@@ -15,6 +15,7 @@ object Dependencies {
     val scalaCheck     = "1.15.3"
     val scalaTest      = "3.2.7"
     val catsScalaCheck = "0.3.2"
+    val log4cats       = "1.2.3"
   }
 
   object Libraries {
@@ -25,13 +26,17 @@ object Dependencies {
     lazy val catsEffect = "org.typelevel" %% "cats-effect" % Versions.catsEffect
     lazy val fs2        = "co.fs2"        %% "fs2-core"    % Versions.fs2
 
+    // Http 4s
     lazy val http4sDsl       = http4s("http4s-dsl")
     lazy val http4sServer    = http4s("http4s-blaze-server")
     lazy val http4sCirce     = http4s("http4s-circe")
+
+    // Circe (JSON)
     lazy val circeCore       = circe("circe-core")
     lazy val circeGeneric    = circe("circe-generic")
     lazy val circeGenericExt = circe("circe-generic-extras")
     lazy val circeParser     = circe("circe-parser")
+
     lazy val pureConfig      = "com.github.pureconfig" %% "pureconfig" % Versions.pureConfig
 
     // Compiler plugins
@@ -39,6 +44,7 @@ object Dependencies {
 
     // Runtime
     lazy val logback = "ch.qos.logback" % "logback-classic" % Versions.logback
+    lazy val log4cats  = "org.typelevel" %% "log4cats-slf4j"  % Versions.log4cats
 
     // Test
     lazy val scalaTest      = "org.scalatest"     %% "scalatest"       % Versions.scalaTest
