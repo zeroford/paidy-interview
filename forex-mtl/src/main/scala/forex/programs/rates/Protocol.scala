@@ -1,6 +1,6 @@
 package forex.programs.rates
 
-import forex.domain.Currency
+import forex.domain.currency.Currency
 
 object Protocol {
 
