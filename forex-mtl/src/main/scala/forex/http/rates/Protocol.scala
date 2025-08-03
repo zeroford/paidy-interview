@@ -3,7 +3,6 @@ package rates
 
 import forex.domain.currency.Currency.show
 import forex.domain.rates.Rate.Pair
-import forex.domain._
 import forex.domain.currency.Currency
 import forex.domain.rates.{Price, Rate, Timestamp}
 import io.circe._
