@@ -1,4 +1,6 @@
-package forex.domain
+package forex.domain.rates
+
+import forex.domain.currency.Currency
 
 case class Rate(
     pair: Rate.Pair,
