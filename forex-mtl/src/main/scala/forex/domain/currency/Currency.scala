@@ -1,10 +1,11 @@
-package forex.domain
+package forex.domain.currency
 
 import cats.Show
 
 sealed trait Currency
 
 object Currency {
+
   case object AUD extends Currency
   case object CAD extends Currency
   case object CHF extends Currency
