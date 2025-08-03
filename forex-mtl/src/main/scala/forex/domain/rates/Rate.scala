@@ -1,7 +1,6 @@
 package forex.domain.rates
 
 import forex.domain.currency.Currency
-import forex.domain.{Price, Timestamp}
 
 case class Rate(
     pair: Rate.Pair,
