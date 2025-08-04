@@ -20,14 +20,12 @@ object QueryValidator {
 
   private def validateCurrencyParam(
       paramName: String,
-      raw: Option[ValidatedNel[ParseFailure, Currency]]
+      optValue: Option[ValidatedNel[ParseFailure, Currency]]
   ): ValidationResult[Currency] =
-    raw match {
-      case None =>
-        s"Missing `$paramName` query parameter".invalidNel
-      case Some(validated) =>
-        validated.leftMap { nel =>
-          nel.map(e => s"Invalid `$paramName`: ${e.sanitized} (${e.details})")
-        }
-    }
+    optValue match {
+    case None =>
+      Validated.invalidNel(s"Missing '$paramName' query parameter")
+    case Some(validated) =>
+      validated.leftMap(_.map(e => s"Invalid '$paramName': ${e.sanitized} (${e.details})"))
+  }
 }
