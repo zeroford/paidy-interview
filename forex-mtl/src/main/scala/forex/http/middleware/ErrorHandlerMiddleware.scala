@@ -16,8 +16,9 @@ object ErrorHandlerMiddleware {
     HttpRoutes.of[F] { req =>
       routes.run(req).value.attempt.flatMap {
         case Right(Some(resp)) => Sync[F].pure(resp)
-        case Right(None)       => NotFound(ErrorResponse(NotFound.code, s"${req.method.name}: ${req.uri.path} not found").asJson)
-        case Left(e)           => InternalServerError(ErrorResponse(InternalServerError.code, e.getMessage).asJson)
+        case Right(None)       =>
+          NotFound(ErrorResponse(NotFound.code, s"${req.method.name}: ${req.uri.path} not found").asJson)
+        case Left(e) => InternalServerError(ErrorResponse(InternalServerError.code, e.getMessage).asJson)
       }
     }
   }

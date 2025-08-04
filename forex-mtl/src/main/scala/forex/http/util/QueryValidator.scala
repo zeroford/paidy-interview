@@ -23,9 +23,9 @@ object QueryValidator {
       optValue: Option[ValidatedNel[ParseFailure, Currency]]
   ): ValidationResult[Currency] =
     optValue match {
-    case None =>
-      Validated.invalidNel(s"Missing '$paramName' query parameter")
-    case Some(validated) =>
-      validated.leftMap(_.map(e => s"Invalid '$paramName': ${e.sanitized} (${e.details})"))
-  }
+      case None =>
+        Validated.invalidNel(s"Missing '$paramName' query parameter")
+      case Some(validated) =>
+        validated.leftMap(_.map(e => s"Invalid '$paramName': ${e.sanitized} (${e.details})"))
+    }
 }

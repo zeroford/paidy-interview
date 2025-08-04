@@ -25,9 +25,9 @@ class RatesHttpRoutes[F[_]: Sync](rates: RatesProgram[F]) extends Http4sDsl[F] {
             case Right(rate) => Ok(rate.asGetApiResponse)
             case Left(err)   => HttpErrorMapper.map(err)
           }
-        case Invalid(err) =>
-          HttpErrorMapper.badRequest[F](err.toList)
+        case Invalid(err) => HttpErrorMapper.badRequest[F](err.toList)
       }
+    case method -> Root => HttpErrorMapper.methodNotAllow[F](method)
   }
 
   val routes: HttpRoutes[F] = Router(prefixPath -> httpRoutes)

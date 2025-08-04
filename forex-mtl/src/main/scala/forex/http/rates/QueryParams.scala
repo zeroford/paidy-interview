@@ -1,7 +1,7 @@
 package forex.http.rates
 
 import cats.implicits.toBifunctorOps
-import forex.domain.currency.{Currency, CurrencyErrorMapper}
+import forex.domain.currency.{ Currency, CurrencyErrorMapper }
 import org.http4s.QueryParamDecoder
 import org.http4s.dsl.impl.OptionalValidatingQueryParamDecoderMatcher
 
