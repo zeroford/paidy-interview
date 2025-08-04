@@ -2,7 +2,7 @@ package forex.http.rates
 
 import forex.domain.currency.Currency
 import org.http4s.ParseFailure
-import cats.data.{Validated, ValidatedNel, NonEmptyList}
+import cats.data.{ NonEmptyList, Validated, ValidatedNel }
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
@@ -45,8 +45,8 @@ class QueryValidatorSpec extends AnyFunSuite with Matchers {
     )
     res match {
       case Validated.Invalid(nel) =>
-        nel.head should include ("Invalid 'from'")
-        nel.head should include ("fail-from")
+        nel.head should include("Invalid 'from'")
+        nel.head should include("fail-from")
       case Validated.Valid(_) => fail("Expected Invalid")
     }
   }
@@ -59,8 +59,8 @@ class QueryValidatorSpec extends AnyFunSuite with Matchers {
     res.isInvalid shouldBe true
     res.fold(
       errors => {
-        errors.toList should contain ("Missing 'from' query parameter")
-        errors.toList should contain ("Missing 'to' query parameter")
+        errors.toList should contain("Missing 'from' query parameter")
+        errors.toList should contain("Missing 'to' query parameter")
       },
       _ => fail("Should not be valid")
     )

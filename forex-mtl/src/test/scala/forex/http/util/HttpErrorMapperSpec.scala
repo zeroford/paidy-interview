@@ -16,17 +16,17 @@ class HttpErrorMapperSpec extends AnyFunSuite with Matchers {
     resp.status shouldBe Status.BadGateway
 
     val json = parse(resp.as[String].unsafeRunSync()).toOption.get
-    json.hcursor.get[String]("message").toOption.value should include ("External rate provider failed")
+    json.hcursor.get[String]("message").toOption.value should include("External rate provider failed")
     json.hcursor.get[Int]("code").toOption shouldBe Some(Status.BadGateway.code)
   }
 
   test("badRequest returns 400 BadRequest with error details") {
     val details = List("Invalid 'from' parameter", "Invalid 'to' parameter")
-    val resp = HttpErrorMapper.badRequest[IO](details).unsafeRunSync()
+    val resp    = HttpErrorMapper.badRequest[IO](details).unsafeRunSync()
     resp.status shouldBe Status.BadRequest
 
     val json = parse(resp.as[String].unsafeRunSync()).toOption.get
-    json.hcursor.get[String]("message").toOption.value should include ("Invalid query parameters")
+    json.hcursor.get[String]("message").toOption.value should include("Invalid query parameters")
     json.hcursor.get[Int]("code").toOption shouldBe Some(Status.BadRequest.code)
     json.hcursor.get[Seq[String]]("details").toOption.value should contain allElementsOf details
   }
@@ -36,7 +36,7 @@ class HttpErrorMapperSpec extends AnyFunSuite with Matchers {
     resp.status shouldBe Status.MethodNotAllowed
 
     val json = parse(resp.as[String].unsafeRunSync()).toOption.get
-    json.hcursor.get[String]("message").toOption.value should include ("Method PUT not allowed")
+    json.hcursor.get[String]("message").toOption.value should include("Method PUT not allowed")
     json.hcursor.get[Int]("code").toOption shouldBe Some(Status.MethodNotAllowed.code)
   }
 }

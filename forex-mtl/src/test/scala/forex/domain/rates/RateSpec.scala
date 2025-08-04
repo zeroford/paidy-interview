@@ -51,7 +51,7 @@ class RateSpec extends AnyFunSuite with Matchers {
 
   test("Rate should store timestamp correctly") {
     val timestamp = Timestamp(OffsetDateTime.parse("2024-08-04T13:00:00Z"))
-    val rate = Rate(
+    val rate      = Rate(
       pair = Rate.Pair(Currency.USD, Currency.CHF),
       price = Price(BigDecimal(2.22)),
       timestamp = timestamp
@@ -61,13 +61,14 @@ class RateSpec extends AnyFunSuite with Matchers {
   }
 
   test("Rate equality and hashCode include timestamp") {
-    val t = Timestamp(OffsetDateTime.parse("2024-08-04T13:00:00Z"))
+    val t  = Timestamp(OffsetDateTime.parse("2024-08-04T13:00:00Z"))
     val r1 = Rate(Rate.Pair(Currency.USD, Currency.EUR), Price(1.2), t)
     val r2 = Rate(Rate.Pair(Currency.USD, Currency.EUR), Price(1.2), t)
     r1 shouldBe r2
     r1.hashCode shouldBe r2.hashCode
 
-    val r3 = Rate(Rate.Pair(Currency.USD, Currency.EUR), Price(1.2), Timestamp(OffsetDateTime.parse("2025-01-01T01:00:00Z")))
+    val r3 =
+      Rate(Rate.Pair(Currency.USD, Currency.EUR), Price(1.2), Timestamp(OffsetDateTime.parse("2025-01-01T01:00:00Z")))
     r3 should not be r1
   }
 }
