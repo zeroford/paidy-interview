@@ -1,9 +1,9 @@
 package forex.domain.currency
 
 import cats.Show
+import forex.domain.currency.CurrencyError
 
 sealed trait Currency
-
 object Currency {
 
   case object AUD extends Currency
@@ -16,28 +16,18 @@ object Currency {
   case object SGD extends Currency
   case object USD extends Currency
 
-  implicit val show: Show[Currency] = Show.show {
-    case AUD => "AUD"
-    case CAD => "CAD"
-    case CHF => "CHF"
-    case EUR => "EUR"
-    case GBP => "GBP"
-    case NZD => "NZD"
-    case JPY => "JPY"
-    case SGD => "SGD"
-    case USD => "USD"
-  }
+  private val all: List[Currency] = List(AUD, CAD, CHF, EUR, GBP, NZD, JPY, SGD, USD)
 
-  def fromString(s: String): Currency = s.toUpperCase match {
-    case "AUD" => AUD
-    case "CAD" => CAD
-    case "CHF" => CHF
-    case "EUR" => EUR
-    case "GBP" => GBP
-    case "NZD" => NZD
-    case "JPY" => JPY
-    case "SGD" => SGD
-    case "USD" => USD
-  }
+  val supported: List[String] = all.map(_.toString)
 
+  def fromString(s: String): Either[CurrencyError, Currency] =
+    if (s.trim.isEmpty) Left(CurrencyError.Empty)
+    else {
+      all.find(_.toString == s.toUpperCase) match {
+        case Some(c) => Right(c)
+        case None    => Left(CurrencyError.Unsupported(s))
+      }
+    }
+
+  implicit val show: Show[Currency] = Show.show(_.toString)
 }
