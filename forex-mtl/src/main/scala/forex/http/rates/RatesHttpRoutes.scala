@@ -4,7 +4,7 @@ package rates
 import cats.data.Validated.{ Invalid, Valid }
 import cats.effect.Sync
 import cats.syntax.all._
-import forex.http.util.{ HttpErrorMapper, QueryValidator }
+import forex.http.util.HttpErrorMapper
 import forex.programs.RatesProgram
 import forex.programs.rates.Protocol.GetRatesRequest
 import org.http4s.dsl.Http4sDsl
