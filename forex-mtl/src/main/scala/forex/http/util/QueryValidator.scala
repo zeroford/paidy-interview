@@ -18,7 +18,10 @@ object QueryValidator {
       validateCurrencyParam("to", toOpt)
     ).tupled
 
-  private def validateCurrencyParam(paramName: String, raw: Option[ValidatedNel[ParseFailure, Currency]]): ValidationResult[Currency] =
+  private def validateCurrencyParam(
+      paramName: String,
+      raw: Option[ValidatedNel[ParseFailure, Currency]]
+  ): ValidationResult[Currency] =
     raw match {
       case None =>
         s"Missing `$paramName` query parameter".invalidNel

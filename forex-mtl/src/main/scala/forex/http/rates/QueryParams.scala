@@ -13,5 +13,5 @@ object QueryParams {
     }
 
   object FromQueryParam extends OptionalValidatingQueryParamDecoderMatcher[Currency]("from")
-  object ToQueryParam   extends OptionalValidatingQueryParamDecoderMatcher[Currency]("to")
+  object ToQueryParam extends OptionalValidatingQueryParamDecoderMatcher[Currency]("to")
 }

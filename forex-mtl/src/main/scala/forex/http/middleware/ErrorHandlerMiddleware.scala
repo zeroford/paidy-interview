@@ -1,7 +1,7 @@
 package forex.http.middleware
 
 import cats.effect.Sync
-import cats.implicits.{catsSyntaxApplicativeError, toFlatMapOps}
+import cats.implicits.{ catsSyntaxApplicativeError, toFlatMapOps }
 import forex.http.util.ErrorResponse
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
@@ -10,7 +10,7 @@ import io.circe.syntax._
 
 object ErrorHandlerMiddleware {
   def apply[F[_]: Sync](routes: HttpRoutes[F]): HttpRoutes[F] = {
-    val dsl = new Http4sDsl[F]{}
+    val dsl = new Http4sDsl[F] {}
     import dsl._
 
     HttpRoutes.of[F] { req =>

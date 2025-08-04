@@ -1,6 +1,6 @@
 package forex.http.util
 
-import forex.domain.currency.{Currency, CurrencyError}
+import forex.domain.currency.{ Currency, CurrencyError }
 import org.http4s.ParseFailure
 
 object CurrencyErrorMappings {

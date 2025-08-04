@@ -2,7 +2,7 @@ package forex.http.util
 
 import cats.effect.Sync
 import forex.programs.rates.errors.Error
-import org.http4s.{Response, Status}
+import org.http4s.{ Response, Status }
 import org.http4s.dsl.Http4sDsl
 
 object HttpErrorMapper {
