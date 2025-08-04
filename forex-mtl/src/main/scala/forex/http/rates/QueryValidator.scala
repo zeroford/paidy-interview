@@ -1,8 +1,8 @@
-package forex.http.util
+package forex.http.rates
 
 import cats.data._
-import forex.domain.currency.Currency
 import cats.syntax.all._
+import forex.domain.currency.Currency
 import org.http4s.ParseFailure
 
 object QueryValidator {
