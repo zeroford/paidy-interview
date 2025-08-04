@@ -35,3 +35,9 @@ jobs:
           cd forex-mtl
           sbt scalafmtCheckAll
           sbt compile
+      
+      - name: Unit tests
+        run: |
+          cd forex-mtl
+          sbt clean test
+          
