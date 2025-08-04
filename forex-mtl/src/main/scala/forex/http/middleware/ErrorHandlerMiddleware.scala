@@ -2,7 +2,7 @@ package forex.http.middleware
 
 import cats.effect.Sync
 import cats.implicits.{ catsSyntaxApplicativeError, toFlatMapOps }
-import forex.util.ErrorResponse
+import forex.http.util.ErrorResponse
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.circe._
