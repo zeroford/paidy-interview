@@ -27,7 +27,7 @@ class RatesHttpRoutesSpec extends CatsEffectSuite {
   val errorProgram: Algebra[IO] = (_: GetRatesRequest) => IO.pure(Left(Error.RateLookupFailed("API Down")))
 
   test("GET /rates should return 200 and correct JSON") {
-    val routes = new RatesHttpRoutes[IO](successProgram).routes
+    val routes  = new RatesHttpRoutes[IO](successProgram).routes
     val request = Request[IO](Method.GET, uri"/rates?from=USD&to=JPY")
 
     for {
@@ -37,13 +37,13 @@ class RatesHttpRoutesSpec extends CatsEffectSuite {
       json = parse(body).getOrElse(fail("Response is not valid JSON"))
       _ <- IO(assertEquals(json.hcursor.get[String]("from").toOption, Some("USD")))
       _ <- IO(assertEquals(json.hcursor.get[String]("to").toOption, Some("JPY")))
-      //_ <- IO(assertEquals(json.hcursor.get[BigDecimal]("price").toOption, Some(123.45)))
+      // _ <- IO(assertEquals(json.hcursor.get[BigDecimal]("price").toOption, Some(123.45)))
       _ <- IO(assertEquals(json.hcursor.get[String]("timestamp").toOption, Some("2024-08-04T12:34:56Z")))
     } yield ()
   }
 
   test("GET /rates missing 'to' param should return 400") {
-    val routes = new RatesHttpRoutes[IO](successProgram).routes
+    val routes  = new RatesHttpRoutes[IO](successProgram).routes
     val request = Request[IO](Method.GET, uri"/rates?from=USD")
 
     for {
@@ -53,7 +53,7 @@ class RatesHttpRoutesSpec extends CatsEffectSuite {
   }
 
   test("GET /rates with invalid currency should return 404 or 400") {
-    val routes = new RatesHttpRoutes[IO](successProgram).routes
+    val routes  = new RatesHttpRoutes[IO](successProgram).routes
     val request = Request[IO](Method.GET, uri"/rates?from=USD&to=XXX")
 
     for {
@@ -63,7 +63,7 @@ class RatesHttpRoutesSpec extends CatsEffectSuite {
   }
 
   test("GET /rates without query params should return 400") {
-    val routes = new RatesHttpRoutes[IO](successProgram).routes
+    val routes  = new RatesHttpRoutes[IO](successProgram).routes
     val request = Request[IO](Method.GET, uri"/rates")
 
     for {
@@ -73,7 +73,7 @@ class RatesHttpRoutesSpec extends CatsEffectSuite {
   }
 
   test("GET /rate (wrong path) should return 404") {
-    val routes = new RatesHttpRoutes[IO](successProgram).routes
+    val routes  = new RatesHttpRoutes[IO](successProgram).routes
     val request = Request[IO](Method.GET, uri"/rate?from=USD&to=JPY")
 
     for {
@@ -83,7 +83,7 @@ class RatesHttpRoutesSpec extends CatsEffectSuite {
   }
 
   test("POST /rates (wrong method) should return 405") {
-    val routes = new RatesHttpRoutes[IO](successProgram).routes
+    val routes  = new RatesHttpRoutes[IO](successProgram).routes
     val request = Request[IO](Method.POST, uri"/rates?from=USD&to=JPY")
 
     for {
@@ -93,7 +93,7 @@ class RatesHttpRoutesSpec extends CatsEffectSuite {
   }
 
   test("GET /rates but service fails should return 502") {
-    val routes = new RatesHttpRoutes[IO](errorProgram).routes
+    val routes  = new RatesHttpRoutes[IO](errorProgram).routes
     val request = Request[IO](Method.GET, uri"/rates?from=USD&to=JPY")
 
     for {

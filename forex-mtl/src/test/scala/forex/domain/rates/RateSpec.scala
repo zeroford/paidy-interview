@@ -66,7 +66,8 @@ class RateSpec extends FunSuite {
     assertEquals(r1, r2)
     assertEquals(r1.hashCode, r2.hashCode)
 
-    val r3 = Rate(Rate.Pair(Currency.USD, Currency.EUR), Price(1.2), Timestamp(OffsetDateTime.parse("2025-01-01T01:00:00Z")))
+    val r3 =
+      Rate(Rate.Pair(Currency.USD, Currency.EUR), Price(1.2), Timestamp(OffsetDateTime.parse("2025-01-01T01:00:00Z")))
     assert(r3 != r1)
   }
 }
