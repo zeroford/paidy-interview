@@ -37,7 +37,7 @@ class RatesHttpRoutesSpec extends CatsEffectSuite {
       json = parse(body).getOrElse(fail("Response is not valid JSON"))
       _ <- IO(assertEquals(json.hcursor.get[String]("from").toOption, Some("USD")))
       _ <- IO(assertEquals(json.hcursor.get[String]("to").toOption, Some("JPY")))
-      // _ <- IO(assertEquals(json.hcursor.get[BigDecimal]("price").toOption, Some(123.45)))
+      _ <- IO(assertEquals(json.hcursor.get[BigDecimal]("price").toOption, Some(BigDecimal("123.45"))))
       _ <- IO(assertEquals(json.hcursor.get[String]("timestamp").toOption, Some("2024-08-04T12:34:56Z")))
     } yield ()
   }
