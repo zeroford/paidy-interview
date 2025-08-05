@@ -1,28 +1,31 @@
 package forex
 
-import scala.concurrent.ExecutionContext
 import cats.effect._
+import fs2.io.net.Network
 import forex.config._
 import fs2.Stream
-import org.http4s.blaze.server.BlazeServerBuilder
+import org.http4s.ember.server.EmberServerBuilder
+import com.comcast.ip4s._
 
-object Main extends IOApp {
+object Main extends IOApp.Simple {
 
-  override def run(args: List[String]): IO[ExitCode] =
-    new Application[IO].stream(executionContext).compile.drain.as(ExitCode.Success)
-
+  override def run: IO[Unit] = new Application[IO].stream.compile.drain
 }
 
-class Application[F[_]: ConcurrentEffect: Timer] {
+class Application[F[_]: Async: Network] {
 
-  def stream(ec: ExecutionContext): Stream[F, Unit] =
-    for {
-      config <- Config.stream("app")
-      module = new Module[F](config)
-      _ <- BlazeServerBuilder[F](ec)
-             .bindHttp(config.http.port, config.http.host)
-             .withHttpApp(module.httpApp)
-             .serve
-    } yield ()
-
+  def stream: Stream[F, Unit] =
+    Config.stream[F]("app").flatMap { config =>
+      val module = new Module[F](config)
+      Stream
+        .resource(
+          EmberServerBuilder
+            .default[F]
+            .withHost(Host.fromString(config.http.host).getOrElse(host"0.0.0.0"))
+            .withPort(Port.fromInt(config.http.port).getOrElse(port"8080"))
+            .withHttpApp(module.httpApp)
+            .build
+        )
+        .drain
+    }
 }
