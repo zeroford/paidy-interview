@@ -1,22 +1,21 @@
 package forex.domain.currency
 
-import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.should.Matchers
+import munit.FunSuite
 
-class CurrencyErrorMapperSpec extends AnyFunSuite with Matchers {
+class CurrencyErrorMapperSpec extends FunSuite {
 
   test("toParseFailure returns ParseFailure for Unsupported currency") {
     val err = CurrencyError.Unsupported("XXX")
     val pf  = CurrencyErrorMapper.toParseFailure(err)
 
-    pf.sanitized shouldBe "Invalid currency"
-    pf.details should include("XXX")
-    pf.details should include regex "(AUD|CAD|CHF|EUR|GBP|NZD|JPY|SGD|USD)"
+    assertEquals(pf.sanitized, "Invalid currency")
+    assert(pf.details.contains("XXX"))
+    assert(pf.details.matches(".*(AUD|CAD|CHF|EUR|GBP|NZD|JPY|SGD|USD).*"))
   }
 
   test("toParseFailure returns ParseFailure for Empty currency") {
     val pf = CurrencyErrorMapper.toParseFailure(CurrencyError.Empty)
-    pf.sanitized shouldBe "Empty currency"
-    pf.details should include("must not be empty")
+    assertEquals(pf.sanitized, "Empty currency")
+    assert(pf.details.contains("must not be empty"))
   }
 }

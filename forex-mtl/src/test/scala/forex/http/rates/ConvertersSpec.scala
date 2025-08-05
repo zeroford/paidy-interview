@@ -3,10 +3,9 @@ package forex.http.rates
 import forex.domain.currency.Currency
 import forex.domain.rates.{ Price, Rate, Timestamp }
 import java.time.OffsetDateTime
-import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.should.Matchers
+import munit.FunSuite
 
-class ConvertersSpec extends AnyFunSuite with Matchers {
+class ConvertersSpec extends FunSuite {
   import Converters._
 
   test("Rate.asGetApiResponse maps all fields correctly") {
@@ -18,9 +17,9 @@ class ConvertersSpec extends AnyFunSuite with Matchers {
 
     val res = rate.asGetApiResponse
 
-    res.from shouldBe Currency.USD
-    res.to shouldBe Currency.JPY
-    res.price shouldBe Price(BigDecimal(150.5))
-    res.timestamp shouldBe Timestamp(OffsetDateTime.parse("2024-08-04T12:34:56Z"))
+    assertEquals(res.from, Currency.USD)
+    assertEquals(res.to, Currency.JPY)
+    assertEquals(res.price, Price(BigDecimal(150.5)))
+    assertEquals(res.timestamp, Timestamp(OffsetDateTime.parse("2024-08-04T12:34:56Z")))
   }
 }
