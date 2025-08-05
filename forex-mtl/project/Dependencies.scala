@@ -5,20 +5,23 @@ object Dependencies {
   object Versions {
     val cats       = "2.13.0"
     val catsEffect = "3.6.3"
-    val catsRetry  = "3.1.3"
     val fs2        = "3.12.0"
     val http4s     = "0.23.23"
     val circe      = "0.14.3"
-    val pureConfig = "0.17.9"
-    val ip4s       = "3.4.0"
-    val newType    = "0.4.4"
 
-    val kindProjector  = "0.13.3"
-    val logback        = "1.5.18"
-    val scalaCheck     = "1.18.1"
-    val scalaTest      = "3.2.19"
-    val catsScalaCheck = "0.3.2"
-    val log4cats       = "2.7.1"
+    val newType       = "0.4.4"
+    val pureConfig    = "0.17.9"
+    val ip4s          = "3.7.0"
+    val kindProjector = "0.13.3"
+    val logback       = "1.5.18"
+    val log4cats      = "2.7.1"
+
+    val scalaCheck      = "1.18.1"
+    val scalaTest       = "3.2.19"
+    val catsScalaCheck  = "0.3.2"
+    val catsEffectTest  = "1.6.0"
+    val munit           = "0.7.29"
+    val munitCatsEffect = "1.0.7"
   }
 
   object Libraries {
@@ -26,10 +29,9 @@ object Dependencies {
     def http4s(artifact: String): ModuleID = "org.http4s" %% artifact % Versions.http4s
 
     // Core FP
-    lazy val cats         = "org.typelevel" %% "cats-core"   % Versions.cats
-    lazy val catsEffect   = "org.typelevel" %% "cats-effect" % Versions.catsEffect
-    lazy val catsRetry    = "com.github.cb372" %% "cats-retry" % Versions.catsRetry
-    lazy val fs2          = "co.fs2"        %% "fs2-core"    % Versions.fs2
+    lazy val cats       = "org.typelevel" %% "cats-core"   % Versions.cats
+    lazy val catsEffect = "org.typelevel" %% "cats-effect" % Versions.catsEffect
+    lazy val fs2        = "co.fs2"        %% "fs2-core"    % Versions.fs2
 
     // Http 4s
     lazy val http4sDsl    = http4s("http4s-dsl")
@@ -38,8 +40,8 @@ object Dependencies {
     lazy val http4sCirce  = http4s("http4s-circe")
 
     // Circe
-    lazy val circeCore    = circe("circe-core")
-    lazy val circeGeneric = circe("circe-generic")
+    lazy val circeCore       = circe("circe-core")
+    lazy val circeGeneric    = circe("circe-generic")
     lazy val circeGenericExt = circe("circe-generic-extras") /* Do not upgrade this than 0.14.3 */
     lazy val circeParser     = circe("circe-parser")
 
@@ -60,9 +62,11 @@ object Dependencies {
     lazy val kindProjector = "org.typelevel" %% "kind-projector" % Versions.kindProjector cross CrossVersion.full
 
     // Testing
-    lazy val scalaTest      = "org.scalatest"     %% "scalatest"       % Versions.scalaTest
-    lazy val scalaCheck     = "org.scalacheck"    %% "scalacheck"      % Versions.scalaCheck
-    lazy val catsScalaCheck = "io.chrisdavenport" %% "cats-scalacheck" % Versions.catsScalaCheck
+    lazy val scalaTest       = "org.scalatest"     %% "scalatest"           % Versions.scalaTest
+    lazy val scalaCheck      = "org.scalacheck"    %% "scalacheck"          % Versions.scalaCheck
+    lazy val catsScalaCheck  = "io.chrisdavenport" %% "cats-scalacheck"     % Versions.catsScalaCheck
+    lazy val munit           = "org.scalameta"     %% "munit"               % Versions.munit
+    lazy val munitCatsEffect = "org.typelevel"     %% "munit-cats-effect-3" % Versions.munitCatsEffect
   }
 
 }
