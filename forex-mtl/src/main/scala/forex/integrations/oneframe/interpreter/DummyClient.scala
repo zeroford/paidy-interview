@@ -4,7 +4,7 @@ import cats.Applicative
 import cats.syntax.applicative._
 import cats.syntax.either._
 import forex.domain.rates.Rate
-import forex.integrations.oneframe.Protocol.{ExchangeRate, GetRateResponse}
+import forex.integrations.oneframe.Protocol.{ ExchangeRate, GetRateResponse }
 import forex.integrations.oneframe.Algebra
 import forex.integrations.oneframe.errors.OneFrameError
 

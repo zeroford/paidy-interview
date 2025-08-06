@@ -26,7 +26,8 @@ class HttpClient[F[_]: Concurrent](client: Client[F], config: OneFrameConfig) ex
               case Right(GetRateResponse(rates)) =>
                 rates.headOption match {
                   case Some(_) => GetRateResponse(rates).asRight
-                  case None    => OneFrameError.OneFrameLookupFailed(s"No rate found for pair ${pair.from}${pair.to}").asLeft
+                  case None    =>
+                    OneFrameError.OneFrameLookupFailed(s"No rate found for pair ${pair.from}${pair.to}").asLeft
                 }
               case Left(e) => OneFrameError.DecodingError(e.getMessage).asLeft
             }
