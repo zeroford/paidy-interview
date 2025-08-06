@@ -5,11 +5,11 @@ import munit.FunSuite
 class CurrencyErrorMapperSpec extends FunSuite {
 
   test("toParseFailure returns ParseFailure for Unsupported currency") {
-    val err = CurrencyError.Unsupported("XXX")
+    val err = CurrencyError.Unsupported("ABC")
     val pf  = CurrencyErrorMapper.toParseFailure(err)
 
     assertEquals(pf.sanitized, "Invalid currency")
-    assert(pf.details.contains("XXX"))
+    assert(pf.details.contains("ABC"))
     assert(pf.details.matches(".*(AUD|CAD|CHF|EUR|GBP|NZD|JPY|SGD|USD).*"))
   }
 

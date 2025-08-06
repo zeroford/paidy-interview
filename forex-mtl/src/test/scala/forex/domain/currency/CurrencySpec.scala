@@ -21,8 +21,8 @@ class CurrencySpec extends FunSuite {
   }
 
   test("fromString returns Left(CurrencyError.Unsupported) for unsupported code") {
-    val res = Currency.fromString("XXX")
-    assertEquals(res, Left(CurrencyError.Unsupported("XXX")))
+    val res = Currency.fromString("ABC")
+    assertEquals(res, Left(CurrencyError.Unsupported("ABC")))
   }
 
   test("supported contains all valid currency codes") {
