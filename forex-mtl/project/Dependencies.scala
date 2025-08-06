@@ -3,19 +3,25 @@ import sbt._
 object Dependencies {
 
   object Versions {
-    val cats       = "2.6.1"
-    val catsEffect = "2.5.1"
-    val fs2        = "2.5.4"
-    val http4s     = "0.22.15"
-    val circe      = "0.14.2"
-    val pureConfig = "0.17.4"
+    val cats       = "2.13.0"
+    val catsEffect = "3.6.3"
+    val fs2        = "3.12.0"
+    val http4s     = "0.23.23"
+    val circe      = "0.14.3"
 
-    val kindProjector  = "0.13.2"
-    val logback        = "1.2.3"
-    val scalaCheck     = "1.15.3"
-    val scalaTest      = "3.2.7"
-    val catsScalaCheck = "0.3.2"
-    val log4cats       = "1.2.3"
+    val newType       = "0.4.4"
+    val pureConfig    = "0.17.9"
+    val ip4s          = "3.7.0"
+    val kindProjector = "0.13.3"
+    val logback       = "1.5.18"
+    val log4cats      = "2.7.1"
+
+    val scalaCheck      = "1.18.1"
+    val scalaTest       = "3.2.19"
+    val catsScalaCheck  = "0.3.2"
+    val catsEffectTest  = "1.6.0"
+    val munit           = "0.7.29"
+    val munitCatsEffect = "1.0.7"
   }
 
   object Libraries {
@@ -28,30 +34,39 @@ object Dependencies {
     lazy val fs2        = "co.fs2"        %% "fs2-core"    % Versions.fs2
 
     // Http 4s
-    lazy val http4sDsl       = http4s("http4s-dsl")
-    lazy val http4sServer    = http4s("http4s-blaze-server")
-    lazy val http4sCirce     = http4s("http4s-circe")
+    lazy val http4sDsl    = http4s("http4s-dsl")
+    lazy val http4sServer = http4s("http4s-ember-server")
+    lazy val http4sClient = http4s("http4s-ember-client")
+    lazy val http4sCirce  = http4s("http4s-circe")
 
-    // Circe (JSON)
+    // Circe
     lazy val circeCore       = circe("circe-core")
     lazy val circeGeneric    = circe("circe-generic")
-    lazy val circeGenericExt = circe("circe-generic-extras")
+    lazy val circeGenericExt = circe("circe-generic-extras") /* Do not upgrade this than 0.14.3 */
     lazy val circeParser     = circe("circe-parser")
 
+    // Newtype
+    lazy val newType = "io.estatico" %% "newtype" % Versions.newType
+
     // Config
-    lazy val pureConfig      = "com.github.pureconfig" %% "pureconfig" % Versions.pureConfig
+    lazy val pureConfig = "com.github.pureconfig" %% "pureconfig" % Versions.pureConfig
+
+    // Network
+    lazy val ip4s = "com.comcast" %% "ip4s-core" % Versions.ip4s
 
     // Logging
-    lazy val logback = "ch.qos.logback" % "logback-classic" % Versions.logback
-    lazy val log4cats  = "org.typelevel" %% "log4cats-slf4j"  % Versions.log4cats
+    lazy val logback  = "ch.qos.logback" % "logback-classic" % Versions.logback
+    lazy val log4cats = "org.typelevel" %% "log4cats-slf4j"  % Versions.log4cats
 
     // Compiler plugins
     lazy val kindProjector = "org.typelevel" %% "kind-projector" % Versions.kindProjector cross CrossVersion.full
 
     // Testing
-    lazy val scalaTest      = "org.scalatest"     %% "scalatest"       % Versions.scalaTest
-    lazy val scalaCheck     = "org.scalacheck"    %% "scalacheck"      % Versions.scalaCheck
-    lazy val catsScalaCheck = "io.chrisdavenport" %% "cats-scalacheck" % Versions.catsScalaCheck
+    lazy val scalaTest       = "org.scalatest"     %% "scalatest"           % Versions.scalaTest
+    lazy val scalaCheck      = "org.scalacheck"    %% "scalacheck"          % Versions.scalaCheck
+    lazy val catsScalaCheck  = "io.chrisdavenport" %% "cats-scalacheck"     % Versions.catsScalaCheck
+    lazy val munit           = "org.scalameta"     %% "munit"               % Versions.munit
+    lazy val munitCatsEffect = "org.typelevel"     %% "munit-cats-effect-3" % Versions.munitCatsEffect
   }
 
 }

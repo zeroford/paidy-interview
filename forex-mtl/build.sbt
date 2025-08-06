@@ -43,7 +43,8 @@ scalacOptions ++= Seq(
   "-Ywarn-unused:patvars", // Warn if a variable bound in a pattern is unused.
   "-Ywarn-unused:privates", // Warn if a private member is unused.
   "-Ycache-plugin-class-loader:last-modified", // Enables caching of classloaders for compiler plugins
-  "-Ycache-macro-class-loader:last-modified" // and macro definitions. This can lead to performance improvements.
+  "-Ycache-macro-class-loader:last-modified", // and macro definitions. This can lead to performance improvements.
+  "-Ymacro-annotations"
 )
 
 resolvers +=
@@ -56,14 +57,19 @@ libraryDependencies ++= Seq(
   Libraries.fs2,
   Libraries.http4sDsl,
   Libraries.http4sServer,
+  Libraries.http4sClient,
   Libraries.http4sCirce,
   Libraries.circeCore,
   Libraries.circeGeneric,
   Libraries.circeGenericExt,
   Libraries.circeParser,
+  Libraries.newType,
   Libraries.pureConfig,
+  Libraries.ip4s,
   Libraries.logback,
-  Libraries.scalaTest      % Test,
-  Libraries.scalaCheck     % Test,
-  Libraries.catsScalaCheck % Test
+  Libraries.log4cats,
+  Libraries.munit           % Test,
+  Libraries.munitCatsEffect % Test,
+  Libraries.scalaCheck      % Test,
+  Libraries.catsScalaCheck  % Test
 )

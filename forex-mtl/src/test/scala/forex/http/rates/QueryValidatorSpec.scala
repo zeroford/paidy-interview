@@ -3,10 +3,9 @@ package forex.http.rates
 import forex.domain.currency.Currency
 import org.http4s.ParseFailure
 import cats.data.{ NonEmptyList, Validated, ValidatedNel }
-import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.should.Matchers
+import munit.FunSuite
 
-class QueryValidatorSpec extends AnyFunSuite with Matchers {
+class QueryValidatorSpec extends FunSuite {
 
   def validCur(cur: Currency): ValidatedNel[ParseFailure, Currency] =
     Validated.Valid(cur)
@@ -19,7 +18,7 @@ class QueryValidatorSpec extends AnyFunSuite with Matchers {
       Some(validCur(Currency.USD)),
       Some(validCur(Currency.JPY))
     )
-    res shouldBe Validated.Valid((Currency.USD, Currency.JPY))
+    assertEquals(res, Validated.Valid((Currency.USD, Currency.JPY)))
   }
 
   test("validate returns Invalid if 'from' missing") {
@@ -27,7 +26,7 @@ class QueryValidatorSpec extends AnyFunSuite with Matchers {
       None,
       Some(validCur(Currency.JPY))
     )
-    res shouldBe Validated.Invalid(NonEmptyList.one("Missing 'from' query parameter"))
+    assertEquals(res, Validated.Invalid(NonEmptyList.one("Missing 'from' query parameter")))
   }
 
   test("validate returns Invalid if 'to' missing") {
@@ -35,7 +34,7 @@ class QueryValidatorSpec extends AnyFunSuite with Matchers {
       Some(validCur(Currency.USD)),
       None
     )
-    res shouldBe Validated.Invalid(NonEmptyList.one("Missing 'to' query parameter"))
+    assertEquals(res, Validated.Invalid(NonEmptyList.one("Missing 'to' query parameter")))
   }
 
   test("validate returns Invalid if param present but is error") {
@@ -45,24 +44,23 @@ class QueryValidatorSpec extends AnyFunSuite with Matchers {
     )
     res match {
       case Validated.Invalid(nel) =>
-        nel.head should include("Invalid 'from'")
-        nel.head should include("fail-from")
+        assert(nel.head.contains("Invalid 'from'"))
+        assert(nel.head.contains("fail-from"))
       case Validated.Valid(_) => fail("Expected Invalid")
     }
   }
 
-  test("validate returns Invalid for both params missing") {
+  test("validate accumulates multiple errors") {
     val res = QueryValidator.validate(
-      None,
-      None
+      Some(invalidCur("fail-from")),
+      Some(invalidCur("fail-to"))
     )
-    res.isInvalid shouldBe true
-    res.fold(
-      errors => {
-        errors.toList should contain("Missing 'from' query parameter")
-        errors.toList should contain("Missing 'to' query parameter")
-      },
-      _ => fail("Should not be valid")
-    )
+    res match {
+      case Validated.Invalid(nel) =>
+        assertEquals(nel.size, 2)
+        assert(nel.head.contains("Invalid 'from'"))
+        assert(nel.tail.head.contains("Invalid 'to'"))
+      case Validated.Valid(_) => fail("Expected Invalid")
+    }
   }
 }
