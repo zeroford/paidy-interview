@@ -1,7 +1,7 @@
 package forex.http.util
 
 import cats.effect.Sync
-import forex.programs.rates.errors.Error
+import forex.programs.rates.errors.RateProgramError
 import io.circe.syntax.EncoderOps
 import org.http4s.{ Method, Response, Status }
 import org.http4s.dsl.Http4sDsl
@@ -12,7 +12,7 @@ object HttpErrorMapper {
   def map[F[_]: Sync](error: Error): F[Response[F]] = {
     val dsl = new Http4sDsl[F] {}; import dsl._
     error match {
-      case Error.RateLookupFailed(_) =>
+      case RateProgramError.RateLookupFailed(_) =>
         BadGateway(ErrorResponse(Status.BadGateway.code, "External rate provider failed"))
     }
   }

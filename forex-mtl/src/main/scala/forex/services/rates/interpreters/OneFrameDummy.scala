@@ -5,11 +5,11 @@ import cats.Applicative
 import cats.syntax.applicative._
 import cats.syntax.either._
 import forex.domain.rates.{ Price, Rate, Timestamp }
-import forex.services.rates.errors._
+import forex.services.rates.errors.RatesServiceError
 
 class OneFrameDummy[F[_]: Applicative] extends Algebra[F] {
 
-  override def get(pair: Rate.Pair): F[Error Either Rate] =
-    Rate(pair, Price(BigDecimal(100)), Timestamp.now).asRight[Error].pure[F]
+  override def get(pair: Rate.Pair): F[RatesServiceError Either Rate] =
+    Rate(pair, Price(BigDecimal(100)), Timestamp.now).asRight[RatesServiceError].pure[F]
 
 }
