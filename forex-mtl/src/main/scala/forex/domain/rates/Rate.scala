@@ -1,8 +1,10 @@
 package forex.domain.rates
 
 import forex.domain.currency.Currency
+import io.circe.{ Decoder, Encoder }
+import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
 
-case class Rate(
+final case class Rate(
     pair: Rate.Pair,
     price: Price,
     timestamp: Timestamp
@@ -13,4 +15,7 @@ object Rate {
       from: Currency,
       to: Currency
   )
+
+  implicit val rateDecoder: Decoder[Rate] = deriveDecoder[Rate]
+  implicit val rateEncoder: Encoder[Rate] = deriveEncoder[Rate]
 }
