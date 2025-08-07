@@ -49,5 +49,4 @@ class ProgramSpec extends CatsEffectSuite {
     } yield ()
   }
 
-
-} 
+}

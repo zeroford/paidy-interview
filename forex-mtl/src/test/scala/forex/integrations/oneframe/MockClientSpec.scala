@@ -13,7 +13,7 @@ class MockClientSpec extends CatsEffectSuite {
 
   test("MockClient should return successful response for any currency pair") {
     val pair = Rate.Pair(Currency.USD, Currency.JPY)
-    
+
     for {
       result <- mockClient.getRate(pair)
       _ <- IO(assert(result.isRight))
@@ -32,7 +32,7 @@ class MockClientSpec extends CatsEffectSuite {
       Rate.Pair(Currency.GBP, Currency.JPY),
       Rate.Pair(Currency.CAD, Currency.AUD)
     )
-    
+
     pairs.foreach { pair =>
       for {
         result <- mockClient.getRate(pair)
@@ -48,7 +48,7 @@ class MockClientSpec extends CatsEffectSuite {
 
   test("MockClient should return valid price data") {
     val pair = Rate.Pair(Currency.EUR, Currency.GBP)
-    
+
     for {
       result <- mockClient.getRate(pair)
       response <- IO(result.toOption.get)
@@ -63,7 +63,7 @@ class MockClientSpec extends CatsEffectSuite {
 
   test("MockClient should return valid timestamp") {
     val pair = Rate.Pair(Currency.USD, Currency.JPY)
-    
+
     for {
       result <- mockClient.getRate(pair)
       response <- IO(result.toOption.get)
@@ -75,7 +75,7 @@ class MockClientSpec extends CatsEffectSuite {
 
   test("MockClient should be deterministic for same pair") {
     val pair = Rate.Pair(Currency.USD, Currency.EUR)
-    
+
     for {
       result1 <- mockClient.getRate(pair)
       result2 <- mockClient.getRate(pair)
@@ -95,7 +95,7 @@ class MockClientSpec extends CatsEffectSuite {
       Rate.Pair(Currency.EUR, Currency.EUR),
       Rate.Pair(Currency.JPY, Currency.JPY)
     )
-    
+
     edgePairs.foreach { pair =>
       for {
         result <- mockClient.getRate(pair)
@@ -108,4 +108,4 @@ class MockClientSpec extends CatsEffectSuite {
       } yield ()
     }
   }
-} 
+}

@@ -9,7 +9,7 @@ import forex.integrations.oneframe.interpreter.HttpClient
 import forex.integrations.oneframe.errors.OneFrameError
 import munit.CatsEffectSuite
 import org.http4s.client.Client
-import org.http4s.{Request, Response, Status}
+import org.http4s.{ Request, Response, Status }
 import org.http4s.circe.CirceEntityCodec._
 import io.circe.Json
 
@@ -26,16 +26,18 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
 
   test("OneFrame integration should handle successful rate lookup") {
     val mockResponse = Response[IO](Status.Ok)
-      .withEntity(Json.arr(
-        Json.obj(
-          "from" -> Json.fromString("USD"),
-          "to" -> Json.fromString("JPY"),
-          "bid" -> Json.fromBigDecimal(BigDecimal(123.40)),
-          "ask" -> Json.fromBigDecimal(BigDecimal(123.50)),
-          "price" -> Json.fromBigDecimal(BigDecimal(123.45)),
-          "time_stamp" -> Json.fromString("2024-08-04T12:34:56Z")
+      .withEntity(
+        Json.arr(
+          Json.obj(
+            "from" -> Json.fromString("USD"),
+            "to" -> Json.fromString("JPY"),
+            "bid" -> Json.fromBigDecimal(BigDecimal(123.40)),
+            "ask" -> Json.fromBigDecimal(BigDecimal(123.50)),
+            "price" -> Json.fromBigDecimal(BigDecimal(123.45)),
+            "time_stamp" -> Json.fromString("2024-08-04T12:34:56Z")
+          )
         )
-      ))
+      )
 
     val mockClient: Client[IO] = Client[IO] { _ =>
       Resource.pure(mockResponse)
@@ -97,7 +99,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
 
   test("OneFrame integration should include authentication header") {
     var capturedRequest: Option[Request[IO]] = None
-    
+
     val mockClient: Client[IO] = Client[IO] { req =>
       capturedRequest = Some(req)
       Resource.pure(Response[IO](Status.Ok).withEntity(Json.arr()))
@@ -115,7 +117,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
 
   test("OneFrame integration should build correct URI with query parameters") {
     var capturedRequest: Option[Request[IO]] = None
-    
+
     val mockClient: Client[IO] = Client[IO] { req =>
       capturedRequest = Some(req)
       Resource.pure(Response[IO](Status.Ok).withEntity(Json.arr()))
@@ -154,16 +156,18 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
 
   test("OneFrame integration should handle different currency pairs") {
     val mockResponse = Response[IO](Status.Ok)
-      .withEntity(Json.arr(
-        Json.obj(
-          "from" -> Json.fromString("EUR"),
-          "to" -> Json.fromString("GBP"),
-          "bid" -> Json.fromBigDecimal(BigDecimal(0.85)),
-          "ask" -> Json.fromBigDecimal(BigDecimal(0.86)),
-          "price" -> Json.fromBigDecimal(BigDecimal(0.855)),
-          "time_stamp" -> Json.fromString("2024-08-04T12:34:56Z")
+      .withEntity(
+        Json.arr(
+          Json.obj(
+            "from" -> Json.fromString("EUR"),
+            "to" -> Json.fromString("GBP"),
+            "bid" -> Json.fromBigDecimal(BigDecimal(0.85)),
+            "ask" -> Json.fromBigDecimal(BigDecimal(0.86)),
+            "price" -> Json.fromBigDecimal(BigDecimal(0.855)),
+            "time_stamp" -> Json.fromString("2024-08-04T12:34:56Z")
+          )
         )
-      ))
+      )
 
     val mockClient: Client[IO] = Client[IO] { _ =>
       Resource.pure(mockResponse)
@@ -183,4 +187,4 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
       _ <- IO(assertEquals(rate.price, BigDecimal(0.855)))
     } yield ()
   }
-} 
+}

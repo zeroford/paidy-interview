@@ -62,8 +62,6 @@ class RatesHttpRoutesSpec extends CatsEffectSuite {
     } yield ()
   }
 
-
-
   test("GET /rates without query params should return 400") {
     val routes  = new RatesHttpRoutes[IO](successProgram).routes
     val request = Request[IO](Method.GET, uri"/rates")

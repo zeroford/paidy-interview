@@ -18,16 +18,18 @@ class ServiceSpec extends CatsEffectSuite {
     timestamp = Timestamp(OffsetDateTime.parse("2024-08-04T12:34:56Z"))
   )
 
-  val validOneFrameResponse = GetRateResponse(List(
-    forex.integrations.oneframe.Protocol.ExchangeRate(
-      from = "USD",
-      to = "JPY",
-      bid = BigDecimal(123.40),
-      ask = BigDecimal(123.50),
-      price = BigDecimal(123.45),
-      time_stamp = "2024-08-04T12:34:56Z"
+  val validOneFrameResponse = GetRateResponse(
+    List(
+      forex.integrations.oneframe.Protocol.ExchangeRate(
+        from = "USD",
+        to = "JPY",
+        bid = BigDecimal(123.40),
+        ask = BigDecimal(123.50),
+        price = BigDecimal(123.45),
+        time_stamp = "2024-08-04T12:34:56Z"
+      )
     )
-  ))
+  )
 
   // Mock success OneFrame client
   val successOneFrameClient: Algebra[IO] = (_: Rate.Pair) => IO.pure(Right(validOneFrameResponse))
@@ -37,7 +39,7 @@ class ServiceSpec extends CatsEffectSuite {
 
   test("Service should return rate when OneFrame client succeeds") {
     val service = Service[IO](successOneFrameClient)
-    val pair = Rate.Pair(Currency.USD, Currency.JPY)
+    val pair    = Rate.Pair(Currency.USD, Currency.JPY)
 
     for {
       result <- service.get(pair)
@@ -51,7 +53,7 @@ class ServiceSpec extends CatsEffectSuite {
 
   test("Service should return error when OneFrame client fails") {
     val service = Service[IO](errorOneFrameClient)
-    val pair = Rate.Pair(Currency.USD, Currency.JPY)
+    val pair    = Rate.Pair(Currency.USD, Currency.JPY)
 
     for {
       result <- service.get(pair)
@@ -63,7 +65,7 @@ class ServiceSpec extends CatsEffectSuite {
 
   test("Service should handle different currency pairs") {
     val service = Service[IO](successOneFrameClient)
-    val pair = Rate.Pair(Currency.EUR, Currency.GBP)
+    val pair    = Rate.Pair(Currency.EUR, Currency.GBP)
 
     for {
       result <- service.get(pair)
@@ -73,4 +75,4 @@ class ServiceSpec extends CatsEffectSuite {
       _ <- IO(assertEquals(rate.pair.to, Currency.GBP))
     } yield ()
   }
-} 
+}
