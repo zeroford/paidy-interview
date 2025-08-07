@@ -5,7 +5,7 @@ import forex.domain.currency.Currency
 import forex.domain.rates.{ Price, Rate, Timestamp }
 import forex.programs.rates.Protocol.GetRatesRequest
 import forex.programs.rates.Algebra
-import forex.programs.rates.errors.Error
+import forex.programs.rates.errors.RateProgramError
 import munit.CatsEffectSuite
 import io.circe.parser._
 import org.http4s._
@@ -24,7 +24,7 @@ class RatesHttpRoutesSpec extends CatsEffectSuite {
   val successProgram: Algebra[IO] = (_: GetRatesRequest) => IO.pure(Right(validRate))
 
   // Mock error
-  val errorProgram: Algebra[IO] = (_: GetRatesRequest) => IO.pure(Left(Error.RateLookupFailed("API Down")))
+  val errorProgram: Algebra[IO] = (_: GetRatesRequest) => IO.pure(Left(RateProgramError.RateLookupFailed("API Down")))
 
   test("GET /rates should return 200 and correct JSON") {
     val routes  = new RatesHttpRoutes[IO](successProgram).routes
@@ -52,13 +52,13 @@ class RatesHttpRoutesSpec extends CatsEffectSuite {
     } yield ()
   }
 
-  test("GET /rates with invalid currency should return 404 or 400") {
+  test("GET /rates with invalid currency should return 400") {
     val routes  = new RatesHttpRoutes[IO](successProgram).routes
     val request = Request[IO](Method.GET, uri"/rates?from=USD&to=XXX")
 
     for {
       response <- routes.orNotFound.run(request)
-      _ <- IO(assert(response.status == Status.NotFound || response.status == Status.BadRequest))
+      _ <- IO(assertEquals(response.status, Status.BadRequest))
     } yield ()
   }
 

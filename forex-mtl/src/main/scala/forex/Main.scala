@@ -1,31 +1,29 @@
 package forex
 
 import cats.effect._
-import fs2.io.net.Network
 import forex.config._
-import fs2.Stream
-import org.http4s.ember.server.EmberServerBuilder
-import com.comcast.ip4s._
+import forex.modules.{ HttpClientBuilder, HttpServerBuilder }
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 object Main extends IOApp.Simple {
 
-  override def run: IO[Unit] = new Application[IO].stream.compile.drain
-}
+  implicit def logger[F[_]: Sync]: Logger[F] = Slf4jLogger.getLogger[F]
 
-class Application[F[_]: Async: Network] {
+  override def run: IO[Unit] = {
+    val app: Resource[IO, Unit] = for {
+      config <- Config.resource[IO]("app")
+      client <- HttpClientBuilder.build[IO]
+      module = new Module[IO](config, client)
+      _ <- HttpServerBuilder.build[IO](module.httpApp, config)
+    } yield ()
 
-  def stream: Stream[F, Unit] =
-    Config.stream[F]("app").flatMap { config =>
-      val module = new Module[F](config)
-      Stream
-        .resource(
-          EmberServerBuilder
-            .default[F]
-            .withHost(Host.fromString(config.http.host).getOrElse(host"0.0.0.0"))
-            .withPort(Port.fromInt(config.http.port).getOrElse(port"8080"))
-            .withHttpApp(module.httpApp)
-            .build
-        )
-        .drain
-    }
+    app
+      .use(_ => IO.never)
+      .handleErrorWith { error =>
+        IO.println(s"Application failed to start: ${error.getMessage}") *>
+          IO.raiseError(error)
+      }
+  }
+
 }

@@ -1,17 +1,20 @@
 package forex.config
 
-import cats.effect.Sync
-import fs2.Stream
-
-import pureconfig.ConfigSource
+import cats.effect.{ Resource, Sync }
+import com.comcast.ip4s.{ Host, Port }
+import pureconfig.{ ConfigReader, ConfigSource }
 import pureconfig.generic.auto._
+import pureconfig.error.CannotConvert
 
 object Config {
 
-  /** @param path
-    *   the property path inside the default configuration
-    */
-  def stream[F[_]: Sync](path: String): Stream[F, ApplicationConfig] =
-    Stream.eval(Sync[F].delay(ConfigSource.default.at(path).loadOrThrow[ApplicationConfig]))
+  implicit val hostReader: ConfigReader[Host] =
+    ConfigReader[String].emap(n => Host.fromString(n).toRight(CannotConvert(n, "Host", "Invalid host")))
+
+  implicit val portReader: ConfigReader[Port] =
+    ConfigReader[Int].emap(n => Port.fromInt(n).toRight(CannotConvert(n.toString, "Port", "Invalid port")))
+
+  def resource[F[_]: Sync](path: String): Resource[F, ApplicationConfig] =
+    Resource.eval(Sync[F].delay(ConfigSource.default.at(path).loadOrThrow[ApplicationConfig]))
 
 }

@@ -11,7 +11,7 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.server.Router
 import org.http4s.HttpRoutes
 
-class RatesHttpRoutes[F[_]: Sync](rates: RatesProgram[F]) extends Http4sDsl[F] {
+class RatesHttpRoutes[F[_]: Sync](ratesProgram: RatesProgram[F]) extends Http4sDsl[F] {
 
   import Converters._, QueryParams._, Protocol._
 
@@ -21,7 +21,7 @@ class RatesHttpRoutes[F[_]: Sync](rates: RatesProgram[F]) extends Http4sDsl[F] {
     case GET -> Root :? FromQueryParam(fromOpt) +& ToQueryParam(toOpt) =>
       QueryValidator.validate(fromOpt, toOpt) match {
         case Valid((from, to)) =>
-          rates.get(GetRatesRequest(from, to)).flatMap {
+          ratesProgram.get(GetRatesRequest(from, to)).flatMap {
             case Right(rate) => Ok(rate.asGetApiResponse)
             case Left(err)   => HttpErrorMapper.map(err)
           }

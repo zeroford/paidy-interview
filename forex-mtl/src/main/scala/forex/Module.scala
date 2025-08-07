@@ -4,14 +4,18 @@ import cats.effect.Async
 import forex.config.ApplicationConfig
 import forex.http.middleware.ErrorHandlerMiddleware
 import forex.http.rates.RatesHttpRoutes
+import forex.integrations.{ OneFrameClient, OneFrameInterpreters }
 import forex.services._
 import forex.programs._
 import org.http4s._
+import org.http4s.client.Client
 import org.http4s.server.middleware.{ AutoSlash, Timeout }
 
-class Module[F[_]: Async](config: ApplicationConfig) {
+class Module[F[_]: Async](config: ApplicationConfig, httpClient: Client[F]) {
 
-  private val ratesService: RatesService[F]  = RatesServices.dummy[F]
+  private val oneFrameClient: OneFrameClient[F] =
+    OneFrameInterpreters.client[F](httpClient, config.oneFrame, config.environment)
+  private val ratesService: RatesService[F]  = RatesService[F](oneFrameClient)
   private val ratesProgram: RatesProgram[F]  = RatesProgram[F](ratesService)
   private val ratesHttpRoutes: HttpRoutes[F] = new RatesHttpRoutes[F](ratesProgram).routes
 
