@@ -1,6 +1,5 @@
 package forex.domain.currency
 
-import cats.Show
 import forex.domain.currency.CurrencyError
 import io.circe.{ Decoder, Encoder }
 

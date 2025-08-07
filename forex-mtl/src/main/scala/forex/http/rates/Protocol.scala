@@ -1,7 +1,6 @@
 package forex.http
 package rates
 
-import forex.domain.currency.Currency.show
 import forex.domain.rates.Rate.Pair
 import forex.domain.currency.Currency
 import forex.domain.rates.{ Price, Rate, Timestamp }
@@ -24,9 +23,6 @@ object Protocol {
       price: Price,
       timestamp: Timestamp
   )
-
-  implicit val currencyEncoder: Encoder[Currency] =
-    Encoder.instance[Currency](show.show _ andThen Json.fromString)
 
   implicit val pairEncoder: Encoder[Pair] =
     deriveConfiguredEncoder[Pair]

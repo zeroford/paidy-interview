@@ -10,9 +10,9 @@ object errors {
     final case class ValidationFailed(errors: List[String]) extends RateProgramError
   }
 
-  def toProgramError(error: forex.services.rates.errors.RatesServiceError): RateProgramError =
+  def toProgramError(error: RatesServiceError): RateProgramError =
     error match {
-      case forex.services.rates.errors.RatesServiceError.OneFrameLookupFailed(msg) =>
+      case RatesServiceError.OneFrameLookupFailed(msg) =>
         RateProgramError.RateLookupFailed(msg)
     }
 }
