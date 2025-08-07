@@ -21,15 +21,12 @@ object HttpUriBuilder {
       )
     )
 
-  private def buildGetRateUri(pair: Rate.Pair, config: OneFrameConfig): Uri =
-    buildBaseUri(config)
-      .withPath(Uri.Path.unsafeFromString("/rates"))
-      .withQueryParam("pair", s"${pair.from}${pair.to}")
-
   def buildGetRateRequest[F[_]](pair: Rate.Pair, config: OneFrameConfig): Request[F] =
     Request[F](
       method = Method.GET,
-      uri = buildGetRateUri(pair, config),
+      uri = buildBaseUri(config)
+        .withPath(Uri.Path.unsafeFromString("/rates"))
+        .withQueryParam("pair", s"${pair.from}${pair.to}"),
       headers = Headers(authHeader(config.token))
     )
 }

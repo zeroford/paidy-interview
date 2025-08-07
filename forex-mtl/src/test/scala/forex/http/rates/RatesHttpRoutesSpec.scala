@@ -5,7 +5,7 @@ import forex.domain.currency.Currency
 import forex.domain.rates.{ Price, Rate, Timestamp }
 import forex.programs.rates.Protocol.GetRatesRequest
 import forex.programs.rates.Algebra
-import forex.programs.rates.errors.Error
+import forex.programs.rates.errors.RateProgramError
 import munit.CatsEffectSuite
 import io.circe.parser._
 import org.http4s._
@@ -24,7 +24,7 @@ class RatesHttpRoutesSpec extends CatsEffectSuite {
   val successProgram: Algebra[IO] = (_: GetRatesRequest) => IO.pure(Right(validRate))
 
   // Mock error
-  val errorProgram: Algebra[IO] = (_: GetRatesRequest) => IO.pure(Left(Error.RateLookupFailed("API Down")))
+  val errorProgram: Algebra[IO] = (_: GetRatesRequest) => IO.pure(Left(RateProgramError.RateLookupFailed("API Down")))
 
   test("GET /rates should return 200 and correct JSON") {
     val routes  = new RatesHttpRoutes[IO](successProgram).routes

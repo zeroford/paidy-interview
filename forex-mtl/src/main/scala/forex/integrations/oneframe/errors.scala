@@ -29,7 +29,6 @@ object errors {
       case e: java.util.concurrent.TimeoutException => OneFrameError.TimeoutError(e.getMessage)
       case e: java.net.ConnectException             => OneFrameError.NetworkError(e.getMessage)
       case e: java.io.IOException                   => OneFrameError.NetworkError(e.getMessage)
-      case e: java.net.UnknownHostException         => OneFrameError.NetworkError(e.getMessage)
       case _                                        => OneFrameError.UnknownError(e)
     }
   }

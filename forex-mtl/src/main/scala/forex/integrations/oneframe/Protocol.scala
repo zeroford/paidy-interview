@@ -18,9 +18,24 @@ object Protocol {
       price: BigDecimal,
       time_stamp: String
   )
+
+  object ExchangeRate {
+    implicit val decoder: Decoder[ExchangeRate]                                  = deriveDecoder[ExchangeRate]
+    implicit def entityDecoder[F[_]: Concurrent]: EntityDecoder[F, ExchangeRate] = jsonOf[F, ExchangeRate]
+  }
+
   object GetRateResponse {
     implicit val decoder: Decoder[GetRateResponse]                                  = deriveDecoder[GetRateResponse]
     implicit def entityDecoder[F[_]: Concurrent]: EntityDecoder[F, GetRateResponse] = jsonOf[F, GetRateResponse]
+  }
+
+  // For handling array response from OneFrame server
+  type OneFrameArrayResponse = List[ExchangeRate]
+
+  object OneFrameArrayResponse {
+    implicit val decoder: Decoder[OneFrameArrayResponse] = deriveDecoder[OneFrameArrayResponse]
+    implicit def entityDecoder[F[_]: Concurrent]: EntityDecoder[F, OneFrameArrayResponse] =
+      jsonOf[F, OneFrameArrayResponse]
   }
 
   final case class OneFrameApiError(error: String)

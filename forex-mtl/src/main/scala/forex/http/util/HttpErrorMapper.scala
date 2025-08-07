@@ -9,11 +9,13 @@ import org.http4s.headers.Allow
 import org.http4s.circe._
 
 object HttpErrorMapper {
-  def map[F[_]: Sync](error: Error): F[Response[F]] = {
+  def map[F[_]: Sync](error: RateProgramError): F[Response[F]] = {
     val dsl = new Http4sDsl[F] {}; import dsl._
     error match {
       case RateProgramError.RateLookupFailed(_) =>
         BadGateway(ErrorResponse(Status.BadGateway.code, "External rate provider failed"))
+      case RateProgramError.ValidationFailed(errors) =>
+        BadRequest(ErrorResponse(Status.BadRequest.code, "Validation failed", errors).asJson)
     }
   }
 

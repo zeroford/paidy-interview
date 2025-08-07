@@ -2,6 +2,7 @@ package forex.domain.currency
 
 import cats.Show
 import forex.domain.currency.CurrencyError
+import io.circe.{ Decoder, Encoder }
 
 sealed trait Currency
 object Currency {
@@ -29,5 +30,6 @@ object Currency {
       }
     }
 
-  implicit val show: Show[Currency] = Show.show(_.toString)
+  implicit val encoder: Encoder[Currency] = Encoder.encodeString.contramap(_.toString)
+  implicit val decoder: Decoder[Currency] = Decoder.decodeString.emap(fromString(_).left.map(_.toString))
 }

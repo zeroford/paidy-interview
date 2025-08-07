@@ -16,6 +16,8 @@ object Rate {
       to: Currency
   )
 
+  implicit val pairDecoder: Decoder[Pair] = deriveDecoder[Pair]
+  implicit val pairEncoder: Encoder[Pair] = deriveEncoder[Pair]
   implicit val rateDecoder: Decoder[Rate] = deriveDecoder[Rate]
   implicit val rateEncoder: Encoder[Rate] = deriveEncoder[Rate]
 }

@@ -7,9 +7,12 @@ object errors {
   sealed trait RateProgramError extends Error
   object RateProgramError {
     final case class RateLookupFailed(msg: String) extends RateProgramError
+    final case class ValidationFailed(errors: List[String]) extends RateProgramError
   }
 
-  def toProgramError(error: Error): RateProgramError = error match {
-    case RatesServiceError.OneFrameLookupFailed(msg) => RateProgramError.RateLookupFailed(msg)
-  }
+  def toProgramError(error: forex.services.rates.errors.RatesServiceError): RateProgramError =
+    error match {
+      case forex.services.rates.errors.RatesServiceError.OneFrameLookupFailed(msg) =>
+        RateProgramError.RateLookupFailed(msg)
+    }
 }

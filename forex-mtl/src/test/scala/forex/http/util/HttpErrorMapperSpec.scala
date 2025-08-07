@@ -1,7 +1,7 @@
 package forex.http.util
 
 import cats.effect.IO
-import forex.programs.rates.errors.Error
+import forex.programs.rates.errors.RateProgramError
 import munit.CatsEffectSuite
 import io.circe.parser._
 import org.http4s.Method
@@ -11,7 +11,7 @@ class HttpErrorMapperSpec extends CatsEffectSuite {
 
   test("map RateLookupFailed returns 502 BadGateway with correct error message") {
     for {
-      resp <- HttpErrorMapper.map[IO](Error.RateLookupFailed("external fail"))
+      res <- HttpErrorMapper.map[IO](RateProgramError.RateLookupFailed("external fail"))
       _ <- IO(assertEquals(resp.status, Status.BadGateway))
       bodyStr <- resp.as[String]
       json = parse(bodyStr).toOption.get
@@ -24,7 +24,7 @@ class HttpErrorMapperSpec extends CatsEffectSuite {
     val details = List("Invalid 'from' parameter", "Invalid 'to' parameter")
 
     for {
-      resp <- HttpErrorMapper.badRequest[IO](details)
+      res <- HttpErrorMapper.badRequest[IO](details)
       _ <- IO(assertEquals(resp.status, Status.BadRequest))
       bodyStr <- resp.as[String]
       json = parse(bodyStr).toOption.get
@@ -37,7 +37,7 @@ class HttpErrorMapperSpec extends CatsEffectSuite {
 
   test("methodNotAllow returns 405 MethodNotAllowed with correct message") {
     for {
-      resp <- HttpErrorMapper.methodNotAllow[IO](Method.PUT)
+      res <- HttpErrorMapper.methodNotAllow[IO](Method.PUT)
       _ <- IO(assertEquals(resp.status, Status.MethodNotAllowed))
       bodyStr <- resp.as[String]
       json = parse(bodyStr).toOption.get

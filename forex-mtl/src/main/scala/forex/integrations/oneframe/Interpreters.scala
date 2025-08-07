@@ -14,7 +14,7 @@ object Interpreters {
 
   def client[F[_]: Concurrent](client: Client[F], config: OneFrameConfig, env: String): OneFrameClient[F] =
     env match {
-      case "prod" => live[F](client, config)
-      case _      => mock[F]
+      case "prod" | "dev" => live[F](client, config)
+      case _              => mock[F]
     }
 }
