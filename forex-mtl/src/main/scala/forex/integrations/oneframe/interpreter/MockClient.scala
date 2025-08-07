@@ -8,7 +8,7 @@ import forex.integrations.oneframe.Protocol.{ ExchangeRate, GetRateResponse }
 import forex.integrations.oneframe.Algebra
 import forex.integrations.oneframe.errors.OneFrameError
 
-class DummyClient[F[_]: Applicative] extends Algebra[F] {
+class MockClient[F[_]: Applicative] extends Algebra[F] {
 
   override def getRate(pair: Rate.Pair): F[OneFrameError Either GetRateResponse] =
     GetRateResponse(
@@ -24,6 +24,6 @@ class DummyClient[F[_]: Applicative] extends Algebra[F] {
 
 }
 
-object DummyClient {
-  def apply[F[_]: Applicative]: Algebra[F] = new DummyClient[F]
+object MockClient {
+  def apply[F[_]: Applicative]: Algebra[F] = new MockClient[F]
 }

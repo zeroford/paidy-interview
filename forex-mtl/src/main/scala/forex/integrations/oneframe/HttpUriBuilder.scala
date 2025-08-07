@@ -7,10 +7,10 @@ import org.typelevel.ci.CIString
 
 object HttpUriBuilder {
 
-  def authHeader(token: String): Header.Raw =
+  private def authHeader(token: String): Header.Raw =
     Header.Raw(CIString("token"), token)
 
-  def buildBaseUri(config: OneFrameConfig): Uri =
+  private def buildBaseUri(config: OneFrameConfig): Uri =
     Uri(
       scheme = Some(Uri.Scheme.http),
       authority = Some(
@@ -21,7 +21,7 @@ object HttpUriBuilder {
       )
     )
 
-  def buildGetRateUri(pair: Rate.Pair, config: OneFrameConfig): Uri =
+  private def buildGetRateUri(pair: Rate.Pair, config: OneFrameConfig): Uri =
     buildBaseUri(config)
       .withPath(Uri.Path.unsafeFromString("/rates"))
       .withQueryParam("pair", s"${pair.from}${pair.to}")

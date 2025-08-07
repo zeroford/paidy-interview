@@ -9,7 +9,7 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 object Main extends IOApp.Simple {
 
   implicit def logger[F[_]: Sync]: Logger[F] = Slf4jLogger.getLogger[F]
-  // override def run: IO[Unit]                 = new Application[IO].stream.compile.drain
+  
   override def run: IO[Unit] = {
     val app: Resource[IO, Unit] =
       for {
@@ -19,7 +19,7 @@ object Main extends IOApp.Simple {
         _ <- HttpServerBuilder.build[IO](module.httpApp, config)
       } yield ()
 
-    app.use_ // use_ = .use(_ => IO.unit), server จะ block ด้วย Stream.never ใน httpApp อยู่แล้ว
+    app.use(_ => IO.never) // Keep the server running indefinitely
   }
 
 }
