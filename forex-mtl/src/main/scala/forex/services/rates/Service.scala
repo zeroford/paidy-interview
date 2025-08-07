@@ -2,15 +2,13 @@ package forex.services.rates
 
 import cats.effect.Concurrent
 import cats.syntax.all._
-import forex.domain.rates.{Price, Rate, Timestamp}
+import forex.domain.rates.{ Price, Rate, Timestamp }
 import forex.integrations.OneFrameClient
 import forex.services.rates.errors.RatesServiceError
 
-class Interpreter[F[_]: Concurrent](
-    oneFrameClient: OneFrameClient[F]
-) extends Algebra[F] {
+class Service[F[_]: Concurrent](oneFrameClient: OneFrameClient[F]) extends Algebra[F] {
 
-  override def get(pair: Rate.Pair): F[RatesServiceError Either Rate] = {
+  override def get(pair: Rate.Pair): F[RatesServiceError Either Rate] =
     oneFrameClient.getRate(pair).map {
       case Right(response) =>
         response.rates.headOption match {
@@ -27,5 +25,10 @@ class Interpreter[F[_]: Concurrent](
       case Left(error) =>
         RatesServiceError.OneFrameLookupFailed(error.toString).asLeft[Rate]
     }
-  }
-} 
+}
+
+object Service {
+
+  def apply[F[_]: Concurrent](oneFrameClient: OneFrameClient[F]): Algebra[F] = new Service[F](oneFrameClient)
+
+}

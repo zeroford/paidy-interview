@@ -17,8 +17,6 @@ class Program[F[_]: Functor](
 
 object Program {
 
-  def apply[F[_]: Functor](
-      ratesService: RatesService[F]
-  ): Algebra[F] = new Program[F](ratesService)
+  def apply[F[_]: Functor](ratesService: RatesService[F]): Algebra[F] = new Program[F](ratesService)
 
 }

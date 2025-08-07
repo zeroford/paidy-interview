@@ -11,11 +11,11 @@ import org.http4s._
 import org.http4s.client.Client
 import org.http4s.server.middleware.{ AutoSlash, Timeout }
 
-class Module[F[_]: Async](config: ApplicationConfig, client: Client[F]) {
+class Module[F[_]: Async](config: ApplicationConfig, httpClient: Client[F]) {
 
   private val oneFrameClient: OneFrameClient[F] =
-    OneFrameInterpreters.client[F](client, config.oneFrame, config.environment)
-  private val ratesService: RatesService[F]  = RatesServices[F](oneFrameClient)
+    OneFrameInterpreters.client[F](httpClient, config.oneFrame, config.environment)
+  private val ratesService: RatesService[F]  = RatesService[F](oneFrameClient)
   private val ratesProgram: RatesProgram[F]  = RatesProgram[F](ratesService)
   private val ratesHttpRoutes: HttpRoutes[F] = new RatesHttpRoutes[F](ratesProgram).routes
 
