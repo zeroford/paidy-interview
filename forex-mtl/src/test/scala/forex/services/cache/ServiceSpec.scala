@@ -9,7 +9,7 @@ class ServiceSpec extends CatsEffectSuite {
 
   test("store and retrieve values") {
     val cache = Service[IO](100, 1.minute)
-    
+
     for {
       _ <- cache.put("key1", 42)
       result <- cache.get[String, Int]("key1")
@@ -19,7 +19,7 @@ class ServiceSpec extends CatsEffectSuite {
 
   test("return None for non-existent keys") {
     val cache = Service[IO](100, 1.minute)
-    
+
     for {
       result <- cache.get[String, Int]("nonexistent")
       _ <- IO(assertEquals(result, None))
@@ -28,7 +28,7 @@ class ServiceSpec extends CatsEffectSuite {
 
   test("invalidate specific keys") {
     val cache = Service[IO](100, 1.minute)
-    
+
     for {
       _ <- cache.put("key1", 42)
       _ <- cache.get[String, Int]("key1")
@@ -40,7 +40,7 @@ class ServiceSpec extends CatsEffectSuite {
 
   test("clear all entries") {
     val cache = Service[IO](100, 1.minute)
-    
+
     for {
       _ <- cache.put("key1", 42)
       _ <- cache.put("key2", 24)
@@ -54,9 +54,9 @@ class ServiceSpec extends CatsEffectSuite {
 
   test("work with different key and value types") {
     case class User(id: Int, name: String)
-    
+
     val cache = Service[IO](100, 1.minute)
-    
+
     for {
       _ <- cache.put(1, User(1, "Alice"))
       result <- cache.get[Int, User](1)
@@ -66,7 +66,7 @@ class ServiceSpec extends CatsEffectSuite {
 
   test("respect maximum size limit") {
     val cache = Service[IO](2, 1.minute) // max size = 2
-    
+
     for {
       _ <- cache.put("key1", 1)
       _ <- cache.put("key2", 2)
@@ -82,7 +82,7 @@ class ServiceSpec extends CatsEffectSuite {
 
   test("handle concurrent access") {
     val cache = Service[IO](100, 1.minute)
-    
+
     for {
       // Concurrent puts
       _ <- List.range(1, 11).parTraverse(i => cache.put(s"key$i", i))
@@ -92,4 +92,4 @@ class ServiceSpec extends CatsEffectSuite {
       _ <- IO(assert(results.flatten.sum == 55)) // 1+2+...+10 = 55
     } yield ()
   }
-} 
+}
