@@ -15,9 +15,9 @@ object Dependencies {
     val kindProjector = "0.13.2"
     val logback       = "1.4.7"
     val log4cats      = "2.5.0"
+    val scaffeine     = "5.3.0"
 
     val scalaCheck      = "1.17.0"
-    val scalaTest       = "3.2.17"
     val catsScalaCheck  = "0.3.2"
     val catsEffectTest  = "1.5.0"
     val munit           = "0.7.29"
@@ -58,11 +58,13 @@ object Dependencies {
     lazy val logback  = "ch.qos.logback" % "logback-classic" % Versions.logback
     lazy val log4cats = "org.typelevel" %% "log4cats-slf4j"  % Versions.log4cats
 
+    // Cache
+    lazy val scaffeine = "com.github.blemale" %% "scaffeine" % Versions.scaffeine
+    
     // Compiler plugins
     lazy val kindProjector = "org.typelevel" %% "kind-projector" % Versions.kindProjector cross CrossVersion.full
 
     // Testing
-    lazy val scalaTest       = "org.scalatest"     %% "scalatest"           % Versions.scalaTest
     lazy val scalaCheck      = "org.scalacheck"    %% "scalacheck"          % Versions.scalaCheck
     lazy val catsScalaCheck  = "io.chrisdavenport" %% "cats-scalacheck"     % Versions.catsScalaCheck
     lazy val munit           = "org.scalameta"     %% "munit"               % Versions.munit
