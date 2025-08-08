@@ -5,7 +5,7 @@ import cats.syntax.parallel._
 import munit.CatsEffectSuite
 import scala.concurrent.duration._
 
-class CacheServiceSpec extends CatsEffectSuite {
+class ServiceSpec extends CatsEffectSuite {
 
   test("store and retrieve values") {
     val cache = Service[IO](100, 1.minute)
