@@ -8,13 +8,8 @@ import forex.integrations.OneFrameClient
 import org.http4s.client.Client
 
 object Interpreters {
-  private def live[F[_]: Concurrent](client: Client[F], config: OneFrameConfig): Algebra[F] =
+  def httpClient[F[_]: Concurrent](client: Client[F], config: OneFrameConfig): OneFrameClient[F] =
     new HttpClient[F](client, config)
-  private def mock[F[_]: Applicative]: Algebra[F] = new MockClient[F]
 
-  def client[F[_]: Concurrent](client: Client[F], config: OneFrameConfig, env: String): OneFrameClient[F] =
-    env match {
-      case "prod" | "dev" => live[F](client, config)
-      case _              => mock[F]
-    }
+  def mockClient[F[_]: Applicative]: OneFrameClient[F] = new MockClient[F]
 }
