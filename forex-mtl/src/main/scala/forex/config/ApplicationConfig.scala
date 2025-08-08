@@ -5,9 +5,10 @@ import com.comcast.ip4s.{ Host, Port }
 import scala.concurrent.duration.FiniteDuration
 
 final case class ApplicationConfig(
-    environment: String,
+    environment: Environment,
     http: HttpConfig,
-    oneFrame: OneFrameConfig
+    oneFrame: OneFrameConfig,
+    cache: CacheConfig
 )
 
 final case class HttpConfig(
@@ -22,3 +23,14 @@ final case class OneFrameConfig(
     token: String,
     timeout: FiniteDuration
 )
+
+final case class CacheConfig(
+    rates: CacheConfig.RatesConfig
+)
+
+object CacheConfig {
+  final case class RatesConfig(
+      maxSize: Long,
+      ttl: FiniteDuration
+  )
+}

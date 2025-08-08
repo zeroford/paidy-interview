@@ -17,11 +17,11 @@ object Dependencies {
     val log4cats      = "2.5.0"
     val scaffeine     = "5.3.0"
 
+    val munit           = "0.7.29"
+    val munitCatsEffect = "1.0.7"
     val scalaCheck      = "1.17.0"
     val catsScalaCheck  = "0.3.2"
     val catsEffectTest  = "1.5.0"
-    val munit           = "0.7.29"
-    val munitCatsEffect = "1.0.7"
   }
 
   object Libraries {
@@ -60,15 +60,15 @@ object Dependencies {
 
     // Cache
     lazy val scaffeine = "com.github.blemale" %% "scaffeine" % Versions.scaffeine
-    
+
     // Compiler plugins
     lazy val kindProjector = "org.typelevel" %% "kind-projector" % Versions.kindProjector cross CrossVersion.full
 
     // Testing
-    lazy val scalaCheck      = "org.scalacheck"    %% "scalacheck"          % Versions.scalaCheck
-    lazy val catsScalaCheck  = "io.chrisdavenport" %% "cats-scalacheck"     % Versions.catsScalaCheck
     lazy val munit           = "org.scalameta"     %% "munit"               % Versions.munit
     lazy val munitCatsEffect = "org.typelevel"     %% "munit-cats-effect-3" % Versions.munitCatsEffect
+    lazy val scalaCheck      = "org.scalacheck"    %% "scalacheck"          % Versions.scalaCheck
+    lazy val catsScalaCheck  = "io.chrisdavenport" %% "cats-scalacheck"     % Versions.catsScalaCheck
   }
 
 }
