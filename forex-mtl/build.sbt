@@ -68,6 +68,7 @@ libraryDependencies ++= Seq(
   Libraries.ip4s,
   Libraries.logback,
   Libraries.log4cats,
+  Libraries.scaffeine,
   Libraries.munit           % Test,
   Libraries.munitCatsEffect % Test,
   Libraries.scalaCheck      % Test,
