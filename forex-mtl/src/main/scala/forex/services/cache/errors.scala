@@ -8,4 +8,4 @@ object errors {
     final case class MemoryPressure(message: String) extends CacheServiceError
     final case class InternalError(throwable: Throwable) extends CacheServiceError
   }
-} 
+}
