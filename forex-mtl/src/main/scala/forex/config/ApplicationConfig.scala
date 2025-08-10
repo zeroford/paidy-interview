@@ -21,7 +21,6 @@ final case class OneFrameConfig(
     host: String,
     port: Int,
     token: String,
-    timeout: FiniteDuration
 )
 
 final case class CacheConfig(
