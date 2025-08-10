@@ -14,5 +14,11 @@ object errors {
     error match {
       case RatesServiceError.OneFrameLookupFailed(msg) =>
         RateProgramError.RateLookupFailed(msg)
+      case RatesServiceError.InvalidCurrencyError(currency) =>
+        RateProgramError.RateLookupFailed(s"Invalid currency: $currency")
+      case RatesServiceError.CacheOperationFailed(msg) =>
+        RateProgramError.RateLookupFailed(s"Cache operation failed: $msg")
+      case RatesServiceError.CrossRateCalculationFailed(pair) =>
+        RateProgramError.RateLookupFailed(s"Cross rate calculation failed for pair: $pair")
     }
 }
