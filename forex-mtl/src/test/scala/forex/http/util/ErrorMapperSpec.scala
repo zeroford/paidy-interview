@@ -7,11 +7,11 @@ import io.circe.parser._
 import org.http4s.Method
 import org.http4s.Status
 
-class HttpErrorMapperSpec extends CatsEffectSuite {
+class ErrorMapperSpec extends CatsEffectSuite {
 
   test("map RateLookupFailed returns 502 BadGateway with correct error message") {
     for {
-      response <- HttpErrorMapper.map[IO](RateProgramError.RateLookupFailed("external fail"))
+      response <- ErrorMapper.map[IO](RateProgramError.RateLookupFailed("external fail"))
       _ <- IO(assertEquals(response.status, Status.BadGateway))
       bodyStr <- response.as[String]
       json = parse(bodyStr).toOption.get
@@ -24,7 +24,7 @@ class HttpErrorMapperSpec extends CatsEffectSuite {
     val details = List("Invalid 'from' parameter", "Invalid 'to' parameter")
 
     for {
-      response <- HttpErrorMapper.badRequest[IO](details)
+      response <- ErrorMapper.badRequest[IO](details)
       _ <- IO(assertEquals(response.status, Status.BadRequest))
       bodyStr <- response.as[String]
       json = parse(bodyStr).toOption.get
@@ -37,7 +37,7 @@ class HttpErrorMapperSpec extends CatsEffectSuite {
 
   test("methodNotAllow returns 405 MethodNotAllowed with correct message") {
     for {
-      response <- HttpErrorMapper.methodNotAllow[IO](Method.PUT)
+      response <- ErrorMapper.methodNotAllow[IO](Method.PUT)
       _ <- IO(assertEquals(response.status, Status.MethodNotAllowed))
       bodyStr <- response.as[String]
       json = parse(bodyStr).toOption.get

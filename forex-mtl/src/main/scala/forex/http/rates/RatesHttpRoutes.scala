@@ -4,7 +4,7 @@ package rates
 import cats.data.Validated.{ Invalid, Valid }
 import cats.effect.Sync
 import cats.syntax.all._
-import forex.http.util.HttpErrorMapper
+import forex.http.util.ErrorMapper
 import forex.programs.RatesProgram
 import forex.programs.rates.Protocol.GetRatesRequest
 import org.http4s.dsl.Http4sDsl
@@ -23,11 +23,11 @@ class RatesHttpRoutes[F[_]: Sync](ratesProgram: RatesProgram[F]) extends Http4sD
         case Valid((from, to)) =>
           ratesProgram.get(GetRatesRequest(from, to)).flatMap {
             case Right(rate) => Ok(rate.asGetApiResponse)
-            case Left(err)   => HttpErrorMapper.map(err)
+            case Left(err)   => ErrorMapper.fromRateError(err)
           }
-        case Invalid(err) => HttpErrorMapper.badRequest[F](err.toList)
+        case Invalid(err) => ErrorMapper.badRequest[F](err.toList)
       }
-    case method -> Root => HttpErrorMapper.methodNotAllow[F](method)
+    case method -> Root => ErrorMapper.methodNotAllow[F](method)
   }
 
   val routes: HttpRoutes[F] = Router(prefixPath -> httpRoutes)

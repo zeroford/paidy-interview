@@ -1,6 +1,6 @@
 package forex.domain.currency
 
-import forex.domain.currency.CurrencyError
+import forex.domain.currency.errors.CurrencyError
 import io.circe.{ Decoder, Encoder }
 
 sealed trait Currency
@@ -174,7 +174,7 @@ object Currency {
   case object ZWD extends Currency
 
   // Top 20 most traded currencies
-  private val mostUsed: List[Currency] = List(
+  val mostUsedCurrencies: List[Currency] = List(
     USD,
     EUR,
     JPY,
@@ -198,7 +198,7 @@ object Currency {
   )
 
   // Other supported currencies
-  private val other: List[Currency] = List(
+  val allCurrencies: List[Currency] = mostUsedCurrencies ++ List(
     AED,
     AFN,
     ALL,
@@ -343,16 +343,22 @@ object Currency {
     ZWD
   )
 
-  val supported: List[String] = (mostUsed ++ other).map(_.toString)
+  private val Iso3 = "^[A-Za-z]{3}$".r
+
+  def isMostUsed(currency: String): Boolean =
+    mostUsedCurrencies.exists(_.toString == currency.toUpperCase)
 
   def fromString(s: String): Either[CurrencyError, Currency] =
-    if (s.trim.isEmpty) Left(CurrencyError.Empty)
+    if (s.trim.isEmpty) Left(CurrencyError.Empty())
+    else if (!Iso3.matches(s)) Left(CurrencyError.InvalidFormat())
     else {
-      (mostUsed ++ other).find(_.toString == s.toUpperCase) match {
+      allCurrencies.find(_.toString == s.toUpperCase) match {
         case Some(c) => Right(c)
         case None    => Left(CurrencyError.Unsupported(s))
       }
     }
+
+  def isMostUsed(currency: Currency): Boolean = mostUsedCurrencies.contains(currency)
 
   implicit val encoder: Encoder[Currency] = Encoder.encodeString.contramap(_.toString)
   implicit val decoder: Decoder[Currency] = Decoder.decodeString.emap(fromString(_).left.map(_.toString))
