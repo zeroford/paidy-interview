@@ -18,8 +18,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
   val config = OneFrameConfig(
     host = "localhost",
     port = 8081,
-    token = "test-token",
-    timeout = scala.concurrent.duration.Duration(10, "seconds")
+    token = "test-token"
   )
 
   val testPair = Rate.Pair(Currency.USD, Currency.JPY)
@@ -46,7 +45,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
     val httpClient = HttpClient[IO](mockClient, config)
 
     for {
-      result <- httpClient.getRate(testPair)
+      result <- httpClient.getRates(List(testPair))
       _ <- IO(assert(result.isRight))
       response <- IO(result.toOption.get)
       _ <- IO(assert(response.rates.nonEmpty))
@@ -68,7 +67,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
     val httpClient = HttpClient[IO](mockClient, config)
 
     for {
-      result <- httpClient.getRate(testPair)
+      result <- httpClient.getRates(List(testPair))
       _ <- IO(assert(result.isLeft))
       error <- IO(result.left.toOption.get)
       _ <- IO(assert(error.isInstanceOf[OneFrameError.UnknownError]))
@@ -88,7 +87,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
     val httpClient = HttpClient[IO](mockClient, config)
 
     for {
-      result <- httpClient.getRate(testPair)
+      result <- httpClient.getRates(List(testPair))
       _ <- IO(assert(result.isLeft))
       error <- IO(result.left.toOption.get)
       _ <- IO(assert(error.isInstanceOf[OneFrameError.UnknownError]))
@@ -108,7 +107,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
     val httpClient = HttpClient[IO](mockClient, config)
 
     for {
-      _ <- httpClient.getRate(testPair)
+      _ <- httpClient.getRates(List(testPair))
       request <- IO(capturedRequest.get)
       _ <- IO(assert(request.headers.get(org.typelevel.ci.CIString("token")).isDefined))
       _ <- IO(assertEquals(request.headers.get(org.typelevel.ci.CIString("token")).get.head.value, "test-token"))
@@ -126,7 +125,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
     val httpClient = HttpClient[IO](mockClient, config)
 
     for {
-      _ <- httpClient.getRate(testPair)
+      _ <- httpClient.getRates(List(testPair))
       request <- IO(capturedRequest.get)
       _ <- IO(assertEquals(request.method.name, "GET"))
       _ <- IO(assert(request.uri.path.toString == "/rates"))
@@ -145,7 +144,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
     val httpClient = HttpClient[IO](mockClient, config)
 
     for {
-      result <- httpClient.getRate(testPair)
+      result <- httpClient.getRates(List(testPair))
       _ <- IO(assert(result.isLeft))
       error <- IO(result.left.toOption.get)
       _ <- IO(assert(error.isInstanceOf[OneFrameError.UnknownError]))
@@ -177,7 +176,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
     val eurGbpPair = Rate.Pair(Currency.EUR, Currency.GBP)
 
     for {
-      result <- httpClient.getRate(eurGbpPair)
+      result <- httpClient.getRates(List(eurGbpPair))
       _ <- IO(assert(result.isRight))
       response <- IO(result.toOption.get)
       _ <- IO(assert(response.rates.nonEmpty))

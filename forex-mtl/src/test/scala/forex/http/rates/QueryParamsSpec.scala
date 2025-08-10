@@ -44,7 +44,7 @@ class QueryParamsSpec extends FunSuite {
         val err = errNel.head
         assertEquals(err.sanitized, "Invalid currency")
         assert(err.details.contains("XXX"))
-        assert(err.details.matches(".*(AUD|USD|EUR|GBP|JPY|SGD|NZD|CHF|CAD).*"))
+        assert(err.details.contains("not supported"))
       case Validated.Valid(cur) => fail(s"Expected Invalid, got Valid: $cur")
     }
   }

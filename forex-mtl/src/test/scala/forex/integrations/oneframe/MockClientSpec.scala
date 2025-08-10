@@ -12,16 +12,16 @@ class MockClientSpec extends CatsEffectSuite {
   val mockClient = MockClient[IO]
 
   test("MockClient should return successful response for any currency pair") {
-    val pair = Rate.Pair(Currency.USD, Currency.JPY)
+    val pairs = List(Rate.Pair(Currency.USD, Currency.JPY))
 
     for {
-      result <- mockClient.getRate(pair)
+      result <- mockClient.getRates(pairs)
       _ <- IO(assert(result.isRight))
       response <- IO(result.toOption.get)
       _ <- IO(assert(response.rates.nonEmpty))
       rate <- IO(response.rates.head)
-      _ <- IO(assertEquals(rate.from, pair.from.toString))
-      _ <- IO(assertEquals(rate.to, pair.to.toString))
+      _ <- IO(assertEquals(rate.from, pairs.head.from.toString))
+      _ <- IO(assertEquals(rate.to, pairs.head.to.toString))
       _ <- IO(assert(rate.price > 0))
     } yield ()
   }
@@ -33,24 +33,23 @@ class MockClientSpec extends CatsEffectSuite {
       Rate.Pair(Currency.CAD, Currency.AUD)
     )
 
-    pairs.foreach { pair =>
-      for {
-        result <- mockClient.getRate(pair)
-        _ <- IO(assert(result.isRight))
-        response <- IO(result.toOption.get)
-        _ <- IO(assert(response.rates.nonEmpty))
-        rate <- IO(response.rates.head)
-        _ <- IO(assertEquals(rate.from, pair.from.toString))
-        _ <- IO(assertEquals(rate.to, pair.to.toString))
-      } yield ()
-    }
+    for {
+      result <- mockClient.getRates(pairs)
+      _ <- IO(assert(result.isRight))
+      response <- IO(result.toOption.get)
+      _ <- IO(assert(response.rates.length == pairs.length))
+      _ <- IO(pairs.zip(response.rates).foreach { case (pair, rate) =>
+             assertEquals(rate.from, pair.from.toString)
+             assertEquals(rate.to, pair.to.toString)
+           })
+    } yield ()
   }
 
   test("MockClient should return valid price data") {
-    val pair = Rate.Pair(Currency.EUR, Currency.GBP)
+    val pairs = List(Rate.Pair(Currency.EUR, Currency.GBP))
 
     for {
-      result <- mockClient.getRate(pair)
+      result <- mockClient.getRates(pairs)
       response <- IO(result.toOption.get)
       rate <- IO(response.rates.head)
       _ <- IO(assert(rate.bid > 0))
@@ -62,10 +61,10 @@ class MockClientSpec extends CatsEffectSuite {
   }
 
   test("MockClient should return valid timestamp") {
-    val pair = Rate.Pair(Currency.USD, Currency.JPY)
+    val pairs = List(Rate.Pair(Currency.USD, Currency.JPY))
 
     for {
-      result <- mockClient.getRate(pair)
+      result <- mockClient.getRates(pairs)
       response <- IO(result.toOption.get)
       rate <- IO(response.rates.head)
       _ <- IO(assert(rate.time_stamp.nonEmpty))
@@ -73,12 +72,12 @@ class MockClientSpec extends CatsEffectSuite {
     } yield ()
   }
 
-  test("MockClient should be deterministic for same pair") {
-    val pair = Rate.Pair(Currency.USD, Currency.EUR)
+  test("MockClient should be deterministic for same pairs") {
+    val pairs = List(Rate.Pair(Currency.USD, Currency.EUR))
 
     for {
-      result1 <- mockClient.getRate(pair)
-      result2 <- mockClient.getRate(pair)
+      result1 <- mockClient.getRates(pairs)
+      result2 <- mockClient.getRates(pairs)
       response1 <- IO(result1.toOption.get)
       response2 <- IO(result2.toOption.get)
       rate1 <- IO(response1.rates.head)
@@ -96,16 +95,15 @@ class MockClientSpec extends CatsEffectSuite {
       Rate.Pair(Currency.JPY, Currency.JPY)
     )
 
-    edgePairs.foreach { pair =>
-      for {
-        result <- mockClient.getRate(pair)
-        _ <- IO(assert(result.isRight))
-        response <- IO(result.toOption.get)
-        _ <- IO(assert(response.rates.nonEmpty))
-        rate <- IO(response.rates.head)
-        _ <- IO(assertEquals(rate.from, pair.from.toString))
-        _ <- IO(assertEquals(rate.to, pair.to.toString))
-      } yield ()
-    }
+    for {
+      result <- mockClient.getRates(edgePairs)
+      _ <- IO(assert(result.isRight))
+      response <- IO(result.toOption.get)
+      _ <- IO(assert(response.rates.length == edgePairs.length))
+      _ <- IO(edgePairs.zip(response.rates).foreach { case (pair, rate) =>
+             assertEquals(rate.from, pair.from.toString)
+             assertEquals(rate.to, pair.to.toString)
+           })
+    } yield ()
   }
 }
