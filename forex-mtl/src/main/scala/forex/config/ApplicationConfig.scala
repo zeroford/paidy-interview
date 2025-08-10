@@ -20,7 +20,7 @@ final case class HttpConfig(
 final case class OneFrameConfig(
     host: String,
     port: Int,
-    token: String,
+    token: String
 )
 
 final case class CacheConfig(

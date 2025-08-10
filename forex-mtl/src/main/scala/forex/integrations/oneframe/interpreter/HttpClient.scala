@@ -19,8 +19,8 @@ class HttpClient[F[_]: Concurrent](
 
   import HttpUriBuilder._
 
-  override def getRate(pair: Rate.Pair): F[OneFrameError Either GetRateResponse] = {
-    val request = buildGetRateRequest[F](pair, config)
+  override def getRates(pairs: List[Rate.Pair]): F[OneFrameError Either GetRateResponse] = {
+    val request = buildGetRatesRequest[F](pairs, config)
 
     EitherT(client.run(request).use(handleResponse))
       .leftMap(OneFrameError.fromThrowable)
