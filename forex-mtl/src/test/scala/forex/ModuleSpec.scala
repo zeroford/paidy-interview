@@ -28,7 +28,7 @@ class ModuleSpec extends CatsEffectSuite {
       )
     ),
     secrets = SecretConfig(
-      oneframeToken = "test-secret-token"
+      oneFrameToken = "test-secret-token"
     )
   )
 

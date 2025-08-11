@@ -35,5 +35,5 @@ object CacheConfig {
 }
 
 final case class SecretConfig(
-    oneframeToken: String
+    oneFrameToken: String = ""
 )

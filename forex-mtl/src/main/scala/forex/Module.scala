@@ -15,7 +15,7 @@ class Module[F[_]: Async](config: ApplicationConfig, httpClient: Client[F]) {
 
   private val oneFrameClient: OneFrameClient[F] = config.environment match {
     case forex.config.Environment.Dev  => 
-      OneFrameClient.httpClient[F](httpClient, config.oneFrame, config.secrets.oneframeToken)
+      OneFrameClient.httpClient[F](httpClient, config.oneFrame, config.secrets.oneFrameToken)
     case forex.config.Environment.Test => 
       OneFrameClient.mockClient[F]
   }

@@ -25,7 +25,7 @@ class ConfigSpec extends FunSuite {
         )
       ),
       secrets = SecretConfig(
-        oneframeToken = "test-secret-token"
+        oneFrameToken = "test-secret-token"
       )
     )
 
@@ -37,7 +37,7 @@ class ConfigSpec extends FunSuite {
     assertEquals(config.oneFrame.port, 8081)
     assertEquals(config.cache.rates.maxSize, 1000L)
     assertEquals(config.cache.rates.ttl, 10.seconds)
-    assertEquals(config.secrets.oneframeToken, "test-secret-token")
+    assertEquals(config.secrets.oneFrameToken, "test-secret-token")
   }
 
   test("Environment should have correct values") {

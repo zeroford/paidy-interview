@@ -74,3 +74,15 @@ libraryDependencies ++= Seq(
   Libraries.scalaCheck      % Test,
   Libraries.catsScalaCheck  % Test
 )
+
+def envFromDotEnv(base: File): Map[String, String] = {
+  val f = base / ".env"
+  if (!f.exists) Map.empty
+  else IO.readLines(f).collect {
+    case l if l.trim.nonEmpty && !l.trim.startsWith("#") && l.contains("=") =>
+      val Array(k, v) = l.split("=", 2); k.trim -> v.trim
+  }.toMap
+}
+
+Compile / run / fork := true
+Compile / run / envVars ++= envFromDotEnv(baseDirectory.value)
