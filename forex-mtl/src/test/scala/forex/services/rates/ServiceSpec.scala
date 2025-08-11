@@ -92,7 +92,7 @@ class ServiceSpec extends CatsEffectSuite {
       rate <- IO(result.toOption.get)
       _ <- IO(assertEquals(rate.pair.from, Currency.USD))
       _ <- IO(assertEquals(rate.pair.to, Currency.JPY))
-      _ <- IO(assertEquals(rate.price.value, BigDecimal(1.0) / BigDecimal(123.45)))
+      _ <- IO(assertEquals(rate.price.value, BigDecimal(123.45))) // USD->JPY uses quote price directly
     } yield ()
   }
 
@@ -137,6 +137,85 @@ class ServiceSpec extends CatsEffectSuite {
       // Verify it was cached using the correct key format
       cachedResult <- cache.get[String, Rate](s"${pair.from}${pair.to}")
       _ <- IO(assert(cachedResult.isDefined))
+    } yield ()
+  }
+
+  test("Service should use consistent timestamp for USD as base") {
+    val cache   = Service[IO](100, 5.minutes)
+    val service = RatesService[IO](successOneFrameClient, cache, 5.minutes)
+    val pair    = Rate.Pair(Currency.USD, Currency.EUR)
+
+    for {
+      // Clear cache first
+      _ <- cache.clear()
+
+      // First request
+      result1 <- service.get(pair)
+      _ <- IO(assert(result1.isRight))
+      rate1 <- IO(result1.toOption.get)
+
+      // Second request (should use cached data)
+      result2 <- service.get(pair)
+      _ <- IO(assert(result2.isRight))
+      rate2 <- IO(result2.toOption.get)
+
+      // Timestamps should be the same (using EUR timestamp)
+      _ <- IO(assertEquals(rate1.timestamp, rate2.timestamp))
+      _ <- IO(assertEquals(rate1.pair, Rate.Pair(Currency.USD, Currency.EUR)))
+      _ <- IO(assertEquals(rate1.price.value, BigDecimal(0.855))) // Direct quote price
+    } yield ()
+  }
+
+  test("Service should use consistent timestamp for USD as quote") {
+    val cache   = Service[IO](100, 5.minutes)
+    val service = RatesService[IO](successOneFrameClient, cache, 5.minutes)
+    val pair    = Rate.Pair(Currency.EUR, Currency.USD)
+
+    for {
+      // Clear cache first
+      _ <- cache.clear()
+
+      // First request
+      result1 <- service.get(pair)
+      _ <- IO(assert(result1.isRight))
+      rate1 <- IO(result1.toOption.get)
+
+      // Second request (should use cached data)
+      result2 <- service.get(pair)
+      _ <- IO(assert(result2.isRight))
+      rate2 <- IO(result2.toOption.get)
+
+      // Timestamps should be the same (using EUR timestamp)
+      _ <- IO(assertEquals(rate1.timestamp, rate2.timestamp))
+      _ <- IO(assertEquals(rate1.pair, Rate.Pair(Currency.EUR, Currency.USD)))
+      _ <- IO(assertEquals(rate1.price.value, BigDecimal(1.0) / BigDecimal(0.855))) // Inverted base price
+    } yield ()
+  }
+
+  test("Service should handle cross-rate with older timestamp") {
+    val cache   = Service[IO](100, 5.minutes)
+    val service = RatesService[IO](successOneFrameClient, cache, 5.minutes)
+    val pair    = Rate.Pair(Currency.EUR, Currency.GBP)
+
+    for {
+      // Clear cache first
+      _ <- cache.clear()
+
+      // First request
+      result1 <- service.get(pair)
+      _ <- IO(assert(result1.isRight))
+      rate1 <- IO(result1.toOption.get)
+
+      // Second request (should use cached data)
+      result2 <- service.get(pair)
+      _ <- IO(assert(result2.isRight))
+      rate2 <- IO(result2.toOption.get)
+
+      // Timestamps should be the same (using older timestamp)
+      _ <- IO(assertEquals(rate1.timestamp, rate2.timestamp))
+      _ <- IO(assertEquals(rate1.pair, Rate.Pair(Currency.EUR, Currency.GBP)))
+      // Cross-rate calculation: GBP price / EUR price
+      _ <- IO(assertEquals(rate1.price.value, BigDecimal(0.755) / BigDecimal(0.855)))
     } yield ()
   }
 
