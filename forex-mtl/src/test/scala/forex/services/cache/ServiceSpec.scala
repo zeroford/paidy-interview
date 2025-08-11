@@ -70,11 +70,11 @@ class ServiceSpec extends CatsEffectSuite {
     for {
       _ <- cache.put("key1", 1)
       _ <- cache.put("key2", 2)
-      _ <- cache.put("key3", 3) // This should evict key1
-      _ <- cache.get[String, Int]("key1") // This might be None due to LRU eviction
+      _ <- cache.put("key3", 3)
+      _ <- cache.get[String, Int]("key1")
       result2 <- cache.get[String, Int]("key2")
       result3 <- cache.get[String, Int]("key3")
-      // At least 2 keys should be present (key2 and key3)
+
       _ <- IO(assert(result2.isDefined || result3.isDefined))
       // key1 might be evicted, so we don't assert on it
     } yield ()

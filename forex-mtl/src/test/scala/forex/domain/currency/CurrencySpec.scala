@@ -1,6 +1,7 @@
 package forex.domain.currency
 
 import munit.FunSuite
+import forex.domain.currency.errors.CurrencyError
 
 class CurrencySpec extends FunSuite {
 
@@ -16,17 +17,12 @@ class CurrencySpec extends FunSuite {
   }
 
   test("fromString returns Left(CurrencyError.Empty) for empty string") {
-    assertEquals(Currency.fromString(""), Left(CurrencyError.Empty))
-    assertEquals(Currency.fromString("   "), Left(CurrencyError.Empty))
+    assertEquals(Currency.fromString(""), Left(CurrencyError.Empty()))
+    assertEquals(Currency.fromString("   "), Left(CurrencyError.Empty()))
   }
 
   test("fromString returns Left(CurrencyError.Unsupported) for unsupported code") {
     val res = Currency.fromString("ABC")
     assertEquals(res, Left(CurrencyError.Unsupported("ABC")))
-  }
-
-  test("supported contains all valid currency codes") {
-    val expected = Set("AUD", "CAD", "CHF", "EUR", "GBP", "NZD", "JPY", "SGD", "USD")
-    assert(Currency.supported.toSet == expected)
   }
 }

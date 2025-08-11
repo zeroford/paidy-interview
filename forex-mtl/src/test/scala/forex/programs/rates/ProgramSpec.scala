@@ -18,10 +18,8 @@ class ProgramSpec extends CatsEffectSuite {
     timestamp = Timestamp(OffsetDateTime.parse("2024-08-04T12:34:56Z"))
   )
 
-  // Mock success service
   val successService: Algebra[IO] = (_: Rate.Pair) => IO.pure(Right(validRate))
 
-  // Mock error service
   val errorService: Algebra[IO] = (_: Rate.Pair) => IO.pure(Left(RatesServiceError.OneFrameLookupFailed("API Down")))
 
   test("Program should return rate when service succeeds") {

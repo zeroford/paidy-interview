@@ -23,7 +23,6 @@ class RatesHttpRoutesSpec extends CatsEffectSuite {
   // Mock success
   val successProgram: Algebra[IO] = (_: GetRatesRequest) => IO.pure(Right(validRate))
 
-  // Mock error
   val errorProgram: Algebra[IO] = (_: GetRatesRequest) => IO.pure(Left(RateProgramError.RateLookupFailed("API Down")))
 
   test("GET /rates should return 200 and correct JSON") {

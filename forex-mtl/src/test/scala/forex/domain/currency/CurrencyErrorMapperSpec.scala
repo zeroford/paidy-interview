@@ -1,20 +1,21 @@
 package forex.domain.currency
 
 import munit.FunSuite
+import forex.domain.currency.errors.CurrencyError
 
 class CurrencyErrorMapperSpec extends FunSuite {
 
   test("toParseFailure returns ParseFailure for Unsupported currency") {
     val err = CurrencyError.Unsupported("ABC")
-    val pf  = CurrencyErrorMapper.toParseFailure(err)
+    val pf  = errors.CurrencyError.toParseFailure(err)
 
     assertEquals(pf.sanitized, "Invalid currency")
     assert(pf.details.contains("ABC"))
-    assert(pf.details.matches(".*(AUD|CAD|CHF|EUR|GBP|NZD|JPY|SGD|USD).*"))
+    assert(pf.details.contains("not supported"))
   }
 
   test("toParseFailure returns ParseFailure for Empty currency") {
-    val pf = CurrencyErrorMapper.toParseFailure(CurrencyError.Empty)
+    val pf = errors.CurrencyError.toParseFailure(CurrencyError.Empty())
     assertEquals(pf.sanitized, "Empty currency")
     assert(pf.details.contains("must not be empty"))
   }

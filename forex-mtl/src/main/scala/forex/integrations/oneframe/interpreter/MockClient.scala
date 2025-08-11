@@ -10,16 +10,18 @@ import forex.integrations.oneframe.errors.OneFrameError
 
 class MockClient[F[_]: Applicative] extends Algebra[F] {
 
-  override def getRate(pair: Rate.Pair): F[OneFrameError Either GetRateResponse] =
+  override def getRates(pairs: List[Rate.Pair]): F[OneFrameError Either GetRateResponse] =
     GetRateResponse(
-      ExchangeRate(
-        from = pair.from.toString,
-        to = pair.to.toString,
-        bid = BigDecimal(100),
-        ask = BigDecimal(100),
-        price = BigDecimal(100),
-        time_stamp = "2025-08-06T00:00:00Z"
-      ) :: Nil
+      pairs.map { pair =>
+        ExchangeRate(
+          from = pair.from.toString,
+          to = pair.to.toString,
+          bid = BigDecimal(100),
+          ask = BigDecimal(100),
+          price = BigDecimal(100),
+          time_stamp = "2025-01-01T00:00:00Z"
+        )
+      }
     ).asRight[OneFrameError].pure[F]
 
 }
