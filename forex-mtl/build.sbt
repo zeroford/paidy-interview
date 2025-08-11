@@ -86,3 +86,4 @@ def envFromDotEnv(base: File): Map[String, String] = {
 
 Compile / run / fork := true
 Compile / run / envVars ++= envFromDotEnv(baseDirectory.value)
+

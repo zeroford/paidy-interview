@@ -1,7 +1,9 @@
 package forex
 
 import cats.effect.Async
-import forex.config.ApplicationConfig
+import cats.implicits.toSemigroupKOps
+import forex.config.{ ApplicationConfig, Environment }
+import forex.http.health.HealthHttpRoutes
 import forex.http.middleware.ErrorHandlerMiddleware
 import forex.http.rates.RatesHttpRoutes
 import forex.integrations.OneFrameClient
@@ -14,9 +16,9 @@ import org.http4s.server.middleware.{ AutoSlash, Timeout }
 class Module[F[_]: Async](config: ApplicationConfig, httpClient: Client[F]) {
 
   private val oneFrameClient: OneFrameClient[F] = config.environment match {
-    case forex.config.Environment.Dev =>
+    case Environment.Dev =>
       OneFrameClient.httpClient[F](httpClient, config.oneFrame, config.secrets.oneFrameToken)
-    case forex.config.Environment.Test =>
+    case Environment.Test =>
       OneFrameClient.mockClient[F]
   }
 
@@ -24,8 +26,9 @@ class Module[F[_]: Async](config: ApplicationConfig, httpClient: Client[F]) {
   private val ratesService: RatesService[F]  = RatesService[F](oneFrameClient, cacheService, config.cache.rates.ttl)
   private val ratesProgram: RatesProgram[F]  = RatesProgram[F](ratesService)
   private val ratesHttpRoutes: HttpRoutes[F] = new RatesHttpRoutes[F](ratesProgram).routes
+  private val healthRoutes: HttpRoutes[F]    = new HealthHttpRoutes[F].routes
 
-  private val allRoutes: HttpRoutes[F] = ratesHttpRoutes
+  private val allRoutes: HttpRoutes[F] = ratesHttpRoutes <+> healthRoutes
 
   private val routesWithMiddleware: HttpRoutes[F] = AutoSlash(ErrorHandlerMiddleware(allRoutes))
 
