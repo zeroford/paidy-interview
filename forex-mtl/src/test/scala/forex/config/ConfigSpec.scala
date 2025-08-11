@@ -81,9 +81,9 @@ class ConfigSpec extends FunSuite {
 
   test("SecretConfig should store values correctly") {
     val secretConfig = SecretConfig(
-      oneframeToken = "test-token"
+      oneFrameToken = "test-token"
     )
 
-    assertEquals(secretConfig.oneframeToken, "test-token")
+    assertEquals(secretConfig.oneFrameToken, "test-token")
   }
 }
