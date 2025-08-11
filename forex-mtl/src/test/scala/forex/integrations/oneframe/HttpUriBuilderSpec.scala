@@ -50,14 +50,10 @@ class HttpUriBuilderSpec extends CatsEffectSuite {
       Rate.Pair(Currency.CAD, Currency.AUD)
     )
 
-    val request = HttpUriBuilder.buildGetRatesRequest[IO](testPairs, config)
-
-    // Check that all pairs are included in query parameters
+    val request   = HttpUriBuilder.buildGetRatesRequest[IO](testPairs, config)
     val uriString = request.uri.toString
-    // http4s may only keep the last pair parameter, so we check for the last one
-    assert(uriString.contains("pair=CADAUD"))
 
-    // even if http4s only shows the last parameter in toString
+    assert(uriString.contains("pair=CADAUD"))
     assertEquals(request.method, Method.GET)
     assertEquals(request.uri.path.toString, "/rates")
   }
@@ -78,15 +74,12 @@ class HttpUriBuilderSpec extends CatsEffectSuite {
   }
 
   test("HttpUriBuilder should handle special characters in currency codes") {
-    // Test with currency codes that might have special handling
     val pairs   = List(Rate.Pair(Currency.USD, Currency.JPY))
     val request = HttpUriBuilder.buildGetRatesRequest[IO](pairs, config)
 
-    // Verify the pair is correctly encoded in the query parameter
     val queryParam = request.uri.query.params.get("pair")
     assertEquals(queryParam, Some("USDJPY"))
 
-    // Verify the URI is properly formatted
     assert(request.uri.toString.contains("localhost:8081/rates?pair=USDJPY"))
   }
 }

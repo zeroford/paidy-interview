@@ -29,7 +29,6 @@ object Protocol {
     implicit def entityDecoder[F[_]: Concurrent]: EntityDecoder[F, GetRateResponse] = jsonOf[F, GetRateResponse]
   }
 
-  // For handling array response from OneFrame server
   type OneFrameArrayResponse = List[ExchangeRate]
 
   object OneFrameArrayResponse {

@@ -20,7 +20,6 @@ class RatesHttpRoutesSpec extends CatsEffectSuite {
     timestamp = Timestamp(OffsetDateTime.parse("2024-08-04T12:34:56Z"))
   )
 
-  // Mock success
   val successProgram: Algebra[IO] = (_: GetRatesRequest) => IO.pure(Right(validRate))
 
   val errorProgram: Algebra[IO] = (_: GetRatesRequest) => IO.pure(Left(RateProgramError.RateLookupFailed("API Down")))
