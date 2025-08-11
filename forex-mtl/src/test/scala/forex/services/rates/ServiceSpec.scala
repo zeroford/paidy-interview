@@ -90,7 +90,7 @@ class ServiceSpec extends CatsEffectSuite {
       rate <- IO(result.toOption.get)
       _ <- IO(assertEquals(rate.pair.from, Currency.USD))
       _ <- IO(assertEquals(rate.pair.to, Currency.JPY))
-      _ <- IO(assertEquals(rate.price.value, BigDecimal(123.45))) // USD->JPY uses quote price directly
+      _ <- IO(assertEquals(rate.price.value, BigDecimal(123.45)))
     } yield ()
   }
 

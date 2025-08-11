@@ -32,7 +32,7 @@ class ServiceSpec extends CatsEffectSuite {
     for {
       _ <- cache.put("key1", 42)
       _ <- cache.get[String, Int]("key1")
-      _ <- cache.clear() // Clear all since we don't have invalidate
+      _ <- cache.clear()
       result <- cache.get[String, Int]("key1")
       _ <- IO(assertEquals(result, None))
     } yield ()
@@ -65,7 +65,7 @@ class ServiceSpec extends CatsEffectSuite {
   }
 
   test("respect maximum size limit") {
-    val cache = Service[IO](2, 1.minute) // max size = 2
+    val cache = Service[IO](2, 1.minute)
 
     for {
       _ <- cache.put("key1", 1)
@@ -76,7 +76,6 @@ class ServiceSpec extends CatsEffectSuite {
       result3 <- cache.get[String, Int]("key3")
 
       _ <- IO(assert(result2.isDefined || result3.isDefined))
-      // key1 might be evicted, so we don't assert on it
     } yield ()
   }
 
@@ -84,12 +83,10 @@ class ServiceSpec extends CatsEffectSuite {
     val cache = Service[IO](100, 1.minute)
 
     for {
-      // Concurrent puts
       _ <- List.range(1, 11).parTraverse(i => cache.put(s"key$i", i))
-      // Concurrent gets
       results <- List.range(1, 11).parTraverse(i => cache.get[String, Int](s"key$i"))
       _ <- IO(assert(results.forall(_.isDefined)))
-      _ <- IO(assert(results.flatten.sum == 55)) // 1+2+...+10 = 55
+      _ <- IO(assert(results.flatten.sum == 55))
     } yield ()
   }
 }

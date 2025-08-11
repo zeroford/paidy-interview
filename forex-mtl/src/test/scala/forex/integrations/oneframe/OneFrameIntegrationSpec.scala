@@ -78,7 +78,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
 
   test("OneFrame integration should handle empty response array") {
     val mockResponse = Response[IO](Status.Ok)
-      .withEntity(Json.arr()) // Empty array
+      .withEntity(Json.arr())
 
     val mockClient: Client[IO] = Client[IO] { _ =>
       Resource.pure(mockResponse)

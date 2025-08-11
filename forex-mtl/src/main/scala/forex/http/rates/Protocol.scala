@@ -1,12 +1,11 @@
 package forex.http
 package rates
 
-import forex.domain.rates.Rate.Pair
 import forex.domain.currency.Currency
-import forex.domain.rates.{ Price, Rate, Timestamp }
-import io.circe._
+import forex.domain.rates.{ Price, Timestamp }
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
+import io.circe.Encoder
 
 object Protocol {
 
@@ -30,9 +29,6 @@ object Protocol {
       details: Option[Map[String, String]] = None
   )
 
-  // JSON Encoders/Decoders
-  implicit val pairEncoder: Encoder[Pair]                   = deriveConfiguredEncoder[Pair]
-  implicit val rateEncoder: Encoder[Rate]                   = deriveConfiguredEncoder[Rate]
   implicit val responseEncoder: Encoder[GetApiResponse]     = deriveConfiguredEncoder[GetApiResponse]
   implicit val errorResponseEncoder: Encoder[ErrorResponse] = deriveConfiguredEncoder[ErrorResponse]
 }
