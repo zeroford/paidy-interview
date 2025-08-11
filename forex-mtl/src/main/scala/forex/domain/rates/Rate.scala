@@ -20,7 +20,7 @@ object Rate {
   def fromPivotRate(pivotBase: PivotRate, pivotQuote: PivotRate): Rate =
     Rate(
       pair = Rate.Pair(pivotBase.currency, pivotQuote.currency),
-      price = Price(pivotBase.price.value / pivotQuote.price.value),
+      price = Price(pivotQuote.price.value / pivotBase.price.value),
       timestamp = Timestamp.olderTTL(pivotBase.timestamp, pivotQuote.timestamp)
     )
 

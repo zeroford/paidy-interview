@@ -121,8 +121,6 @@ class ServiceSpec extends CatsEffectSuite {
     } yield ()
   }
 
-
-
   test("Service should handle cache miss and put to cache") {
     val cache   = Service[IO](100, 5.minutes)
     val service = RatesService[IO](successOneFrameClient, cache, 5.minutes)
@@ -141,6 +139,5 @@ class ServiceSpec extends CatsEffectSuite {
       _ <- IO(assert(cachedResult.isDefined))
     } yield ()
   }
-
 
 }

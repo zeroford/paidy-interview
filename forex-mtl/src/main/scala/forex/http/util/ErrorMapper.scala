@@ -18,7 +18,7 @@ object ErrorMapper {
         BadRequest(ErrorResponse(Status.BadRequest.code, "Validation failed", errors).asJson)
     }
   }
-  
+
   def fromRateError[F[_]: Sync](error: Error): F[Response[F]] = map(error)
 
   def badRequest[F[_]: Sync](messages: List[String]): F[Response[F]] = {
