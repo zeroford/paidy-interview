@@ -30,27 +30,27 @@ class PriceSpec extends FunSuite {
 
   test("Price encoder should encode to JSON number") {
     val price = Price(BigDecimal("123.45"))
-    val json = price.asJson
+    val json  = price.asJson
     assertEquals(json.asString, None)
     assert(json.isNumber)
   }
 
   test("Price decoder should decode from JSON number") {
-    val json = "123.45"
+    val json   = "123.45"
     val result = decode[Price](json)
     assert(result.isRight)
     assertEquals(result.toOption.get.value, BigDecimal("123.45"))
   }
 
   test("Price decoder should handle integer JSON") {
-    val json = "42"
+    val json   = "42"
     val result = decode[Price](json)
     assert(result.isRight)
     assertEquals(result.toOption.get.value, BigDecimal(42))
   }
 
   test("Price decoder should fail for invalid JSON") {
-    val json = "\"invalid\""
+    val json   = "\"invalid\""
     val result = decode[Price](json)
     assert(result.isLeft)
   }
