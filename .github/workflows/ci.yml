@@ -3,7 +3,8 @@ on: [ push ]
 jobs:
   validate:
     runs-on: ubuntu-latest
-
+    env:
+      ONE_FRAME_TOKEN: ${{ secrets.ONE_FRAME_TOKEN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

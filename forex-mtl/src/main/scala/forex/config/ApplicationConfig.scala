@@ -8,7 +8,8 @@ final case class ApplicationConfig(
     environment: Environment,
     http: HttpConfig,
     oneFrame: OneFrameConfig,
-    cache: CacheConfig
+    cache: CacheConfig,
+    secrets: SecretConfig
 )
 
 final case class HttpConfig(
@@ -19,8 +20,7 @@ final case class HttpConfig(
 
 final case class OneFrameConfig(
     host: String,
-    port: Int,
-    token: String
+    port: Int
 )
 
 final case class CacheConfig(
@@ -33,3 +33,7 @@ object CacheConfig {
       ttl: FiniteDuration
   )
 }
+
+final case class SecretConfig(
+    oneFrameToken: String = ""
+)

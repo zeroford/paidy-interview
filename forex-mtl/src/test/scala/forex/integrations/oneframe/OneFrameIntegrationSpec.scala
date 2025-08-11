@@ -17,11 +17,11 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
 
   val config = OneFrameConfig(
     host = "localhost",
-    port = 8081,
-    token = "test-token"
+    port = 8081
   )
 
-  val testPair = Rate.Pair(Currency.USD, Currency.JPY)
+  val testToken = "test-token"
+  val testPair  = Rate.Pair(Currency.USD, Currency.JPY)
 
   test("OneFrame integration should handle successful rate lookup") {
     val mockResponse = Response[IO](Status.Ok)
@@ -42,7 +42,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
       Resource.pure(mockResponse)
     }
 
-    val httpClient = HttpClient[IO](mockClient, config)
+    val httpClient = HttpClient[IO](mockClient, config, testToken)
 
     for {
       result <- httpClient.getRates(List(testPair))
@@ -64,7 +64,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
       Resource.pure(mockResponse)
     }
 
-    val httpClient = HttpClient[IO](mockClient, config)
+    val httpClient = HttpClient[IO](mockClient, config, testToken)
 
     for {
       result <- httpClient.getRates(List(testPair))
@@ -84,7 +84,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
       Resource.pure(mockResponse)
     }
 
-    val httpClient = HttpClient[IO](mockClient, config)
+    val httpClient = HttpClient[IO](mockClient, config, testToken)
 
     for {
       result <- httpClient.getRates(List(testPair))
@@ -104,7 +104,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
       Resource.pure(Response[IO](Status.Ok).withEntity(Json.arr()))
     }
 
-    val httpClient = HttpClient[IO](mockClient, config)
+    val httpClient = HttpClient[IO](mockClient, config, testToken)
 
     for {
       _ <- httpClient.getRates(List(testPair))
@@ -122,7 +122,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
       Resource.pure(Response[IO](Status.Ok).withEntity(Json.arr()))
     }
 
-    val httpClient = HttpClient[IO](mockClient, config)
+    val httpClient = HttpClient[IO](mockClient, config, testToken)
 
     for {
       _ <- httpClient.getRates(List(testPair))
@@ -141,7 +141,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
       Resource.pure(mockResponse)
     }
 
-    val httpClient = HttpClient[IO](mockClient, config)
+    val httpClient = HttpClient[IO](mockClient, config, testToken)
 
     for {
       result <- httpClient.getRates(List(testPair))
@@ -172,7 +172,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
       Resource.pure(mockResponse)
     }
 
-    val httpClient = HttpClient[IO](mockClient, config)
+    val httpClient = HttpClient[IO](mockClient, config, testToken)
     val eurGbpPair = Rate.Pair(Currency.EUR, Currency.GBP)
 
     for {

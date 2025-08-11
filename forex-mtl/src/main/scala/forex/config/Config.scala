@@ -23,9 +23,17 @@ object Config {
 
   def resource[F[_]: Sync](path: String): Resource[F, ApplicationConfig] =
     Resource.eval(Sync[F].delay {
-      ConfigSource.default
+      val secretPath = sys.env.getOrElse("APP_SECRET", "application-secret.conf")
+
+      val src = ConfigSource
+        .file(secretPath)
+        .optional
+        .withFallback(ConfigSource.default)
         .withFallback(ConfigSource.systemProperties)
-        .at(path)
-        .loadOrThrow[ApplicationConfig]
+
+      val cfg = src.at(path).loadOrThrow[ApplicationConfig]
+      require(cfg.secrets.oneFrameToken.trim.nonEmpty, "ONE_FRAME_TOKEN is required")
+      cfg
     })
+
 }

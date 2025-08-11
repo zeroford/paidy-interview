@@ -6,7 +6,7 @@ import cats.syntax.all._
 import forex.config.OneFrameConfig
 import forex.domain.rates.Rate
 import forex.integrations.oneframe.Protocol.{ GetRateResponse, OneFrameArrayResponse }
-import forex.integrations.oneframe.{ Algebra, HttpUriBuilder }
+import forex.integrations.oneframe.{ Algebra, UriBuilder }
 import forex.integrations.oneframe.errors.OneFrameError
 import org.http4s.Status.Ok
 import org.http4s.client.Client
@@ -14,13 +14,14 @@ import org.http4s.circe.CirceEntityCodec._
 
 class HttpClient[F[_]: Concurrent](
     client: Client[F],
-    config: OneFrameConfig
+    config: OneFrameConfig,
+    token: String
 ) extends Algebra[F] {
 
-  import HttpUriBuilder._
+  import UriBuilder._
 
   override def getRates(pairs: List[Rate.Pair]): F[OneFrameError Either GetRateResponse] = {
-    val request = buildGetRatesRequest[F](pairs, config)
+    val request = buildGetRatesRequest[F](pairs, config, token)
 
     EitherT(client.run(request).use(handleResponse))
       .leftMap(OneFrameError.fromThrowable)
@@ -58,6 +59,6 @@ class HttpClient[F[_]: Concurrent](
 }
 
 object HttpClient {
-  def apply[F[_]: Concurrent](client: Client[F], config: OneFrameConfig): Algebra[F] =
-    new HttpClient[F](client, config)
+  def apply[F[_]: Concurrent](client: Client[F], config: OneFrameConfig, token: String): Algebra[F] =
+    new HttpClient[F](client, config, token)
 }
