@@ -14,8 +14,10 @@ import org.http4s.server.middleware.{ AutoSlash, Timeout }
 class Module[F[_]: Async](config: ApplicationConfig, httpClient: Client[F]) {
 
   private val oneFrameClient: OneFrameClient[F] = config.environment match {
-    case forex.config.Environment.Dev  => OneFrameClient.httpClient[F](httpClient, config.oneFrame)
-    case forex.config.Environment.Test => OneFrameClient.mockClient[F]
+    case forex.config.Environment.Dev  => 
+      OneFrameClient.httpClient[F](httpClient, config.oneFrame, config.secrets.oneframeToken)
+    case forex.config.Environment.Test => 
+      OneFrameClient.mockClient[F]
   }
 
   private val cacheService: CacheService[F]  = CacheService[F](config.cache.rates.maxSize, config.cache.rates.ttl)

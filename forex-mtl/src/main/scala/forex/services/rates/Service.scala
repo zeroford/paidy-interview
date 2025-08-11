@@ -49,7 +49,7 @@ class Service[F[_]: Concurrent](oneFrameClient: OneFrameClient[F], cache: CacheA
       baseOpt: Option[PivotRate],
       quoteOpt: Option[PivotRate]
   ): F[RatesServiceError Either PivotPair] = {
-    val strategy     = determineStrategy(pair, baseOpt.isEmpty, quoteOpt.isEmpty)
+    val strategy     = FetchStrategy.fromPair(pair, baseOpt.isEmpty, quoteOpt.isEmpty)
     val requestPairs = strategy match {
       case FetchStrategy.MostUsed => Currency.mostUsedCurrencies.map(Rate.Pair(Pivot, _))
       case FetchStrategy.All      => Currency.allCurrencies.map(Rate.Pair(Pivot, _))
@@ -57,7 +57,6 @@ class Service[F[_]: Concurrent](oneFrameClient: OneFrameClient[F], cache: CacheA
 
     for {
       responseEither <- oneFrameClient.getRates(requestPairs)
-
       result <- responseEither.fold(
                   err => RatesServiceError.OneFrameLookupFailed(err.getMessage).asLeft[PivotPair].pure[F],
                   response =>
@@ -68,11 +67,6 @@ class Service[F[_]: Concurrent](oneFrameClient: OneFrameClient[F], cache: CacheA
                 )
     } yield result
   }
-
-  private def determineStrategy(pair: Rate.Pair, needBase: Boolean, needQuote: Boolean): FetchStrategy =
-    if (needBase && !Currency.isMostUsed(pair.from)) { FetchStrategy.All }
-    else if (needQuote && !Currency.isMostUsed(pair.to)) { FetchStrategy.All }
-    else { FetchStrategy.MostUsed }
 
   private def cacheRates(response: GetRateResponse): F[Unit] =
     response.rates.traverse { r =>

@@ -16,14 +16,16 @@ class ConfigSpec extends FunSuite {
       ),
       oneFrame = OneFrameConfig(
         host = "localhost",
-        port = 8081,
-        token = "test-token"
+        port = 8081
       ),
       cache = CacheConfig(
         rates = CacheConfig.RatesConfig(
           maxSize = 1000L,
           ttl = 10.seconds
         )
+      ),
+      secrets = SecretConfig(
+        oneframeToken = "test-secret-token"
       )
     )
 
@@ -33,9 +35,9 @@ class ConfigSpec extends FunSuite {
     assertEquals(config.http.timeout, 10.seconds)
     assertEquals(config.oneFrame.host, "localhost")
     assertEquals(config.oneFrame.port, 8081)
-    assertEquals(config.oneFrame.token, "test-token")
     assertEquals(config.cache.rates.maxSize, 1000L)
     assertEquals(config.cache.rates.ttl, 10.seconds)
+    assertEquals(config.secrets.oneframeToken, "test-secret-token")
   }
 
   test("Environment should have correct values") {
@@ -58,13 +60,11 @@ class ConfigSpec extends FunSuite {
   test("OneFrameConfig should store values correctly") {
     val oneFrameConfig = OneFrameConfig(
       host = "api.example.com",
-      port = 443,
-      token = "secret-token"
+      port = 443
     )
 
     assertEquals(oneFrameConfig.host, "api.example.com")
     assertEquals(oneFrameConfig.port, 443)
-    assertEquals(oneFrameConfig.token, "secret-token")
   }
 
   test("CacheConfig should store values correctly") {
@@ -77,5 +77,13 @@ class ConfigSpec extends FunSuite {
 
     assertEquals(cacheConfig.rates.maxSize, 500L)
     assertEquals(cacheConfig.rates.ttl, 5.minutes)
+  }
+
+  test("SecretConfig should store values correctly") {
+    val secretConfig = SecretConfig(
+      oneframeToken = "test-token"
+    )
+
+    assertEquals(secretConfig.oneframeToken, "test-token")
   }
 }

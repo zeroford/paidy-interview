@@ -1,7 +1,7 @@
 package forex
 
 import cats.effect.IO
-import forex.config.{ ApplicationConfig, CacheConfig, Environment, HttpConfig, OneFrameConfig }
+import forex.config.{ ApplicationConfig, CacheConfig, Environment, HttpConfig, OneFrameConfig, SecretConfig }
 import org.http4s.HttpApp
 import org.http4s.client.Client
 import munit.CatsEffectSuite
@@ -19,14 +19,16 @@ class ModuleSpec extends CatsEffectSuite {
     ),
     oneFrame = OneFrameConfig(
       host = "localhost",
-      port = 8081,
-      token = "test-token"
+      port = 8081
     ),
     cache = CacheConfig(
       rates = CacheConfig.RatesConfig(
         maxSize = 1000L,
         ttl = 10.seconds
       )
+    ),
+    secrets = SecretConfig(
+      oneframeToken = "test-secret-token"
     )
   )
 

@@ -11,13 +11,14 @@ class HttpUriBuilderSpec extends CatsEffectSuite {
 
   val config = OneFrameConfig(
     host = "localhost",
-    port = 8081,
-    token = "test-token"
+    port = 8081
   )
+
+  val testToken = "test-token"
 
   test("HttpUriBuilder should build correct base URI") {
     val pairs   = List(Rate.Pair(Currency.USD, Currency.JPY))
-    val request = HttpUriBuilder.buildGetRatesRequest[IO](pairs, config)
+    val request = UriBuilder.buildGetRatesRequest[IO](pairs, config, testToken)
     val uri     = request.uri
 
     assertEquals(uri.scheme, Some(Uri.Scheme.http))
@@ -27,7 +28,7 @@ class HttpUriBuilderSpec extends CatsEffectSuite {
 
   test("HttpUriBuilder should build correct request with query parameters") {
     val pairs   = List(Rate.Pair(Currency.USD, Currency.JPY))
-    val request = HttpUriBuilder.buildGetRatesRequest[IO](pairs, config)
+    val request = UriBuilder.buildGetRatesRequest[IO](pairs, config, testToken)
 
     assertEquals(request.method, Method.GET)
     assertEquals(request.uri.path.toString, "/rates")
@@ -36,7 +37,7 @@ class HttpUriBuilderSpec extends CatsEffectSuite {
 
   test("HttpUriBuilder should include authentication header") {
     val pairs   = List(Rate.Pair(Currency.EUR, Currency.GBP))
-    val request = HttpUriBuilder.buildGetRatesRequest[IO](pairs, config)
+    val request = UriBuilder.buildGetRatesRequest[IO](pairs, config, testToken)
 
     val tokenHeader = request.headers.get(org.typelevel.ci.CIString("token"))
     assert(tokenHeader.isDefined)
@@ -50,7 +51,7 @@ class HttpUriBuilderSpec extends CatsEffectSuite {
       Rate.Pair(Currency.CAD, Currency.AUD)
     )
 
-    val request   = HttpUriBuilder.buildGetRatesRequest[IO](testPairs, config)
+    val request   = UriBuilder.buildGetRatesRequest[IO](testPairs, config, testToken)
     val uriString = request.uri.toString
 
     assert(uriString.contains("pair=CADAUD"))
@@ -61,12 +62,12 @@ class HttpUriBuilderSpec extends CatsEffectSuite {
   test("HttpUriBuilder should build correct URI with different configs") {
     val config2 = OneFrameConfig(
       host = "api.oneframe.com",
-      port = 443,
-      token = "different-token"
+      port = 443
     )
 
+    val differentToken = "different-token"
     val pairs   = List(Rate.Pair(Currency.USD, Currency.JPY))
-    val request = HttpUriBuilder.buildGetRatesRequest[IO](pairs, config2)
+    val request = UriBuilder.buildGetRatesRequest[IO](pairs, config2, differentToken)
 
     assertEquals(request.uri.authority.get.host, Uri.RegName("api.oneframe.com"))
     assertEquals(request.uri.authority.get.port, Some(443))
@@ -75,7 +76,7 @@ class HttpUriBuilderSpec extends CatsEffectSuite {
 
   test("HttpUriBuilder should handle special characters in currency codes") {
     val pairs   = List(Rate.Pair(Currency.USD, Currency.JPY))
-    val request = HttpUriBuilder.buildGetRatesRequest[IO](pairs, config)
+    val request = UriBuilder.buildGetRatesRequest[IO](pairs, config, testToken)
 
     val queryParam = request.uri.query.params.get("pair")
     assertEquals(queryParam, Some("USDJPY"))
