@@ -2,13 +2,13 @@ package forex.services.rates
 
 import cats.effect.Concurrent
 import cats.syntax.all._
-import forex.domain.cache.{FetchStrategy, PivotRate}
+import forex.domain.cache.{ FetchStrategy, PivotRate }
 import forex.domain.currency.Currency
-import forex.domain.rates.{Rate, Timestamp}
+import forex.domain.rates.{ Rate, Timestamp }
 import forex.integrations.OneFrameClient
 import forex.integrations.oneframe.Protocol.GetRateResponse
 import forex.services.PivotPair
-import forex.services.cache.{Algebra => CacheAlgebra}
+import forex.services.cache.{ Algebra => CacheAlgebra }
 import forex.services.rates.errors.RatesServiceError
 
 import scala.concurrent.duration._
@@ -20,23 +20,21 @@ class Service[F[_]: Concurrent](oneFrameClient: OneFrameClient[F], cache: CacheA
 
   private def cacheKey(currency: Currency): String = s"${Pivot}${currency}"
 
-  override def get(pair: Rate.Pair): F[RatesServiceError Either Rate] = {
+  override def get(pair: Rate.Pair): F[RatesServiceError Either Rate] =
     getRateOrFetch(pair).flatMap {
       case Right((base, quote)) =>
         Rate.fromPivotRate(base, quote).asRight[RatesServiceError].pure[F]
       case Left(err) =>
         err.asLeft[Rate].pure[F]
     }
-  }
 
-  private def getRateOrFetch(pair: Rate.Pair): F[RatesServiceError Either PivotPair] = {
+  private def getRateOrFetch(pair: Rate.Pair): F[RatesServiceError Either PivotPair] =
     (getFromCachePivot(pair.from), getFromCachePivot(pair.to)).tupled.flatMap {
       case (Some(base), Some(quote)) =>
         (base -> quote).asRight[RatesServiceError].pure[F]
       case (baseOpt, quoteOpt) =>
         fetchWithStrategy(pair, baseOpt, quoteOpt)
     }
-  }
 
   private def getFromCachePivot(currency: Currency): F[Option[PivotRate]] =
     if (currency == Pivot) PivotRate.default(Pivot).some.pure[F]
@@ -61,8 +59,7 @@ class Service[F[_]: Concurrent](oneFrameClient: OneFrameClient[F], cache: CacheA
       responseEither <- oneFrameClient.getRates(requestPairs)
 
       result <- responseEither.fold(
-                  err =>
-                    RatesServiceError.OneFrameLookupFailed(err.getMessage).asLeft[PivotPair].pure[F],
+                  err => RatesServiceError.OneFrameLookupFailed(err.getMessage).asLeft[PivotPair].pure[F],
                   response =>
                     for {
                       pivotRates <- extractPivotRates(response, pair, baseOpt, quoteOpt)

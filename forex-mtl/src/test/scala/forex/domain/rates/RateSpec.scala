@@ -70,4 +70,56 @@ class RateSpec extends FunSuite {
       Rate(Rate.Pair(Currency.USD, Currency.EUR), Price(1.2), Timestamp(OffsetDateTime.parse("2025-01-01T01:00:00Z")))
     assert(r3 != r1)
   }
+
+  test("fromPivotRate should handle USD as base correctly") {
+    val usdPivot =
+      forex.domain.cache.PivotRate(Currency.USD, Price(1.0), Timestamp(OffsetDateTime.parse("2024-08-04T13:00:00Z")))
+    val eurPivot =
+      forex.domain.cache.PivotRate(Currency.EUR, Price(0.85), Timestamp(OffsetDateTime.parse("2024-08-04T14:00:00Z")))
+
+    val rate = Rate.fromPivotRate(usdPivot, eurPivot)
+
+    assertEquals(rate.pair, Rate.Pair(Currency.USD, Currency.EUR))
+    assertEquals(rate.price.value, BigDecimal(0.85))
+    assertEquals(rate.timestamp, eurPivot.timestamp) // Should use quote timestamp
+  }
+
+  test("fromPivotRate should handle USD as quote correctly") {
+    val eurPivot =
+      forex.domain.cache.PivotRate(Currency.EUR, Price(0.85), Timestamp(OffsetDateTime.parse("2024-08-04T13:00:00Z")))
+    val usdPivot =
+      forex.domain.cache.PivotRate(Currency.USD, Price(1.0), Timestamp(OffsetDateTime.parse("2024-08-04T14:00:00Z")))
+
+    val rate = Rate.fromPivotRate(eurPivot, usdPivot)
+
+    assertEquals(rate.pair, Rate.Pair(Currency.EUR, Currency.USD))
+    assertEquals(rate.price.value, BigDecimal(1.0) / BigDecimal(0.85))
+    assertEquals(rate.timestamp, eurPivot.timestamp) // Should use base timestamp
+  }
+
+  test("fromPivotRate should handle cross-rate correctly") {
+    val eurPivot =
+      forex.domain.cache.PivotRate(Currency.EUR, Price(0.85), Timestamp(OffsetDateTime.parse("2024-08-04T13:00:00Z")))
+    val jpyPivot =
+      forex.domain.cache.PivotRate(Currency.JPY, Price(110.0), Timestamp(OffsetDateTime.parse("2024-08-04T14:00:00Z")))
+
+    val rate = Rate.fromPivotRate(eurPivot, jpyPivot)
+
+    assertEquals(rate.pair, Rate.Pair(Currency.EUR, Currency.JPY))
+    assertEquals(rate.price.value, BigDecimal(110.0) / BigDecimal(0.85))
+    assertEquals(rate.timestamp, eurPivot.timestamp) // Should use older timestamp
+  }
+
+  test("fromPivotRate should use older timestamp for cross-rate when quote is older") {
+    val eurPivot =
+      forex.domain.cache.PivotRate(Currency.EUR, Price(0.85), Timestamp(OffsetDateTime.parse("2024-08-04T14:00:00Z")))
+    val jpyPivot =
+      forex.domain.cache.PivotRate(Currency.JPY, Price(110.0), Timestamp(OffsetDateTime.parse("2024-08-04T13:00:00Z")))
+
+    val rate = Rate.fromPivotRate(eurPivot, jpyPivot)
+
+    assertEquals(rate.pair, Rate.Pair(Currency.EUR, Currency.JPY))
+    assertEquals(rate.price.value, BigDecimal(110.0) / BigDecimal(0.85))
+    assertEquals(rate.timestamp, jpyPivot.timestamp) // Should use older timestamp (JPY)
+  }
 }
