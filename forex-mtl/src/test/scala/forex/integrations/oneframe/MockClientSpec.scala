@@ -55,8 +55,8 @@ class MockClientSpec extends CatsEffectSuite {
       _ <- IO(assert(rate.bid > 0))
       _ <- IO(assert(rate.ask > 0))
       _ <- IO(assert(rate.price > 0))
-      _ <- IO(assert(rate.bid <= rate.ask)) // bid should be <= ask
-      _ <- IO(assert(rate.price >= rate.bid && rate.price <= rate.ask)) // price should be between bid and ask
+      _ <- IO(assert(rate.bid <= rate.ask))
+      _ <- IO(assert(rate.price >= rate.bid && rate.price <= rate.ask))
     } yield ()
   }
 
@@ -90,7 +90,7 @@ class MockClientSpec extends CatsEffectSuite {
 
   test("MockClient should handle edge case currencies") {
     val edgePairs = List(
-      Rate.Pair(Currency.USD, Currency.USD), // Same currency (though this shouldn't happen in real usage)
+      Rate.Pair(Currency.USD, Currency.USD),
       Rate.Pair(Currency.EUR, Currency.EUR),
       Rate.Pair(Currency.JPY, Currency.JPY)
     )

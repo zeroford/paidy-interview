@@ -74,10 +74,8 @@ class ServiceSpec extends CatsEffectSuite {
     )
   )
 
-  // Mock success OneFrame client
   val successOneFrameClient: Algebra[IO] = (_: List[Rate.Pair]) => IO.pure(Right(validOneFrameResponse))
 
-  // Mock error OneFrame client
   val errorOneFrameClient: Algebra[IO] = (_: List[Rate.Pair]) =>
     IO.pure(Left(OneFrameError.OneFrameLookupFailed("API Down")))
 
@@ -127,14 +125,11 @@ class ServiceSpec extends CatsEffectSuite {
     val pair    = Rate.Pair(Currency.USD, Currency.JPY)
 
     for {
-      // Clear cache first
       _ <- cache.clear()
 
-      // Request should miss cache and fetch from OneFrame
       result <- service.get(pair)
       _ <- IO(assert(result.isRight))
 
-      // Verify it was cached using the correct key format
       cachedResult <- cache.get[String, Rate](s"${pair.from}${pair.to}")
       _ <- IO(assert(cachedResult.isDefined))
     } yield ()
@@ -146,23 +141,19 @@ class ServiceSpec extends CatsEffectSuite {
     val pair    = Rate.Pair(Currency.USD, Currency.EUR)
 
     for {
-      // Clear cache first
       _ <- cache.clear()
 
-      // First request
       result1 <- service.get(pair)
       _ <- IO(assert(result1.isRight))
       rate1 <- IO(result1.toOption.get)
 
-      // Second request (should use cached data)
       result2 <- service.get(pair)
       _ <- IO(assert(result2.isRight))
       rate2 <- IO(result2.toOption.get)
 
-      // Timestamps should be the same (using EUR timestamp)
       _ <- IO(assertEquals(rate1.timestamp, rate2.timestamp))
       _ <- IO(assertEquals(rate1.pair, Rate.Pair(Currency.USD, Currency.EUR)))
-      _ <- IO(assertEquals(rate1.price.value, BigDecimal(0.855))) // Direct quote price
+      _ <- IO(assertEquals(rate1.price.value, BigDecimal(0.855)))
     } yield ()
   }
 
@@ -172,23 +163,19 @@ class ServiceSpec extends CatsEffectSuite {
     val pair    = Rate.Pair(Currency.EUR, Currency.USD)
 
     for {
-      // Clear cache first
       _ <- cache.clear()
 
-      // First request
       result1 <- service.get(pair)
       _ <- IO(assert(result1.isRight))
       rate1 <- IO(result1.toOption.get)
 
-      // Second request (should use cached data)
       result2 <- service.get(pair)
       _ <- IO(assert(result2.isRight))
       rate2 <- IO(result2.toOption.get)
 
-      // Timestamps should be the same (using EUR timestamp)
       _ <- IO(assertEquals(rate1.timestamp, rate2.timestamp))
       _ <- IO(assertEquals(rate1.pair, Rate.Pair(Currency.EUR, Currency.USD)))
-      _ <- IO(assertEquals(rate1.price.value, BigDecimal(1.0) / BigDecimal(0.855))) // Inverted base price
+      _ <- IO(assertEquals(rate1.price.value, BigDecimal(1.0) / BigDecimal(0.855)))
     } yield ()
   }
 
@@ -198,23 +185,18 @@ class ServiceSpec extends CatsEffectSuite {
     val pair    = Rate.Pair(Currency.EUR, Currency.GBP)
 
     for {
-      // Clear cache first
       _ <- cache.clear()
 
-      // First request
       result1 <- service.get(pair)
       _ <- IO(assert(result1.isRight))
       rate1 <- IO(result1.toOption.get)
 
-      // Second request (should use cached data)
       result2 <- service.get(pair)
       _ <- IO(assert(result2.isRight))
       rate2 <- IO(result2.toOption.get)
 
-      // Timestamps should be the same (using older timestamp)
       _ <- IO(assertEquals(rate1.timestamp, rate2.timestamp))
       _ <- IO(assertEquals(rate1.pair, Rate.Pair(Currency.EUR, Currency.GBP)))
-      // Cross-rate calculation: GBP price / EUR price
       _ <- IO(assertEquals(rate1.price.value, BigDecimal(0.755) / BigDecimal(0.855)))
     } yield ()
   }

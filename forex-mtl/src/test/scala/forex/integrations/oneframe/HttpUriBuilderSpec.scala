@@ -56,7 +56,7 @@ class HttpUriBuilderSpec extends CatsEffectSuite {
     val uriString = request.uri.toString
     // http4s may only keep the last pair parameter, so we check for the last one
     assert(uriString.contains("pair=CADAUD"))
-    // For multiple pairs, we should check that the request is built correctly
+
     // even if http4s only shows the last parameter in toString
     assertEquals(request.method, Method.GET)
     assertEquals(request.uri.path.toString, "/rates")

@@ -81,7 +81,7 @@ class RateSpec extends FunSuite {
 
     assertEquals(rate.pair, Rate.Pair(Currency.USD, Currency.EUR))
     assertEquals(rate.price.value, BigDecimal(0.85))
-    assertEquals(rate.timestamp, eurPivot.timestamp) // Should use quote timestamp
+    assertEquals(rate.timestamp, eurPivot.timestamp)
   }
 
   test("fromPivotRate should handle USD as quote correctly") {
@@ -94,7 +94,7 @@ class RateSpec extends FunSuite {
 
     assertEquals(rate.pair, Rate.Pair(Currency.EUR, Currency.USD))
     assertEquals(rate.price.value, BigDecimal(1.0) / BigDecimal(0.85))
-    assertEquals(rate.timestamp, eurPivot.timestamp) // Should use base timestamp
+    assertEquals(rate.timestamp, eurPivot.timestamp)
   }
 
   test("fromPivotRate should handle cross-rate correctly") {
@@ -107,7 +107,7 @@ class RateSpec extends FunSuite {
 
     assertEquals(rate.pair, Rate.Pair(Currency.EUR, Currency.JPY))
     assertEquals(rate.price.value, BigDecimal(110.0) / BigDecimal(0.85))
-    assertEquals(rate.timestamp, eurPivot.timestamp) // Should use older timestamp
+    assertEquals(rate.timestamp, eurPivot.timestamp)
   }
 
   test("fromPivotRate should use older timestamp for cross-rate when quote is older") {
@@ -120,6 +120,6 @@ class RateSpec extends FunSuite {
 
     assertEquals(rate.pair, Rate.Pair(Currency.EUR, Currency.JPY))
     assertEquals(rate.price.value, BigDecimal(110.0) / BigDecimal(0.85))
-    assertEquals(rate.timestamp, jpyPivot.timestamp) // Should use older timestamp (JPY)
+    assertEquals(rate.timestamp, jpyPivot.timestamp)
   }
 }

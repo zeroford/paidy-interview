@@ -2,7 +2,7 @@ package forex.config
 
 import munit.FunSuite
 import scala.concurrent.duration._
-import com.comcast.ip4s.{Host, Port}
+import com.comcast.ip4s.{ Host, Port }
 
 class ConfigSpec extends FunSuite {
 

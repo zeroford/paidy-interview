@@ -1,12 +1,12 @@
 package forex
 
 import cats.effect.IO
-import forex.config.{ApplicationConfig, Environment, HttpConfig, OneFrameConfig, CacheConfig}
+import forex.config.{ ApplicationConfig, CacheConfig, Environment, HttpConfig, OneFrameConfig }
 import org.http4s.HttpApp
 import org.http4s.client.Client
 import munit.CatsEffectSuite
 import scala.concurrent.duration._
-import com.comcast.ip4s.{Host, Port}
+import com.comcast.ip4s.{ Host, Port }
 
 class ModuleSpec extends CatsEffectSuite {
 
@@ -34,7 +34,7 @@ class ModuleSpec extends CatsEffectSuite {
 
   test("Module should create httpApp with correct configuration") {
     val module = new Module[IO](testConfig, mockHttpClient)
-    
+
     for {
       httpApp <- IO(module.httpApp)
       _ <- IO(assert(httpApp.isInstanceOf[HttpApp[IO]]))
@@ -43,7 +43,7 @@ class ModuleSpec extends CatsEffectSuite {
 
   test("Module should use Dev environment for OneFrame client") {
     val module = new Module[IO](testConfig, mockHttpClient)
-    
+
     // This test verifies that the module is created successfully
     // The actual OneFrame client selection is tested in integration tests
     for {
@@ -54,8 +54,8 @@ class ModuleSpec extends CatsEffectSuite {
 
   test("Module should use Test environment for OneFrame client") {
     val testConfigWithTestEnv = testConfig.copy(environment = Environment.Test)
-    val module = new Module[IO](testConfigWithTestEnv, mockHttpClient)
-    
+    val module                = new Module[IO](testConfigWithTestEnv, mockHttpClient)
+
     for {
       httpApp <- IO(module.httpApp)
       _ <- IO(assert(httpApp.isInstanceOf[HttpApp[IO]]))
