@@ -17,9 +17,11 @@ class Service[F[_]: Sync](maxSize: Long, ttl: FiniteDuration) extends Algebra[F]
     Sync[F]
       .delay(scaffeine.getIfPresent(key.toString).asInstanceOf[Option[V]])
       .handleErrorWith { error =>
-        Sync[F].raiseError(CacheServiceError.CacheOperationFailed(
-          s"Failed to get cache key: ${error.getMessage}"
-        ))
+        Sync[F].raiseError(
+          CacheServiceError.CacheOperationFailed(
+            s"Failed to get cache key: ${error.getMessage}"
+          )
+        )
       }
 
   def put[K, V](key: K, value: V): F[Unit] =

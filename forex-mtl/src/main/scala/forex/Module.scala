@@ -14,9 +14,9 @@ import org.http4s.server.middleware.{ AutoSlash, Timeout }
 class Module[F[_]: Async](config: ApplicationConfig, httpClient: Client[F]) {
 
   private val oneFrameClient: OneFrameClient[F] = config.environment match {
-    case forex.config.Environment.Dev  => 
+    case forex.config.Environment.Dev =>
       OneFrameClient.httpClient[F](httpClient, config.oneFrame, config.secrets.oneFrameToken)
-    case forex.config.Environment.Test => 
+    case forex.config.Environment.Test =>
       OneFrameClient.mockClient[F]
   }
 

@@ -21,7 +21,7 @@ class OneFrameIntegrationSpec extends CatsEffectSuite {
   )
 
   val testToken = "test-token"
-  val testPair = Rate.Pair(Currency.USD, Currency.JPY)
+  val testPair  = Rate.Pair(Currency.USD, Currency.JPY)
 
   test("OneFrame integration should handle successful rate lookup") {
     val mockResponse = Response[IO](Status.Ok)

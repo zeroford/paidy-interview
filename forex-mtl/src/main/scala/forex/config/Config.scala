@@ -25,7 +25,9 @@ object Config {
     Resource.eval(Sync[F].delay {
       val secretPath = sys.env.getOrElse("APP_SECRET", "application-secret.conf")
 
-      val src = ConfigSource.file(secretPath).optional
+      val src = ConfigSource
+        .file(secretPath)
+        .optional
         .withFallback(ConfigSource.default)
         .withFallback(ConfigSource.systemProperties)
 

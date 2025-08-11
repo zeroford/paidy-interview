@@ -66,8 +66,8 @@ class HttpUriBuilderSpec extends CatsEffectSuite {
     )
 
     val differentToken = "different-token"
-    val pairs   = List(Rate.Pair(Currency.USD, Currency.JPY))
-    val request = UriBuilder.buildGetRatesRequest[IO](pairs, config2, differentToken)
+    val pairs          = List(Rate.Pair(Currency.USD, Currency.JPY))
+    val request        = UriBuilder.buildGetRatesRequest[IO](pairs, config2, differentToken)
 
     assertEquals(request.uri.authority.get.host, Uri.RegName("api.oneframe.com"))
     assertEquals(request.uri.authority.get.port, Some(443))
