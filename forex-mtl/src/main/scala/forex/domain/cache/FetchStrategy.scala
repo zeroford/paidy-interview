@@ -6,10 +6,21 @@ import forex.domain.rates.Rate
 sealed trait FetchStrategy
 object FetchStrategy {
   case object MostUsed extends FetchStrategy
+  case object LeastUsed extends FetchStrategy
   case object All extends FetchStrategy
 
-  def fromPair(pair: Rate.Pair, needBase: Boolean, needQuote: Boolean): FetchStrategy =
-    if (needBase && !Currency.isMostUsed(pair.from)) { FetchStrategy.All }
-    else if (needQuote && !Currency.isMostUsed(pair.to)) { FetchStrategy.All }
-    else { FetchStrategy.MostUsed }
+  def fromPair(pair: Rate.Pair, needBase: Boolean, needQuote: Boolean): FetchStrategy = {
+
+    val baseMostUsed  = Currency.isMostUsed(pair.from)
+    val quoteMostUsed = Currency.isMostUsed(pair.to)
+
+    val anyMost  = (needBase && baseMostUsed) || (needQuote && quoteMostUsed)
+    val anyLeast = (needBase && !baseMostUsed) || (needQuote && !quoteMostUsed)
+
+    (anyMost, anyLeast) match {
+      case (true, false) => FetchStrategy.MostUsed
+      case (false, true) => FetchStrategy.LeastUsed
+      case _             => FetchStrategy.All
+    }
+  }
 }

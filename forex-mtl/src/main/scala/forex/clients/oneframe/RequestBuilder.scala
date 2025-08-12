@@ -1,11 +1,11 @@
-package forex.integrations.oneframe
+package forex.clients.oneframe
 
 import forex.config.OneFrameConfig
 import forex.domain.rates.Rate
 import org.http4s.{ Header, Headers, Method, Request, Uri }
 import org.typelevel.ci.CIString
 
-object UriBuilder {
+object RequestBuilder {
 
   def buildGetRatesRequest[F[_]](pairs: List[Rate.Pair], config: OneFrameConfig, token: String): Request[F] = {
     val pairParams  = pairs.map(pair => s"${pair.from}${pair.to}")
