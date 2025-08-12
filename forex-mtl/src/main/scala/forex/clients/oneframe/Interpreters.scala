@@ -1,10 +1,10 @@
-package forex.integrations.oneframe
+package forex.clients.oneframe
 
 import cats.Applicative
 import cats.effect.Concurrent
 import forex.config.OneFrameConfig
-import forex.integrations.oneframe.interpreter.{ HttpClient, MockClient }
-import forex.integrations.OneFrameClient
+import forex.clients.oneframe.interpreter.{ HttpClient, MockClient }
+import forex.clients.OneFrameClient
 import org.http4s.client.Client
 
 object Interpreters {

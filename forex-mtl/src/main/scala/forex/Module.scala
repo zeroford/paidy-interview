@@ -6,7 +6,7 @@ import forex.config.{ ApplicationConfig, Environment }
 import forex.http.health.HealthHttpRoutes
 import forex.http.middleware.ErrorHandlerMiddleware
 import forex.http.rates.RatesHttpRoutes
-import forex.integrations.OneFrameClient
+import forex.clients.OneFrameClient
 import forex.programs.RatesProgram
 import forex.services.{ CacheService, RatesService }
 import org.http4s._

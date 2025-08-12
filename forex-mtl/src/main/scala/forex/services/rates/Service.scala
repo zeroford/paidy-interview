@@ -5,8 +5,8 @@ import cats.syntax.all._
 import forex.domain.cache.{ FetchStrategy, PivotRate }
 import forex.domain.currency.Currency
 import forex.domain.rates.{ Rate, Timestamp }
-import forex.integrations.OneFrameClient
-import forex.integrations.oneframe.Protocol.GetRateResponse
+import forex.clients.OneFrameClient
+import forex.clients.oneframe.Protocol.OneFrameRatesResponse
 import forex.services.PivotPair
 import forex.services.cache.{ Algebra => CacheAlgebra }
 import forex.services.rates.errors.RatesServiceError
@@ -18,7 +18,7 @@ class Service[F[_]: Concurrent](oneFrameClient: OneFrameClient[F], cache: CacheA
 
   private val Pivot = Currency.USD
 
-  private def cacheKey(currency: Currency): String = s"${Pivot}${currency}"
+  private def cacheKey(currency: Currency): String = s"$Pivot$currency"
 
   override def get(pair: Rate.Pair): F[RatesServiceError Either Rate] =
     getRateOrFetch(pair).flatMap {
@@ -51,8 +51,9 @@ class Service[F[_]: Concurrent](oneFrameClient: OneFrameClient[F], cache: CacheA
   ): F[RatesServiceError Either PivotPair] = {
     val strategy     = FetchStrategy.fromPair(pair, baseOpt.isEmpty, quoteOpt.isEmpty)
     val requestPairs = strategy match {
-      case FetchStrategy.MostUsed => Currency.mostUsedCurrencies.map(Rate.Pair(Pivot, _))
-      case FetchStrategy.All      => Currency.allCurrencies.map(Rate.Pair(Pivot, _))
+      case FetchStrategy.MostUsed  => Currency.mostUsedCurrencies.map(Rate.Pair(Pivot, _))
+      case FetchStrategy.LeastUsed => Currency.leastUsedCurrencies.map(Rate.Pair(Pivot, _))
+      case FetchStrategy.All       => Currency.allCurrencies.map(Rate.Pair(Pivot, _))
     }
 
     for {
@@ -68,8 +69,8 @@ class Service[F[_]: Concurrent](oneFrameClient: OneFrameClient[F], cache: CacheA
     } yield result
   }
 
-  private def cacheRates(response: GetRateResponse): F[Unit] =
-    response.rates.traverse { r =>
+  private def cacheRates(response: OneFrameRatesResponse): F[Unit] =
+    response.traverse { r =>
       Currency.fromString(r.to) match {
         case Right(currency) =>
           val pivotRate = PivotRate.fromResponse(currency, r.price, r.time_stamp)
@@ -80,13 +81,13 @@ class Service[F[_]: Concurrent](oneFrameClient: OneFrameClient[F], cache: CacheA
     }.void
 
   private def extractPivotRates(
-      response: GetRateResponse,
+      response: OneFrameRatesResponse,
       pair: Rate.Pair,
       baseOpt: Option[PivotRate],
       quoteOpt: Option[PivotRate]
   ): F[(PivotRate, PivotRate)] = {
     def lookup(cur: Currency): Option[PivotRate] =
-      response.rates.collectFirst {
+      response.collectFirst {
         case r if r.from == Pivot.toString && r.to == cur.toString =>
           PivotRate.fromResponse(cur, r.price, r.time_stamp)
       }

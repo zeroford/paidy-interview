@@ -1,19 +1,19 @@
-package forex.integrations.oneframe.interpreter
+package forex.clients.oneframe.interpreter
 
 import cats.Applicative
 import cats.syntax.applicative._
 import cats.syntax.either._
 import forex.domain.rates.Rate
-import forex.integrations.oneframe.Protocol.{ ExchangeRate, GetRateResponse }
-import forex.integrations.oneframe.Algebra
-import forex.integrations.oneframe.errors.OneFrameError
+import forex.clients.oneframe.Protocol.{OneFrameRate, OneFrameRatesResponse}
+import forex.clients.oneframe.Algebra
+import forex.clients.oneframe.errors.OneFrameError
 
 class MockClient[F[_]: Applicative] extends Algebra[F] {
 
-  override def getRates(pairs: List[Rate.Pair]): F[OneFrameError Either GetRateResponse] =
-    GetRateResponse(
-      pairs.map { pair =>
-        ExchangeRate(
+  override def getRates(pairs: List[Rate.Pair]): F[OneFrameError Either OneFrameRatesResponse] =
+    pairs
+      .map { pair =>
+        OneFrameRate(
           from = pair.from.toString,
           to = pair.to.toString,
           bid = BigDecimal(100),
@@ -22,7 +22,9 @@ class MockClient[F[_]: Applicative] extends Algebra[F] {
           time_stamp = "2025-01-01T00:00:00Z"
         )
       }
-    ).asRight[OneFrameError].pure[F]
+      .toList
+      .asRight[OneFrameError]
+      .pure[F]
 
 }
 
