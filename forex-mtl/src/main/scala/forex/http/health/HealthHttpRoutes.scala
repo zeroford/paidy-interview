@@ -10,8 +10,8 @@ class HealthHttpRoutes[F[_]: Sync] extends Http4sDsl[F] {
 
   private[health] val prefixPath = "/health"
 
-  private val httpRoutes: HttpRoutes[F] = HttpRoutes.of[F] {
-    case GET -> Root => Ok(HealthResponse("OK"))
+  private val httpRoutes: HttpRoutes[F] = HttpRoutes.of[F] { case GET -> Root =>
+    Ok(HealthResponse("OK"))
   }
 
   val routes: HttpRoutes[F] = Router(prefixPath -> httpRoutes)
