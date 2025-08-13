@@ -1,12 +1,12 @@
-package forex.integrations.oneframe
+package forex.clients.oneframe
 
 import cats.effect.IO
 import cats.effect.Resource
 import forex.config.OneFrameConfig
 import forex.domain.currency.Currency
 import forex.domain.rates.Rate
-import forex.integrations.oneframe.interpreter.HttpClient
-import forex.integrations.oneframe.errors.OneFrameError
+import forex.clients.oneframe.interpreter.HttpClient
+import forex.clients.oneframe.errors.OneFrameError
 import munit.CatsEffectSuite
 import org.http4s.client.Client
 import org.http4s.{ Request, Response, Status }

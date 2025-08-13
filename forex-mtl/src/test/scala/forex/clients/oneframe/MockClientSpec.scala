@@ -1,9 +1,9 @@
-package forex.integrations.oneframe
+package forex.clients.oneframe
 
 import cats.effect.IO
 import forex.domain.currency.Currency
 import forex.domain.rates.Rate
-import forex.integrations.oneframe.interpreter.MockClient
+import forex.clients.oneframe.interpreter.MockClient
 
 import munit.CatsEffectSuite
 

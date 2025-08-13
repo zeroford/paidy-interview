@@ -1,29 +1,29 @@
 package forex.services.rates
 
 import cats.effect.IO
-
 import forex.domain.currency.Currency
 import forex.domain.rates.{ Price, Rate, Timestamp }
-import forex.integrations.oneframe.Algebra
-import forex.integrations.oneframe.Protocol.GetRateResponse
-import forex.integrations.oneframe.errors.OneFrameError
+import forex.clients.oneframe.Algebra
+import forex.clients.oneframe.Protocol.{ OneFrameRate, OneFrameRatesResponse }
+import forex.domain.error.AppError
 import forex.services.cache.Service
 import forex.services.rates.{ Service => RatesService }
 import munit.CatsEffectSuite
+
 import java.time.OffsetDateTime
 import scala.concurrent.duration._
 
 class ServiceSpec extends CatsEffectSuite {
 
   val validRate: Rate = Rate(
-    pair = Rate.Pair(Currency.USD, Currency.JPY),
+    pair = Rate.Pair(Currency.EUR, Currency.JPY),
     price = Price(BigDecimal(123.45)),
     timestamp = Timestamp(OffsetDateTime.parse("2024-08-04T12:34:56Z"))
   )
 
-  val validOneFrameResponse = GetRateResponse(
+  val validOneFrameResponse = OneFrameRatesResponse(
     List(
-      forex.integrations.oneframe.Protocol.ExchangeRate(
+      OneFrameRate(
         from = "USD",
         to = "JPY",
         bid = BigDecimal(123.40),
@@ -31,7 +31,7 @@ class ServiceSpec extends CatsEffectSuite {
         price = BigDecimal(123.45),
         time_stamp = "2024-08-04T12:34:56Z"
       ),
-      forex.integrations.oneframe.Protocol.ExchangeRate(
+      OneFrameRate(
         from = "USD",
         to = "USD",
         bid = BigDecimal(1.0),
@@ -39,7 +39,7 @@ class ServiceSpec extends CatsEffectSuite {
         price = BigDecimal(1.0),
         time_stamp = "2024-08-04T12:34:56Z"
       ),
-      forex.integrations.oneframe.Protocol.ExchangeRate(
+      OneFrameRate(
         from = "USD",
         to = "EUR",
         bid = BigDecimal(0.85),
@@ -47,7 +47,7 @@ class ServiceSpec extends CatsEffectSuite {
         price = BigDecimal(0.855),
         time_stamp = "2024-08-04T12:34:56Z"
       ),
-      forex.integrations.oneframe.Protocol.ExchangeRate(
+      OneFrameRate(
         from = "USD",
         to = "GBP",
         bid = BigDecimal(0.75),
@@ -55,7 +55,7 @@ class ServiceSpec extends CatsEffectSuite {
         price = BigDecimal(0.755),
         time_stamp = "2024-08-04T12:34:56Z"
       ),
-      forex.integrations.oneframe.Protocol.ExchangeRate(
+      OneFrameRate(
         from = "EUR",
         to = "USD",
         bid = BigDecimal(1.17),
@@ -63,7 +63,7 @@ class ServiceSpec extends CatsEffectSuite {
         price = BigDecimal(1.175),
         time_stamp = "2024-08-04T12:34:56Z"
       ),
-      forex.integrations.oneframe.Protocol.ExchangeRate(
+      forex.clients.oneframe.Protocol.OneFrameRate(
         from = "GBP",
         to = "USD",
         bid = BigDecimal(1.32),
@@ -77,18 +77,18 @@ class ServiceSpec extends CatsEffectSuite {
   val successOneFrameClient: Algebra[IO] = (_: List[Rate.Pair]) => IO.pure(Right(validOneFrameResponse))
 
   val errorOneFrameClient: Algebra[IO] = (_: List[Rate.Pair]) =>
-    IO.pure(Left(OneFrameError.OneFrameLookupFailed("API Down")))
+    IO.pure(Left(AppError.UpstreamUnavailable("one-frame", "Service unavailable")))
 
   test("Service should return rate when OneFrame client succeeds") {
     val cache   = Service[IO](100, 5.minutes)
     val service = RatesService[IO](successOneFrameClient, cache, 5.minutes)
-    val pair    = Rate.Pair(Currency.USD, Currency.JPY)
+    val pair    = Rate.Pair(Currency.EUR, Currency.JPY)
 
     for {
       result <- service.get(pair)
       _ <- IO(assert(result.isRight))
       rate <- IO(result.toOption.get)
-      _ <- IO(assertEquals(rate.pair.from, Currency.USD))
+      _ <- IO(assertEquals(rate.pair.from, Currency.EUR))
       _ <- IO(assertEquals(rate.pair.to, Currency.JPY))
       _ <- IO(assertEquals(rate.price.value, BigDecimal(123.45)))
     } yield ()
@@ -97,11 +97,13 @@ class ServiceSpec extends CatsEffectSuite {
   test("Service should return error when OneFrame client fails") {
     val cache   = Service[IO](100, 5.minutes)
     val service = RatesService[IO](errorOneFrameClient, cache, 5.minutes)
-    val pair    = Rate.Pair(Currency.USD, Currency.JPY)
+    val pair    = Rate.Pair(Currency.EUR, Currency.JPY)
 
     for {
       result <- service.get(pair)
       _ <- IO(assert(result.isLeft))
+      error <- IO(result.left.toOption.get)
+      _ <- IO(assert(error.isInstanceOf[AppError.UpstreamUnavailable]))
     } yield ()
   }
 
@@ -122,7 +124,7 @@ class ServiceSpec extends CatsEffectSuite {
   test("Service should handle cache miss and put to cache") {
     val cache   = Service[IO](100, 5.minutes)
     val service = RatesService[IO](successOneFrameClient, cache, 5.minutes)
-    val pair    = Rate.Pair(Currency.USD, Currency.JPY)
+    val pair    = Rate.Pair(Currency.EUR, Currency.JPY)
 
     for {
       _ <- cache.clear()
