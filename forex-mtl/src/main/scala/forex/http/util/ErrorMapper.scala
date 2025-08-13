@@ -1,33 +1,37 @@
 package forex.http.util
 
 import cats.effect.Sync
-import forex.programs.rates.errors.RateProgramError
-import io.circe.syntax.EncoderOps
+import cats.syntax.applicative._
+import forex.domain.error.AppError
 import org.http4s.{ Method, Response, Status }
 import org.http4s.dsl.Http4sDsl
 import org.http4s.headers.Allow
-import org.http4s.circe._
 
 object ErrorMapper {
-  def map[F[_]: Sync](error: Error): F[Response[F]] = {
-    val dsl = new Http4sDsl[F] {}; import dsl._
-    error match {
-      case RateProgramError.RateLookupFailed(_) =>
-        BadGateway(ErrorResponse(Status.BadGateway.code, "External rate provider failed"))
-      case RateProgramError.ValidationFailed(errors) =>
-        BadRequest(ErrorResponse(Status.BadRequest.code, "Validation failed", errors).asJson)
-    }
+
+  private def getErrorResponse[F[_]: Sync](status: Status, msg: String): F[Response[F]] =
+    Response[F](status).withEntity(ErrorResponse(status.code, msg)).pure[F]
+
+  def toErrorResponse[F[_]: Sync](e: AppError): F[Response[F]] = e match {
+    case AppError.Validation(m)             => getErrorResponse(Status.BadRequest, m)
+    case AppError.NotFound(m)               => getErrorResponse(Status.NotFound, m)
+    case AppError.CalculationFailed(m)      => getErrorResponse(Status.UnprocessableEntity, m)
+    case AppError.UpstreamAuthFailed(_, m)  => getErrorResponse(Status.BadGateway, m)
+    case AppError.RateLimited(_, m)         => getErrorResponse(Status.BadGateway, m)
+    case AppError.DecodingFailed(_, m)      => getErrorResponse(Status.BadGateway, m)
+    case AppError.UpstreamUnavailable(_, m) => getErrorResponse(Status.ServiceUnavailable, m)
+    case AppError.UnexpectedError(m)        => getErrorResponse(Status.InternalServerError, m)
+    case _ => getErrorResponse(Status.InternalServerError, "An unexpected error occurred")
   }
 
-  def fromRateError[F[_]: Sync](error: Error): F[Response[F]] = map(error)
-
   def badRequest[F[_]: Sync](messages: List[String]): F[Response[F]] = {
-    val dsl = new Http4sDsl[F] {}; import dsl._
-    BadRequest(ErrorResponse(Status.BadRequest.code, "Bad Request: Invalid query parameters", messages).asJson)
+    val dsl     = new Http4sDsl[F] {}; import dsl._
+    val message = if (messages.isEmpty) "Bad Request: Invalid query parameters" else messages.mkString("; ")
+    BadRequest(ErrorResponse(Status.BadRequest.code, message))
   }
 
   def methodNotAllow[F[_]: Sync](method: Method): F[Response[F]] = {
     val dsl = new Http4sDsl[F] {}; import dsl._
-    MethodNotAllowed(Allow(), ErrorResponse(Status.MethodNotAllowed.code, s"Method ${method} not allowed").asJson)
+    MethodNotAllowed(Allow(), ErrorResponse(Status.MethodNotAllowed.code, s"Method ${method} not allowed"))
   }
 }

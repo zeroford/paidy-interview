@@ -4,13 +4,15 @@ import cats.Applicative
 import cats.syntax.applicative._
 import cats.syntax.either._
 import forex.domain.rates.Rate
-import forex.clients.oneframe.Protocol.{OneFrameRate, OneFrameRatesResponse}
+import forex.clients.oneframe.Protocol.{ OneFrameRate, OneFrameRatesResponse }
 import forex.clients.oneframe.Algebra
-import forex.clients.oneframe.errors.OneFrameError
+import forex.domain.error.AppError
+import org.typelevel.log4cats.Logger
 
-class MockClient[F[_]: Applicative] extends Algebra[F] {
+class MockClient[F[_]: Applicative: Logger] extends Algebra[F] {
 
-  override def getRates(pairs: List[Rate.Pair]): F[OneFrameError Either OneFrameRatesResponse] =
+  override def getRates(pairs: List[Rate.Pair]): F[AppError Either OneFrameRatesResponse] = {
+    Logger[F].info(s"[MockOneFrame] Get rate from mock client")
     pairs
       .map { pair =>
         OneFrameRate(
@@ -22,12 +24,11 @@ class MockClient[F[_]: Applicative] extends Algebra[F] {
           time_stamp = "2025-01-01T00:00:00Z"
         )
       }
-      .toList
-      .asRight[OneFrameError]
+      .asRight[AppError]
       .pure[F]
-
+  }
 }
 
 object MockClient {
-  def apply[F[_]: Applicative]: Algebra[F] = new MockClient[F]
+  def apply[F[_]: Applicative: Logger]: Algebra[F] = new MockClient[F]
 }

@@ -6,10 +6,15 @@ import forex.config.OneFrameConfig
 import forex.clients.oneframe.interpreter.{ HttpClient, MockClient }
 import forex.clients.OneFrameClient
 import org.http4s.client.Client
+import org.typelevel.log4cats.Logger
 
 object Interpreters {
-  def httpClient[F[_]: Concurrent](client: Client[F], config: OneFrameConfig, token: String): OneFrameClient[F] =
+  def httpClient[F[_]: Concurrent: Logger](
+      client: Client[F],
+      config: OneFrameConfig,
+      token: String
+  ): OneFrameClient[F] =
     new HttpClient[F](client, config, token)
 
-  def mockClient[F[_]: Applicative]: OneFrameClient[F] = new MockClient[F]
+  def mockClient[F[_]: Applicative: Logger]: OneFrameClient[F] = new MockClient[F]
 }

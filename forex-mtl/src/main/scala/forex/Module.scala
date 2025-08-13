@@ -12,8 +12,9 @@ import forex.services.{ CacheService, RatesService }
 import org.http4s._
 import org.http4s.client.Client
 import org.http4s.server.middleware.{ AutoSlash, Timeout }
+import org.typelevel.log4cats.Logger
 
-class Module[F[_]: Async](config: ApplicationConfig, httpClient: Client[F]) {
+class Module[F[_]: Async: Logger](config: ApplicationConfig, httpClient: Client[F]) {
 
   private val oneFrameClient: OneFrameClient[F] = config.environment match {
     case Environment.Dev =>

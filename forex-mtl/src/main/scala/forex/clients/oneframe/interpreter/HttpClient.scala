@@ -2,63 +2,63 @@ package forex.clients.oneframe.interpreter
 
 import cats.effect.Concurrent
 import cats.syntax.all._
+import com.sun.org.apache.xerces.internal.util.XMLChar.trim
 import forex.clients.oneframe.Protocol.{ OneFrameApiError, OneFrameRatesResponse }
+import forex.clients.oneframe.{ errors => Error }
 import forex.config.OneFrameConfig
 import forex.domain.rates.Rate
 import forex.clients.oneframe.{ Algebra, RequestBuilder }
-import forex.clients.oneframe.errors.OneFrameError
+import forex.domain.error.AppError
 import io.circe.parser.decode
 import org.http4s.client.Client
-import org.slf4j.LoggerFactory
+import org.typelevel.log4cats.Logger
 
-class HttpClient[F[_]: Concurrent](client: Client[F], config: OneFrameConfig, token: String) extends Algebra[F] {
+class HttpClient[F[_]: Concurrent: Logger](client: Client[F], config: OneFrameConfig, token: String)
+    extends Algebra[F] {
 
-  import RequestBuilder._
+  private val builder = RequestBuilder(config.host, config.port, token)
 
-  private val logger = LoggerFactory.getLogger(getClass)
-
-  override def getRates(pairs: List[Rate.Pair]): F[OneFrameError Either OneFrameRatesResponse] = {
-    val request = buildGetRatesRequest[F](pairs, config, token)
-
-    logger.error(s"Request to OneFrameAPI: Get Rate")
+  override def getRates(pairs: List[Rate.Pair]): F[AppError Either OneFrameRatesResponse] = {
+    val request = builder.getRatesRequest[F](pairs)
     client.run(request).use { response =>
-      response.bodyText.compile.string.attempt.map {
-        case Left(t) =>
-          logger.error(s"Failed to read response body: ${t.getMessage}", t)
-          Left(OneFrameError.fromThrowable(t))
-        case Right(body) if response.status.isSuccess =>
-          parseSuccessBody(body)
-        case Right(body) =>
-          logger.error(s"Error response from OneFrame - status:${response.status}, body:$body")
-          Left(OneFrameError.HttpError(response.status.code, body))
-      }
+      Logger[F].debug(s"[OneFrameAPI] Request GET rates, request:$request") >>
+        response.bodyText.compile.string.attempt.flatMap {
+          case Right(body) if response.status.isSuccess => parseSuccessBody(body)
+          case Right(body)                              =>
+            Logger[F]
+              .error(s"[OneFrameAPI] Receive error, http error: ${response.status}, $body")
+              .as(Error.toAppError(response.status.code).asLeft[OneFrameRatesResponse])
+          case Left(t) =>
+            Logger[F]
+              .error(s"[OneFrameAPI] Receive error, read-body failed: ${t.getMessage}")
+              .as(Error.toAppError(t).asLeft[OneFrameRatesResponse])
+        }
     }
   }
 
-  private def parseSuccessBody(body: String): Either[OneFrameError, OneFrameRatesResponse] =
-    decode[OneFrameRatesResponse](body)
-      .leftFlatMap { _ =>
-        decode[OneFrameApiError](body)
-          .leftMap(_ => OneFrameError.decodedFailed(body))
-          .flatMap(apiError => {
-            logger.error(s"Received error from OneFrameAPI: $apiError")
-            Left(OneFrameError.fromApiError(apiError.error))
-          })
-      }
-      .flatMap(ensureNonEmpty)
-
-  private def ensureNonEmpty(r: OneFrameRatesResponse): Either[OneFrameError, OneFrameRatesResponse] =
-    if (r.nonEmpty) {
-      logger.info(s"Received response from OneFrameAPI: ${r.size} rates")
-      Right(r)
-    } else {
-      logger.warn("Received response from OneFrameAPI: Empty Rate")
-      Left(OneFrameError.noRateFound)
+  private def parseSuccessBody(body: String): F[AppError Either OneFrameRatesResponse] =
+    decode[OneFrameRatesResponse](body) match {
+      case Right(r) =>
+        if (r.nonEmpty)
+          Logger[F].debug(s"[OneFrameAPI] Received response: ${r.size} rates") >>
+            r.asRight[AppError].pure[F]
+        else
+          Logger[F].warn("[OneFrameAPI] Received response: Empty rate") >>
+            Error.toAppError("Empty Rate").asLeft[OneFrameRatesResponse].pure[F]
+      case Left(_) =>
+        decode[OneFrameApiError](body) match {
+          case Right(res) =>
+            Logger[F].warn(s"[OneFrameAPI] Received error: $res") >>
+              Error.toAppError(res.error).asLeft[OneFrameRatesResponse].pure[F]
+          case Left(e) =>
+            Logger[F].error(s"[OneFrameAPI] decode failed, ${e.getMessage}; body:${trim(body)}") >>
+              Error.toAppError(body).asLeft[OneFrameRatesResponse].pure[F]
+        }
     }
 
 }
 
 object HttpClient {
-  def apply[F[_]: Concurrent](client: Client[F], config: OneFrameConfig, token: String): Algebra[F] =
+  def apply[F[_]: Concurrent: Logger](client: Client[F], config: OneFrameConfig, token: String): Algebra[F] =
     new HttpClient[F](client, config, token)
 }

@@ -1,42 +1,45 @@
 package forex.clients.oneframe
 
+import forex.domain.error.AppError
+
 import java.io.IOException
 import java.net.{ ConnectException, SocketTimeoutException }
 import java.util.concurrent.TimeoutException
 
 object errors {
 
-  sealed trait OneFrameError extends Error
-  object OneFrameError {
-    final case class HttpError(code: Int, str: String) extends OneFrameError
-    final case class LookupFailed(str: String) extends OneFrameError
-    final case class DecodingError(str: String) extends OneFrameError
-    final case class ConnectionError(str: String) extends OneFrameError
-    final case class UnexpectedError(str: String) extends OneFrameError
+  def toAppError(t: Throwable): AppError = t match {
+    case _: SocketTimeoutException | _: TimeoutException =>
+      AppError.UpstreamUnavailable("one-frame", "Timeout")
+    case _: ConnectException | _: IOException =>
+      AppError.UpstreamUnavailable("one-frame", "Unavailable")
+    case _ =>
+      AppError.UnexpectedError("Unexpected upstream error")
+  }
 
-    def nonEmpty: OneFrameError = LookupFailed("Pairs must be non-empty")
-    def noRateFound: OneFrameError = LookupFailed("No rate found")
-    def decodedFailed(str: String): OneFrameError = DecodingError(s"Failed to decoded $str")
-
-    def fromThrowable(e: Throwable): OneFrameError = e match {
-      case e: SocketTimeoutException => ConnectionError("OneFrameAPI: Timeout - " + e.getMessage)
-      case e: TimeoutException       => ConnectionError("OneFrameAPI: Timeout - " + e.getMessage)
-      case e: ConnectException       => ConnectionError("OneFrameAPI: Connection failed - " + e.getMessage)
-      case e: IOException            => ConnectionError(e.getMessage)
-      case _                         => UnexpectedError(e.getMessage)
+  def toAppError(error: String): AppError =
+    error match {
+      case "Invalid Currency Pair" | "No currency pair provided" => AppError.Validation("Invalid currency pair")
+      case "Quota reached" | "Rate limited"                      => AppError.RateLimited("one-frame", "Rate limited")
+      case "Forbidden" => AppError.UpstreamAuthFailed("one-frame", "Upstream service authentication failed")
+      case "Empty Rate" | "No Rate Found" => AppError.NotFound("No rate found")
+      case _                              => AppError.UnexpectedError("Unexpected error")
     }
 
-    def fromApiError(error: String): OneFrameError =
-      error match {
-        case "Invalid Currency Pair" | "No currency pair provided" =>
-          LookupFailed("OneFrameAPI: Invalid currency pair")
-        case "Quota reached" | "Rate limited" =>
-          LookupFailed("OneFrameAPI: Rate limited")
-        case "Forbidden" =>
-          LookupFailed("OneFrameAPI: Invalid token")
-        case other       =>
-          UnexpectedError(s"Unexpected error from OneFrame: $other")
-      }
+  def toAppError(status: Int): AppError =
+    status match {
+      case 400 =>
+        AppError.BadRequest(s"Bad request")
+      case 401 | 403 =>
+        AppError.UpstreamAuthFailed("one-frame", "Upstream service authentication failed")
+      case 404 =>
+        AppError.NotFound("No rate found")
+      case 429 =>
+        AppError.RateLimited("one-frame", "Rate limited")
+      case x if x >= 500 =>
+        AppError.UpstreamUnavailable("one-frame", s"Upstream error $x")
+      case _ =>
+        AppError.UnexpectedError("Unexpected error")
+    }
 
-  }
 }

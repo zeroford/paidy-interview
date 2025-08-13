@@ -22,7 +22,7 @@ class RatesHttpRoutes[F[_]: Sync](ratesProgram: RatesProgram[F]) extends Http4sD
         case Valid((from, to)) =>
           ratesProgram.get(GetRatesRequest(from, to)).flatMap {
             case Right(rate) => Ok(rate.asGetApiResponse)
-            case Left(err)   => ErrorMapper.fromRateError(err)
+            case Left(err)   => ErrorMapper.toErrorResponse(err)
           }
         case Invalid(err) => ErrorMapper.badRequest[F](err.toList)
       }

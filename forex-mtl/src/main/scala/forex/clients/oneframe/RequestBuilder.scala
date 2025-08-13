@@ -1,22 +1,20 @@
 package forex.clients.oneframe
 
-import forex.config.OneFrameConfig
 import forex.domain.rates.Rate
-import org.http4s.{ Header, Headers, Method, Request, Uri }
-import org.typelevel.ci.CIString
+import org.http4s._
+import org.typelevel.ci.CIStringSyntax
 
-object RequestBuilder {
+final case class RequestBuilder(host: String, port: Int, token: String) {
 
-  def buildGetRatesRequest[F[_]](pairs: List[Rate.Pair], config: OneFrameConfig, token: String): Request[F] = {
-    val pairParams  = pairs.map(pair => s"${pair.from}${pair.to}")
-    val queryString = pairParams.map(param => s"pair=$param").mkString("&")
-    val uriString   = s"http://${config.host}:${config.port}/rates?$queryString"
-    val uri         = Uri.unsafeFromString(uriString)
+  private val baseUri: Uri = Uri(
+    scheme = Some(Uri.Scheme.http),
+    authority = Some(Uri.Authority(host = Uri.RegName(host), port = Some(port)))
+  )
+  private val header: Headers = Headers(Header.Raw(ci"token", token))
 
-    Request[F](
-      method = Method.GET,
-      uri = uri,
-      headers = Headers(Header.Raw(CIString("token"), token))
-    )
+  def getRatesRequest[F[_]](pairs: List[Rate.Pair]): Request[F] = {
+    val query      = Query.fromPairs(pairs.map(p => "pair" -> s"${p.from}${p.to}"): _*)
+    val requestUrl = (baseUri / "rates").copy(query = query)
+    Request[F]().withMethod(Method.GET).withUri(requestUrl).withHeaders(header)
   }
 }
