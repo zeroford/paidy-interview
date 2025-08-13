@@ -54,15 +54,15 @@ class AppErrorSpec extends FunSuite {
   }
 
   test("AppError instances should be different types") {
-    val validation = AppError.Validation("test")
-    val notFound = AppError.NotFound("test")
-    val calculationFailed = AppError.CalculationFailed("test")
-    val upstreamAuth = AppError.UpstreamAuthFailed("service", "test")
+    val validation          = AppError.Validation("test")
+    val notFound            = AppError.NotFound("test")
+    val calculationFailed   = AppError.CalculationFailed("test")
+    val upstreamAuth        = AppError.UpstreamAuthFailed("service", "test")
     val upstreamUnavailable = AppError.UpstreamUnavailable("service", "test")
-    val rateLimited = AppError.RateLimited("service", "test")
-    val decodingFailed = AppError.DecodingFailed("service", "test")
-    val unexpected = AppError.UnexpectedError("test")
-    val badRequest = AppError.BadRequest("test")
+    val rateLimited         = AppError.RateLimited("service", "test")
+    val decodingFailed      = AppError.DecodingFailed("service", "test")
+    val unexpected          = AppError.UnexpectedError("test")
+    val badRequest          = AppError.BadRequest("test")
 
     assert(validation.isInstanceOf[AppError.Validation])
     assert(notFound.isInstanceOf[AppError.NotFound])
