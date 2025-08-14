@@ -18,7 +18,10 @@ object ErrorHandlerMiddleware {
         case Right(Some(resp)) => Sync[F].pure(resp)
         case Right(None)       =>
           NotFound(ErrorResponse(NotFound.code, s"${req.method.name}: ${req.uri.path} not found").asJson)
-        case Left(e) => InternalServerError(ErrorResponse(InternalServerError.code, e.getMessage).asJson)
+        case Left(e) =>
+          InternalServerError(
+            ErrorResponse(InternalServerError.code, "Internal server error", Some(e.getMessage)).asJson
+          )
       }
     }
   }

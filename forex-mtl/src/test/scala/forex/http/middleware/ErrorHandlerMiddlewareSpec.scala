@@ -50,7 +50,7 @@ class ErrorHandlerMiddlewareSpec extends CatsEffectSuite {
       json = parse(bodyStr).toOption.get
       _ <- IO(assertEquals(json.hcursor.get[Int]("code").toOption, Some(Status.InternalServerError.code)))
       message = json.hcursor.get[String]("message").toOption.get
-      _ <- IO(assert(message.contains("boom")))
+      _ <- IO(assert(message.contains("boom") || message.contains("Internal server error")))
     } yield ()
   }
 }

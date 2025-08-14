@@ -1,18 +1,24 @@
 package forex.services.rates
 
+import forex.domain.cache.PivotRate
+import forex.domain.error.AppError
+import forex.domain.error.AppError.UpstreamUnavailable
+import forex.domain.rates.Rate
+
 object errors {
 
-  sealed trait RatesServiceError extends Error
-  object RatesServiceError {
-    final case class OneFrameLookupFailed(msg: String) extends RatesServiceError
-    final case class InvalidCurrencyError(currency: String) extends RatesServiceError
-    final case class CacheOperationFailed(msg: String) extends RatesServiceError
-    final case class CrossRateCalculationFailed(pair: String) extends RatesServiceError
-  }
+  def notFound(pair: Rate.Pair): AppError =
+    AppError.NotFound(s"Could not extract rates for ${pair.from} and ${pair.to}")
 
-  def fromError(error: Error): RatesServiceError =
-    error match {
-      case e: RatesServiceError => e
-      case _                    => RatesServiceError.OneFrameLookupFailed(error.getMessage)
+  def combine(
+      baseError: Either[AppError, Option[PivotRate]],
+      quoteError: Either[AppError, Option[PivotRate]]
+  ): AppError =
+    (baseError, quoteError) match {
+      case (Left(base), Right(_))                                              => base
+      case (Right(_), Left(quote))                                             => quote
+      case (Left(base: UpstreamUnavailable), Left(quote: UpstreamUnavailable)) =>
+        AppError.UpstreamUnavailable("CacheService", s"${base.message}, ${quote.message}")
+      case (_, _) => AppError.UnexpectedError("Unexpected cache error")
     }
 }

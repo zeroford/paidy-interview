@@ -1,6 +1,6 @@
 package forex
 
-package object integrations {
+package object clients {
   type OneFrameClient[F[_]] = oneframe.Algebra[F]
 
   final val OneFrameClient = oneframe.Interpreters

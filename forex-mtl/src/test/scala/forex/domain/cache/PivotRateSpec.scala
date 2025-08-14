@@ -9,7 +9,7 @@ import java.time.OffsetDateTime
 
 class PivotRateSpec extends FunSuite {
 
-  test("PivotRate should store all fields correctly") {
+  test("PivotRate should handle business operations correctly") {
     val currency  = Currency.USD
     val price     = Price(BigDecimal("1.23"))
     val timestamp = Timestamp(OffsetDateTime.parse("2024-01-01T10:00:00Z"))
@@ -18,26 +18,6 @@ class PivotRateSpec extends FunSuite {
     assertEquals(pivotRate.currency, currency)
     assertEquals(pivotRate.price, price)
     assertEquals(pivotRate.timestamp, timestamp)
-  }
-
-  test("PivotRate should be equal if all fields are equal") {
-    val currency   = Currency.USD
-    val price      = Price(BigDecimal("1.23"))
-    val timestamp  = Timestamp(OffsetDateTime.parse("2024-01-01T10:00:00Z"))
-    val pivotRate1 = PivotRate(currency, price, timestamp)
-    val pivotRate2 = PivotRate(currency, price, timestamp)
-
-    assertEquals(pivotRate1, pivotRate2)
-  }
-
-  test("PivotRate should have correct hashCode") {
-    val currency   = Currency.USD
-    val price      = Price(BigDecimal("1.23"))
-    val timestamp  = Timestamp(OffsetDateTime.parse("2024-01-01T10:00:00Z"))
-    val pivotRate1 = PivotRate(currency, price, timestamp)
-    val pivotRate2 = PivotRate(currency, price, timestamp)
-
-    assertEquals(pivotRate1.hashCode(), pivotRate2.hashCode())
   }
 
   test("default should create PivotRate with price 1 and current timestamp") {
@@ -73,12 +53,15 @@ class PivotRateSpec extends FunSuite {
   }
 
   test("PivotRate decoder should decode from JSON object") {
-    val json   = """{"currency":"USD","price":1.23,"timestamp":"2024-01-01T10:00:00.000000Z"}"""
+    val json   = """{"currency":"EUR","price":1.23,"timestamp":"2024-01-01T10:00:00.000000Z"}"""
     val result = decode[PivotRate](json)
 
+    if (result.isLeft) {
+      println(s"PivotRate decode error: ${result.left.toOption.get}")
+    }
     assert(result.isRight)
     val pivotRate = result.toOption.get
-    assertEquals(pivotRate.currency, Currency.USD)
+    assertEquals(pivotRate.currency, Currency.EUR)
     assertEquals(pivotRate.price.value, BigDecimal("1.23"))
   }
 

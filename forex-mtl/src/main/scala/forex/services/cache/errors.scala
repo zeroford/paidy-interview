@@ -1,11 +1,15 @@
 package forex.services.cache
 
+import forex.domain.error.AppError
+
+import java.io.IOException
+import java.util.concurrent.TimeoutException
+
 object errors {
 
-  sealed trait CacheServiceError extends Error
-  object CacheServiceError {
-    final case class CacheOperationFailed(message: String) extends CacheServiceError
-    final case class MemoryPressure(message: String) extends CacheServiceError
-    final case class InternalError(throwable: Throwable) extends CacheServiceError
+  def toAppError(op: String, t: Throwable): AppError = t match {
+    case _: TimeoutException => AppError.UpstreamUnavailable("CacheService", s"$op -Timeout: ${t.getMessage}")
+    case _: IOException      => AppError.UpstreamUnavailable("CacheService", s"$op -I/O error: ${t.getMessage}")
+    case _                   => AppError.UnexpectedError("Unexpected cache error")
   }
 }

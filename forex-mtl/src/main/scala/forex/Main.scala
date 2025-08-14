@@ -15,7 +15,7 @@ object Main extends IOApp.Simple {
       config <- Config.resource[IO]("app")
       client <- HttpClientBuilder.build[IO]
       module = new Module[IO](config, client)
-      _ <- HttpServerBuilder.build[IO](module.httpApp, config)
+      _ <- HttpServerBuilder.build[IO](module.httpApp, config.http)
     } yield ()
 
     app
