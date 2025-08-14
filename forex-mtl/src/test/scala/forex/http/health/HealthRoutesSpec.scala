@@ -9,7 +9,7 @@ import io.circe.parser._
 class HealthRoutesSpec extends CatsEffectSuite {
 
   test("GET /health should return 200 OK with correct JSON response") {
-    val healthRoutes = new HealthHttpRoutes[IO].routes
+    val healthRoutes = new HealthRoutes[IO].routes
     val request      = Request[IO](Method.GET, uri"/health")
 
     for {

@@ -6,7 +6,7 @@ import org.http4s.HttpRoutes
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.Router
 
-class HealthHttpRoutes[F[_]: Sync] extends Http4sDsl[F] {
+class HealthRoutes[F[_]: Sync] extends Http4sDsl[F] {
 
   private[health] val prefixPath = "/health"
 

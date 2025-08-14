@@ -10,7 +10,7 @@ import org.http4s.dsl.Http4sDsl
 import org.http4s.server.Router
 import org.http4s.HttpRoutes
 
-class RatesHttpRoutes[F[_]: Sync](ratesProgram: RatesProgram[F]) extends Http4sDsl[F] {
+class RatesRoutes[F[_]: Sync](ratesProgram: RatesProgram[F]) extends Http4sDsl[F] {
 
   import Converters._, QueryParams._, Protocol._
 
