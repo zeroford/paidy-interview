@@ -3,7 +3,7 @@ package forex.domain.currency
 import munit.FunSuite
 import forex.domain.currency.errors.CurrencyError
 
-class CurrencyErrorMapperSpec extends FunSuite {
+class ErrorsSpec extends FunSuite {
 
   test("toParseFailure returns ParseFailure for Unsupported currency") {
     val err = CurrencyError.Unsupported("ABC")

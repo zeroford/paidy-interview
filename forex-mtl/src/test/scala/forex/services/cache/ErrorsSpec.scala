@@ -6,7 +6,7 @@ import munit.FunSuite
 import java.io.IOException
 import java.util.concurrent.TimeoutException
 
-class CacheErrorsSpec extends FunSuite {
+class ErrorsSpec extends FunSuite {
 
   test("toAppError with TimeoutException should return UpstreamUnavailable") {
     val operation = "GET"

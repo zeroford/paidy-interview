@@ -6,7 +6,7 @@ import java.io.IOException
 import java.net.{ ConnectException, SocketTimeoutException }
 import java.util.concurrent.TimeoutException
 
-class OneFrameErrorsSpec extends FunSuite {
+class ErrorsSpec extends FunSuite {
 
   object TestData {
     def arbitraryTimeoutException: SocketTimeoutException =

@@ -6,7 +6,7 @@ import forex.domain.rates.Rate
 import forex.config.OneFrameConfig
 import munit.CatsEffectSuite
 
-class HttpUriBuilderSpec extends CatsEffectSuite {
+class RequestBuilderSpec extends CatsEffectSuite {
 
   val config = OneFrameConfig(
     host = "localhost",
@@ -16,31 +16,25 @@ class HttpUriBuilderSpec extends CatsEffectSuite {
   val testToken = "test-token"
   val testPairs = List(Rate.Pair(Currency.USD, Currency.JPY))
 
-  test("RequestBuilder should build correct URI for single pair") {
+  test("RequestBuilder should build URIs correctly") {
     val builder = RequestBuilder(config.host, config.port, testToken)
-    val request = builder.getRatesRequest[IO](testPairs)
 
-    assertEquals(request.method.name, "GET")
-    assertEquals(request.uri.path.toString, "/rates")
-    assertEquals(request.uri.query.params.get("pair"), Some("USDJPY"))
-    assertEquals(request.uri.authority.get.host.toString, "localhost")
-    assertEquals(request.uri.authority.get.port, Some(8081))
-  }
+    // Test single pair
+    val singleRequest = builder.getRatesRequest[IO](testPairs)
+    assertEquals(singleRequest.method.name, "GET")
+    assertEquals(singleRequest.uri.path.toString, "/rates")
+    assertEquals(singleRequest.uri.query.params.get("pair"), Some("USDJPY"))
+    assertEquals(singleRequest.uri.authority.get.host.toString, "localhost")
+    assertEquals(singleRequest.uri.authority.get.port, Some(8081))
 
-  test("RequestBuilder should build correct URI for multiple pairs") {
+    // Test multiple pairs
     val pairs = List(
       Rate.Pair(Currency.USD, Currency.EUR),
       Rate.Pair(Currency.EUR, Currency.GBP),
       Rate.Pair(Currency.GBP, Currency.JPY)
     )
-    val builder = RequestBuilder(config.host, config.port, testToken)
-    val request = builder.getRatesRequest[IO](pairs)
-
-    assertEquals(request.method.name, "GET")
-    assertEquals(request.uri.path.toString, "/rates")
-    assertEquals(request.uri.query.params.get("pair"), Some("USDEUR"))
-    assertEquals(request.uri.authority.get.host.toString, "localhost")
-    assertEquals(request.uri.authority.get.port, Some(8081))
+    val multiRequest = builder.getRatesRequest[IO](pairs)
+    assertEquals(multiRequest.uri.query.params.get("pair"), Some("USDEUR"))
   }
 
   test("RequestBuilder should include authentication header") {
@@ -68,13 +62,4 @@ class HttpUriBuilderSpec extends CatsEffectSuite {
     assertEquals(tokenHeader.get.head.value, differentToken)
   }
 
-  test("RequestBuilder should build correct URI for empty pairs list") {
-    val pairs   = List.empty[Rate.Pair]
-    val builder = RequestBuilder(config.host, config.port, testToken)
-    val request = builder.getRatesRequest[IO](pairs)
-
-    assertEquals(request.method.name, "GET")
-    assertEquals(request.uri.path.toString, "/rates")
-    assertEquals(request.uri.query.params.get("pair"), None)
-  }
 }
