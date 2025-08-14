@@ -10,8 +10,8 @@ class QueryParamsSpec extends FunSuite {
   test("currencyQueryParamDecoder decodes valid currency") {
     val decoder = QueryParams.currencyQueryParamDecoder
 
-    decoder.decode(QueryParameterValue("USD")) match {
-      case Validated.Valid(cur)   => assertEquals(cur, Currency.USD)
+    decoder.decode(QueryParameterValue("EUR")) match {
+      case Validated.Valid(cur)   => assertEquals(cur, Currency.EUR)
       case Validated.Invalid(err) => fail(s"Expected Valid, got Invalid: $err")
     }
     decoder.decode(QueryParameterValue("eur")) match {

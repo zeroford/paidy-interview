@@ -1,16 +1,21 @@
 package forex
 
-import cats.effect.IO
-import forex.config.{ ApplicationConfig, CacheConfig, Environment, HttpConfig, OneFrameConfig, SecretConfig }
-import org.http4s.HttpApp
-import org.http4s.client.Client
+import cats.effect.{ IO, Resource }
+import forex.config.{ ApplicationConfig, Environment }
+import forex.config.{ CacheConfig, HttpConfig, OneFrameConfig, SecretConfig }
 import munit.CatsEffectSuite
-import scala.concurrent.duration._
+import org.typelevel.log4cats.slf4j.Slf4jLogger
+import org.typelevel.log4cats.Logger
 import com.comcast.ip4s.{ Host, Port }
+import org.http4s.{ HttpApp, Response, Status }
+import org.http4s.client.Client
+import scala.concurrent.duration._
 
 class ModuleSpec extends CatsEffectSuite {
 
-  val testConfig = ApplicationConfig(
+  implicit val logger: Logger[IO] = Slf4jLogger.getLogger[IO]
+
+  private val testConfig = ApplicationConfig(
     environment = Environment.Dev,
     http = HttpConfig(
       host = Host.fromString("0.0.0.0").get,
@@ -32,35 +37,50 @@ class ModuleSpec extends CatsEffectSuite {
     )
   )
 
-  val mockHttpClient: Client[IO] = Client[IO](_ => cats.effect.Resource.pure(org.http4s.Response[IO]()))
+  private val testConfigWithTestEnv = testConfig.copy(environment = Environment.Test)
 
-  test("Module should create httpApp with correct configuration") {
+  private val mockHttpClient: Client[IO] = Client[IO] { _ =>
+    Resource.pure(Response[IO](Status.Ok).withEntity("mock response"))
+  }
+
+  test("Module should create valid HttpApp with Dev environment") {
     val module = new Module[IO](testConfig, mockHttpClient)
 
     for {
       httpApp <- IO(module.httpApp)
-      _ <- IO(assert(httpApp.isInstanceOf[HttpApp[IO]]))
+      _ <- IO(assert(httpApp.isInstanceOf[HttpApp[IO]], "HttpApp should be created successfully"))
+      _ <- IO(assert(httpApp != null, "HttpApp should not be null"))
     } yield ()
   }
 
-  test("Module should use Dev environment for OneFrame client") {
+  test("Module should create valid HttpApp with Test environment") {
+    val module = new Module[IO](testConfigWithTestEnv, mockHttpClient)
+
+    for {
+      httpApp <- IO(module.httpApp)
+      _ <- IO(assert(httpApp.isInstanceOf[HttpApp[IO]], "HttpApp should be created successfully"))
+      _ <- IO(assert(httpApp != null, "HttpApp should not be null"))
+    } yield ()
+  }
+
+  test("Module should handle different environments correctly") {
+    val devModule  = new Module[IO](testConfig, mockHttpClient)
+    val testModule = new Module[IO](testConfigWithTestEnv, mockHttpClient)
+
+    for {
+      devApp <- IO(devModule.httpApp)
+      testApp <- IO(testModule.httpApp)
+      _ <- IO(assert(devApp.isInstanceOf[HttpApp[IO]], "Dev HttpApp should be valid"))
+      _ <- IO(assert(testApp.isInstanceOf[HttpApp[IO]], "Test HttpApp should be valid"))
+    } yield ()
+  }
+
+  test("Module should use provided HTTP client") {
     val module = new Module[IO](testConfig, mockHttpClient)
 
-    // This test verifies that the module is created successfully
-    // The actual OneFrame client selection is tested in integration tests
     for {
       httpApp <- IO(module.httpApp)
-      _ <- IO(assert(httpApp.isInstanceOf[HttpApp[IO]]))
-    } yield ()
-  }
-
-  test("Module should use Test environment for OneFrame client") {
-    val testConfigWithTestEnv = testConfig.copy(environment = Environment.Test)
-    val module                = new Module[IO](testConfigWithTestEnv, mockHttpClient)
-
-    for {
-      httpApp <- IO(module.httpApp)
-      _ <- IO(assert(httpApp.isInstanceOf[HttpApp[IO]]))
+      _ <- IO(assert(httpApp != null, "Module should use provided HTTP client"))
     } yield ()
   }
 }

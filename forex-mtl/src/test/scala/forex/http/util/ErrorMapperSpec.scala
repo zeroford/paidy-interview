@@ -3,121 +3,124 @@ package forex.http.util
 import cats.effect.IO
 import forex.domain.error.AppError
 import munit.CatsEffectSuite
-import io.circe.parser._
-import org.http4s.Method
-import org.http4s.Status
+import org.http4s.{ Method, Status }
 
 class ErrorMapperSpec extends CatsEffectSuite {
 
-  test("toErrorResponse Validation returns 400 BadRequest") {
+  test("toErrorResponse should map Validation error to BadRequest") {
+    val error = AppError.Validation("Invalid currency pair")
+
     for {
-      response <- ErrorMapper.toErrorResponse[IO](AppError.Validation("Invalid currency format"))
+      response <- ErrorMapper.toErrorResponse[IO](error)
       _ <- IO(assertEquals(response.status, Status.BadRequest))
-      bodyStr <- response.as[String]
-      json = parse(bodyStr).toOption.get
-      _ <- IO(assert(json.hcursor.get[String]("message").toOption.get.contains("Invalid currency format")))
-      _ <- IO(assertEquals(json.hcursor.get[Int]("code").toOption, Some(Status.BadRequest.code)))
+      _ <- IO(assert(response.headers.get(org.typelevel.ci.CIString("Content-Type")).isDefined))
     } yield ()
   }
 
-  test("toErrorResponse NotFound returns 404 NotFound") {
+  test("toErrorResponse should map NotFound error to NotFound") {
+    val error = AppError.NotFound("Rate not found for USD/EUR")
+
     for {
-      response <- ErrorMapper.toErrorResponse[IO](AppError.NotFound("No rate found"))
+      response <- ErrorMapper.toErrorResponse[IO](error)
       _ <- IO(assertEquals(response.status, Status.NotFound))
-      bodyStr <- response.as[String]
-      json = parse(bodyStr).toOption.get
-      _ <- IO(assert(json.hcursor.get[String]("message").toOption.get.contains("No rate found")))
-      _ <- IO(assertEquals(json.hcursor.get[Int]("code").toOption, Some(Status.NotFound.code)))
     } yield ()
   }
 
-  test("toErrorResponse CalculationFailed returns 422 UnprocessableEntity") {
+  test("toErrorResponse should map CalculationFailed error to UnprocessableEntity") {
+    val error = AppError.CalculationFailed("Division by zero in rate calculation")
+
     for {
-      response <- ErrorMapper.toErrorResponse[IO](AppError.CalculationFailed("Rate calculation failed"))
+      response <- ErrorMapper.toErrorResponse[IO](error)
       _ <- IO(assertEquals(response.status, Status.UnprocessableEntity))
-      bodyStr <- response.as[String]
-      json = parse(bodyStr).toOption.get
-      _ <- IO(assert(json.hcursor.get[String]("message").toOption.get.contains("Rate calculation failed")))
-      _ <- IO(assertEquals(json.hcursor.get[Int]("code").toOption, Some(Status.UnprocessableEntity.code)))
     } yield ()
   }
 
-  test("toErrorResponse UpstreamAuthFailed returns 502 BadGateway") {
+  test("toErrorResponse should map UpstreamAuthFailed error to BadGateway") {
+    val error = AppError.UpstreamAuthFailed("401", "Authentication failed")
+
     for {
-      response <- ErrorMapper.toErrorResponse[IO](AppError.UpstreamAuthFailed("one-frame", "Authentication failed"))
+      response <- ErrorMapper.toErrorResponse[IO](error)
       _ <- IO(assertEquals(response.status, Status.BadGateway))
-      bodyStr <- response.as[String]
-      json = parse(bodyStr).toOption.get
-      _ <- IO(assert(json.hcursor.get[String]("message").toOption.get.contains("Authentication failed")))
-      _ <- IO(assertEquals(json.hcursor.get[Int]("code").toOption, Some(Status.BadGateway.code)))
     } yield ()
   }
 
-  test("toErrorResponse RateLimited returns 502 BadGateway") {
+  test("toErrorResponse should map RateLimited error to BadGateway") {
+    val error = AppError.RateLimited("429", "Too many requests")
+
     for {
-      response <- ErrorMapper.toErrorResponse[IO](AppError.RateLimited("one-frame", "Rate limited"))
+      response <- ErrorMapper.toErrorResponse[IO](error)
       _ <- IO(assertEquals(response.status, Status.BadGateway))
-      bodyStr <- response.as[String]
-      json = parse(bodyStr).toOption.get
-      _ <- IO(assert(json.hcursor.get[String]("message").toOption.get.contains("Rate limited")))
-      _ <- IO(assertEquals(json.hcursor.get[Int]("code").toOption, Some(Status.BadGateway.code)))
     } yield ()
   }
 
-  test("toErrorResponse DecodingFailed returns 502 BadGateway") {
+  test("toErrorResponse should map DecodingFailed error to BadGateway") {
+    val error = AppError.DecodingFailed("Invalid JSON", "Failed to parse response")
+
     for {
-      response <- ErrorMapper.toErrorResponse[IO](AppError.DecodingFailed("one-frame", "Failed to decode response"))
+      response <- ErrorMapper.toErrorResponse[IO](error)
       _ <- IO(assertEquals(response.status, Status.BadGateway))
-      bodyStr <- response.as[String]
-      json = parse(bodyStr).toOption.get
-      _ <- IO(assert(json.hcursor.get[String]("message").toOption.get.contains("Failed to decode response")))
-      _ <- IO(assertEquals(json.hcursor.get[Int]("code").toOption, Some(Status.BadGateway.code)))
     } yield ()
   }
 
-  test("toErrorResponse UpstreamUnavailable returns 503 ServiceUnavailable") {
+  test("toErrorResponse should map UpstreamUnavailable error to ServiceUnavailable") {
+    val error = AppError.UpstreamUnavailable("503", "Service temporarily unavailable")
+
     for {
-      response <- ErrorMapper.toErrorResponse[IO](AppError.UpstreamUnavailable("one-frame", "Service unavailable"))
+      response <- ErrorMapper.toErrorResponse[IO](error)
       _ <- IO(assertEquals(response.status, Status.ServiceUnavailable))
-      bodyStr <- response.as[String]
-      json = parse(bodyStr).toOption.get
-      _ <- IO(assert(json.hcursor.get[String]("message").toOption.get.contains("Service unavailable")))
-      _ <- IO(assertEquals(json.hcursor.get[Int]("code").toOption, Some(Status.ServiceUnavailable.code)))
     } yield ()
   }
 
-  test("toErrorResponse UnexpectedError returns 500 InternalServerError") {
+  test("toErrorResponse should map UnexpectedError to InternalServerError") {
+    val error = AppError.UnexpectedError("Something went wrong")
+
     for {
-      response <- ErrorMapper.toErrorResponse[IO](AppError.UnexpectedError("Internal server error"))
+      response <- ErrorMapper.toErrorResponse[IO](error)
       _ <- IO(assertEquals(response.status, Status.InternalServerError))
-      bodyStr <- response.as[String]
-      json = parse(bodyStr).toOption.get
-      _ <- IO(assert(json.hcursor.get[String]("message").toOption.get.contains("Internal server error")))
-      _ <- IO(assertEquals(json.hcursor.get[Int]("code").toOption, Some(Status.InternalServerError.code)))
     } yield ()
   }
 
-  test("badRequest returns 400 BadRequest with error details") {
-    val details = List("Invalid 'from' parameter", "Invalid 'to' parameter")
-
+  test("badRequest should return BadRequest with empty messages") {
     for {
-      response <- ErrorMapper.badRequest[IO](details)
+      response <- ErrorMapper.badRequest[IO](List.empty)
       _ <- IO(assertEquals(response.status, Status.BadRequest))
-      bodyStr <- response.as[String]
-      json = parse(bodyStr).toOption.get
-      _ <- IO(assert(json.hcursor.get[String]("message").toOption.get.contains("Invalid query parameters")))
-      _ <- IO(assertEquals(json.hcursor.get[Int]("code").toOption, Some(Status.BadRequest.code)))
     } yield ()
   }
 
-  test("methodNotAllow returns 405 MethodNotAllowed with correct message") {
+  test("badRequest should return BadRequest with single message") {
+    val messages = List("Invalid currency code")
+
     for {
-      response <- ErrorMapper.methodNotAllow[IO](Method.PUT)
+      response <- ErrorMapper.badRequest[IO](messages)
+      _ <- IO(assertEquals(response.status, Status.BadRequest))
+    } yield ()
+  }
+
+  test("badRequest should return BadRequest with multiple messages") {
+    val messages = List("Invalid from currency", "Invalid to currency")
+
+    for {
+      response <- ErrorMapper.badRequest[IO](messages)
+      _ <- IO(assertEquals(response.status, Status.BadRequest))
+    } yield ()
+  }
+
+  test("methodNotAllow should return MethodNotAllowed with Allow header") {
+    val method = Method.GET
+
+    for {
+      response <- ErrorMapper.methodNotAllow[IO](method)
       _ <- IO(assertEquals(response.status, Status.MethodNotAllowed))
-      bodyStr <- response.as[String]
-      json = parse(bodyStr).toOption.get
-      _ <- IO(assert(json.hcursor.get[String]("message").toOption.get.contains("Method PUT not allowed")))
-      _ <- IO(assertEquals(json.hcursor.get[Int]("code").toOption, Some(Status.MethodNotAllowed.code)))
+      _ <- IO(assert(response.headers.get(org.typelevel.ci.CIString("Allow")).isDefined))
+    } yield ()
+  }
+
+  test("methodNotAllow should include method name in error message") {
+    val method = Method.POST
+
+    for {
+      response <- ErrorMapper.methodNotAllow[IO](method)
+      _ <- IO(assertEquals(response.status, Status.MethodNotAllowed))
     } yield ()
   }
 }

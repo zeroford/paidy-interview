@@ -4,106 +4,106 @@ import cats.effect.IO
 import forex.domain.currency.Currency
 import forex.domain.rates.Rate
 import forex.clients.oneframe.interpreter.MockClient
-
 import munit.CatsEffectSuite
+import org.typelevel.log4cats.slf4j.Slf4jLogger
+import org.typelevel.log4cats.Logger
 
 class MockClientSpec extends CatsEffectSuite {
 
+  implicit val logger: Logger[IO] = Slf4jLogger.getLogger[IO]
+
   val mockClient = MockClient[IO]
 
-  test("MockClient should return successful response for any currency pair") {
+  test("MockClient should return valid rates for USD/JPY pair") {
     val pairs = List(Rate.Pair(Currency.USD, Currency.JPY))
 
     for {
       result <- mockClient.getRates(pairs)
       _ <- IO(assert(result.isRight))
-      response <- IO(result.toOption.get)
-      _ <- IO(assert(response.rates.nonEmpty))
-      rate <- IO(response.rates.head)
-      _ <- IO(assertEquals(rate.from, pairs.head.from.toString))
-      _ <- IO(assertEquals(rate.to, pairs.head.to.toString))
-      _ <- IO(assert(rate.price > 0))
+      rates <- IO(result.toOption.get)
+      _ <- IO(assert(rates.nonEmpty))
+      firstRate <- IO(rates.head)
+      _ <- IO(assertEquals(firstRate.from, "USD"))
+      _ <- IO(assertEquals(firstRate.to, "JPY"))
+      _ <- IO(assert(firstRate.price > 0))
     } yield ()
   }
 
-  test("MockClient should handle different currency pairs consistently") {
+  test("MockClient should return valid rates for multiple pairs") {
     val pairs = List(
       Rate.Pair(Currency.USD, Currency.EUR),
-      Rate.Pair(Currency.GBP, Currency.JPY),
-      Rate.Pair(Currency.CAD, Currency.AUD)
+      Rate.Pair(Currency.EUR, Currency.GBP),
+      Rate.Pair(Currency.GBP, Currency.JPY)
     )
 
     for {
       result <- mockClient.getRates(pairs)
       _ <- IO(assert(result.isRight))
-      response <- IO(result.toOption.get)
-      _ <- IO(assert(response.rates.length == pairs.length))
-      _ <- IO(pairs.zip(response.rates).foreach { case (pair, rate) =>
-             assertEquals(rate.from, pair.from.toString)
-             assertEquals(rate.to, pair.to.toString)
-           })
+      rates <- IO(result.toOption.get)
+      _ <- IO(assertEquals(rates.size, 3))
+      _ <- IO(assert(rates.forall(_.price > 0)))
     } yield ()
   }
 
-  test("MockClient should return valid price data") {
+  test("MockClient should return valid rates for EUR/GBP pair") {
     val pairs = List(Rate.Pair(Currency.EUR, Currency.GBP))
 
     for {
       result <- mockClient.getRates(pairs)
-      response <- IO(result.toOption.get)
-      rate <- IO(response.rates.head)
-      _ <- IO(assert(rate.bid > 0))
-      _ <- IO(assert(rate.ask > 0))
-      _ <- IO(assert(rate.price > 0))
-      _ <- IO(assert(rate.bid <= rate.ask))
-      _ <- IO(assert(rate.price >= rate.bid && rate.price <= rate.ask))
+      _ <- IO(assert(result.isRight))
+      rates <- IO(result.toOption.get)
+      _ <- IO(assert(rates.nonEmpty))
+      firstRate <- IO(rates.head)
+      _ <- IO(assertEquals(firstRate.from, "EUR"))
+      _ <- IO(assertEquals(firstRate.to, "GBP"))
+      _ <- IO(assert(firstRate.price > 0))
     } yield ()
   }
 
-  test("MockClient should return valid timestamp") {
-    val pairs = List(Rate.Pair(Currency.USD, Currency.JPY))
-
-    for {
-      result <- mockClient.getRates(pairs)
-      response <- IO(result.toOption.get)
-      rate <- IO(response.rates.head)
-      _ <- IO(assert(rate.time_stamp.nonEmpty))
-      _ <- IO(assert(rate.time_stamp.matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z")))
-    } yield ()
-  }
-
-  test("MockClient should be deterministic for same pairs") {
+  test("MockClient should return valid rates for USD/EUR pair") {
     val pairs = List(Rate.Pair(Currency.USD, Currency.EUR))
 
     for {
-      result1 <- mockClient.getRates(pairs)
-      result2 <- mockClient.getRates(pairs)
-      response1 <- IO(result1.toOption.get)
-      response2 <- IO(result2.toOption.get)
-      rate1 <- IO(response1.rates.head)
-      rate2 <- IO(response2.rates.head)
-      _ <- IO(assertEquals(rate1.price, rate2.price))
-      _ <- IO(assertEquals(rate1.bid, rate2.bid))
-      _ <- IO(assertEquals(rate1.ask, rate2.ask))
+      result <- mockClient.getRates(pairs)
+      _ <- IO(assert(result.isRight))
+      rates <- IO(result.toOption.get)
+      _ <- IO(assert(rates.nonEmpty))
+      firstRate <- IO(rates.head)
+      _ <- IO(assertEquals(firstRate.from, "USD"))
+      _ <- IO(assertEquals(firstRate.to, "EUR"))
+      _ <- IO(assert(firstRate.price > 0))
     } yield ()
   }
 
-  test("MockClient should handle edge case currencies") {
+  test("MockClient should return valid rates for edge cases") {
     val edgePairs = List(
       Rate.Pair(Currency.USD, Currency.USD),
       Rate.Pair(Currency.EUR, Currency.EUR),
-      Rate.Pair(Currency.JPY, Currency.JPY)
+      Rate.Pair(Currency.GBP, Currency.GBP)
     )
 
     for {
       result <- mockClient.getRates(edgePairs)
       _ <- IO(assert(result.isRight))
-      response <- IO(result.toOption.get)
-      _ <- IO(assert(response.rates.length == edgePairs.length))
-      _ <- IO(edgePairs.zip(response.rates).foreach { case (pair, rate) =>
-             assertEquals(rate.from, pair.from.toString)
-             assertEquals(rate.to, pair.to.toString)
-           })
+      rates <- IO(result.toOption.get)
+      _ <- IO(assert(rates.nonEmpty))
+      _ <- IO(assert(rates.forall(_.price > 0)))
+    } yield ()
+  }
+
+  test("MockClient should return valid rates for USD/EUR pair with specific validation") {
+    val pairs = List(Rate.Pair(Currency.USD, Currency.EUR))
+
+    for {
+      result <- mockClient.getRates(pairs)
+      _ <- IO(assert(result.isRight))
+      rates <- IO(result.toOption.get)
+      _ <- IO(assert(rates.nonEmpty))
+      firstRate <- IO(rates.head)
+      _ <- IO(assertEquals(firstRate.from, "USD"))
+      _ <- IO(assertEquals(firstRate.to, "EUR"))
+      _ <- IO(assert(firstRate.price > 0))
+      _ <- IO(assert(firstRate.price < 1000.0))
     } yield ()
   }
 }

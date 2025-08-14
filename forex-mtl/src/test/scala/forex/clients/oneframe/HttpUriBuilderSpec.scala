@@ -1,11 +1,10 @@
 package forex.clients.oneframe
 
 import cats.effect.IO
-import forex.config.OneFrameConfig
 import forex.domain.currency.Currency
 import forex.domain.rates.Rate
+import forex.config.OneFrameConfig
 import munit.CatsEffectSuite
-import org.http4s.{ Method, Uri }
 
 class HttpUriBuilderSpec extends CatsEffectSuite {
 
@@ -15,72 +14,67 @@ class HttpUriBuilderSpec extends CatsEffectSuite {
   )
 
   val testToken = "test-token"
+  val testPairs = List(Rate.Pair(Currency.USD, Currency.JPY))
 
-  test("HttpUriBuilder should build correct base URI") {
-    val pairs   = List(Rate.Pair(Currency.USD, Currency.JPY))
-    val request = RequestBuilder.buildGetRatesRequest[IO](pairs, config, testToken)
-    val uri     = request.uri
+  test("RequestBuilder should build correct URI for single pair") {
+    val builder = RequestBuilder(config.host, config.port, testToken)
+    val request = builder.getRatesRequest[IO](testPairs)
 
-    assertEquals(uri.scheme, Some(Uri.Scheme.http))
-    assertEquals(uri.authority.get.host, Uri.RegName("localhost"))
-    assertEquals(uri.authority.get.port, Some(8081))
-  }
-
-  test("HttpUriBuilder should build correct request with query parameters") {
-    val pairs   = List(Rate.Pair(Currency.USD, Currency.JPY))
-    val request = RequestBuilder.buildGetRatesRequest[IO](pairs, config, testToken)
-
-    assertEquals(request.method, Method.GET)
+    assertEquals(request.method.name, "GET")
     assertEquals(request.uri.path.toString, "/rates")
     assertEquals(request.uri.query.params.get("pair"), Some("USDJPY"))
+    assertEquals(request.uri.authority.get.host.toString, "localhost")
+    assertEquals(request.uri.authority.get.port, Some(8081))
   }
 
-  test("HttpUriBuilder should include authentication header") {
-    val pairs   = List(Rate.Pair(Currency.EUR, Currency.GBP))
-    val request = RequestBuilder.buildGetRatesRequest[IO](pairs, config, testToken)
+  test("RequestBuilder should build correct URI for multiple pairs") {
+    val pairs = List(
+      Rate.Pair(Currency.USD, Currency.EUR),
+      Rate.Pair(Currency.EUR, Currency.GBP),
+      Rate.Pair(Currency.GBP, Currency.JPY)
+    )
+    val builder = RequestBuilder(config.host, config.port, testToken)
+    val request = builder.getRatesRequest[IO](pairs)
+
+    assertEquals(request.method.name, "GET")
+    assertEquals(request.uri.path.toString, "/rates")
+    assertEquals(request.uri.query.params.get("pair"), Some("USDEUR"))
+    assertEquals(request.uri.authority.get.host.toString, "localhost")
+    assertEquals(request.uri.authority.get.port, Some(8081))
+  }
+
+  test("RequestBuilder should include authentication header") {
+    val builder = RequestBuilder(config.host, config.port, testToken)
+    val request = builder.getRatesRequest[IO](testPairs)
 
     val tokenHeader = request.headers.get(org.typelevel.ci.CIString("token"))
     assert(tokenHeader.isDefined)
-    assertEquals(tokenHeader.get.head.value, "test-token")
+    assertEquals(tokenHeader.get.head.value, testToken)
   }
 
-  test("HttpUriBuilder should handle multiple currency pairs") {
-    val testPairs = List(
-      Rate.Pair(Currency.USD, Currency.EUR),
-      Rate.Pair(Currency.GBP, Currency.JPY),
-      Rate.Pair(Currency.CAD, Currency.AUD)
-    )
-
-    val request   = RequestBuilder.buildGetRatesRequest[IO](testPairs, config, testToken)
-    val uriString = request.uri.toString
-
-    assert(uriString.contains("pair=CADAUD"))
-    assertEquals(request.method, Method.GET)
-    assertEquals(request.uri.path.toString, "/rates")
-  }
-
-  test("HttpUriBuilder should build correct URI with different configs") {
+  test("RequestBuilder should handle different configurations") {
     val config2 = OneFrameConfig(
-      host = "api.oneframe.com",
-      port = 443
+      host = "different-host",
+      port = 8082
     )
-
     val differentToken = "different-token"
-    val pairs          = List(Rate.Pair(Currency.USD, Currency.JPY))
-    val request        = RequestBuilder.buildGetRatesRequest[IO](pairs, config2, differentToken)
+    val builder        = RequestBuilder(config2.host, config2.port, differentToken)
+    val request        = builder.getRatesRequest[IO](testPairs)
 
-    assertEquals(request.uri.authority.get.host, Uri.RegName("api.oneframe.com"))
-    assertEquals(request.uri.authority.get.port, Some(443))
-    assertEquals(request.headers.get(org.typelevel.ci.CIString("token")).get.head.value, "different-token")
+    assertEquals(request.uri.authority.get.host.toString, "different-host")
+    assertEquals(request.uri.authority.get.port, Some(8082))
+    val tokenHeader = request.headers.get(org.typelevel.ci.CIString("token"))
+    assert(tokenHeader.isDefined)
+    assertEquals(tokenHeader.get.head.value, differentToken)
   }
 
-  test("HttpUriBuilder should handle special characters in currency codes") {
-    val pairs   = List(Rate.Pair(Currency.USD, Currency.JPY))
-    val request = RequestBuilder.buildGetRatesRequest[IO](pairs, config, testToken)
+  test("RequestBuilder should build correct URI for empty pairs list") {
+    val pairs   = List.empty[Rate.Pair]
+    val builder = RequestBuilder(config.host, config.port, testToken)
+    val request = builder.getRatesRequest[IO](pairs)
 
-    val queryParam = request.uri.query.params.get("pair")
-    assertEquals(queryParam, Some("USDJPY"))
-
-    assert(request.uri.toString.contains("localhost:8081/rates?pair=USDJPY"))
+    assertEquals(request.method.name, "GET")
+    assertEquals(request.uri.path.toString, "/rates")
+    assertEquals(request.uri.query.params.get("pair"), None)
   }
 }

@@ -8,8 +8,8 @@ import java.util.concurrent.TimeoutException
 object errors {
 
   def toAppError(op: String, t: Throwable): AppError = t match {
-    case _: TimeoutException => AppError.UpstreamUnavailable("cache", s"$op -Timeout")
-    case _: IOException      => AppError.UpstreamUnavailable("cache", s"$op -I/O error")
+    case _: TimeoutException => AppError.UpstreamUnavailable("cache", s"$op -Timeout: ${t.getMessage}")
+    case _: IOException      => AppError.UpstreamUnavailable("cache", s"$op -I/O error: ${t.getMessage}")
     case _                   => AppError.UnexpectedError("Unexpected cache error")
   }
 }

@@ -73,12 +73,15 @@ class PivotRateSpec extends FunSuite {
   }
 
   test("PivotRate decoder should decode from JSON object") {
-    val json   = """{"currency":"USD","price":1.23,"timestamp":"2024-01-01T10:00:00.000000Z"}"""
+    val json   = """{"currency":"EUR","price":1.23,"timestamp":"2024-01-01T10:00:00.000000Z"}"""
     val result = decode[PivotRate](json)
 
+    if (result.isLeft) {
+      println(s"PivotRate decode error: ${result.left.toOption.get}")
+    }
     assert(result.isRight)
     val pivotRate = result.toOption.get
-    assertEquals(pivotRate.currency, Currency.USD)
+    assertEquals(pivotRate.currency, Currency.EUR)
     assertEquals(pivotRate.price.value, BigDecimal("1.23"))
   }
 

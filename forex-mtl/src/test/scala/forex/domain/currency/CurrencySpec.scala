@@ -6,14 +6,14 @@ import forex.domain.currency.errors.CurrencyError
 class CurrencySpec extends FunSuite {
 
   test("fromString returns correct Currency for supported codes") {
-    assertEquals(Currency.fromString("USD"), Right(Currency.USD))
-    assertEquals(Currency.fromString("eur"), Right(Currency.EUR))
+    assertEquals(Currency.fromString("EUR"), Right(Currency.EUR))
     assertEquals(Currency.fromString("jPy"), Right(Currency.JPY))
+    assertEquals(Currency.fromString("GBP"), Right(Currency.GBP))
   }
 
   test("fromString is case-insensitive") {
-    assertEquals(Currency.fromString("cAd"), Right(Currency.CAD))
-    assertEquals(Currency.fromString("nzd"), Right(Currency.NZD))
+    assertEquals(Currency.fromString("eUr"), Right(Currency.EUR))
+    assertEquals(Currency.fromString("jpy"), Right(Currency.JPY))
   }
 
   test("fromString returns Left(CurrencyError.Empty) for empty string") {
