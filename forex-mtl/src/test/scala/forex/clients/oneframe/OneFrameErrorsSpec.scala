@@ -9,13 +9,13 @@ import java.util.concurrent.TimeoutException
 class OneFrameErrorsSpec extends FunSuite {
 
   object TestData {
-    def arbitraryTimeoutException: SocketTimeoutException = 
+    def arbitraryTimeoutException: SocketTimeoutException =
       new SocketTimeoutException("Test timeout")
-    
-    def arbitraryConnectException: ConnectException = 
+
+    def arbitraryConnectException: ConnectException =
       new ConnectException("Test connection")
-    
-    def arbitraryIOException: IOException = 
+
+    def arbitraryIOException: IOException =
       new IOException("Test IO")
   }
 
@@ -27,50 +27,60 @@ class OneFrameErrorsSpec extends FunSuite {
     assert(upstreamError.message.contains(expectedMessageContains))
   }
 
-  def testStringMapping(message: String, expectedErrorType: Class[_ <: AppError], expectedService: Option[String] = None, expectedMessage: Option[String] = None): Unit = {
+  def testStringMapping(
+      message: String,
+      expectedErrorType: Class[_ <: AppError],
+      expectedService: Option[String] = None,
+      expectedMessage: Option[String] = None
+  ): Unit = {
     val error = errors.toAppError(message)
     assert(error.getClass == expectedErrorType)
-    expectedService.foreach(service => {
+    expectedService.foreach(service =>
       error match {
         case e: AppError.UpstreamAuthFailed => assertEquals(e.service, service)
-        case e: AppError.RateLimited => assertEquals(e.service, service)
-        case _ =>
+        case e: AppError.RateLimited        => assertEquals(e.service, service)
+        case _                              =>
       }
-    })
-    expectedMessage.foreach(msg => {
+    )
+    expectedMessage.foreach(msg =>
       error match {
-        case e: AppError.Validation => assertEquals(e.message, msg)
-        case e: AppError.NotFound => assertEquals(e.message, msg)
+        case e: AppError.Validation         => assertEquals(e.message, msg)
+        case e: AppError.NotFound           => assertEquals(e.message, msg)
         case e: AppError.UpstreamAuthFailed => assertEquals(e.message, msg)
-        case e: AppError.RateLimited => assertEquals(e.message, msg)
-        case e: AppError.UnexpectedError => assertEquals(e.message, msg)
-        case _ => fail(s"Unexpected error type: ${error.getClass}")
+        case e: AppError.RateLimited        => assertEquals(e.message, msg)
+        case e: AppError.UnexpectedError    => assertEquals(e.message, msg)
+        case _                              => fail(s"Unexpected error type: ${error.getClass}")
       }
-    })
+    )
   }
 
-  def testStatusMapping(status: Int, expectedErrorType: Class[_ <: AppError], expectedService: Option[String] = None, expectedMessageContains: Option[String] = None): Unit = {
+  def testStatusMapping(
+      status: Int,
+      expectedErrorType: Class[_ <: AppError],
+      expectedService: Option[String] = None,
+      expectedMessageContains: Option[String] = None
+  ): Unit = {
     val error = errors.toAppError(status)
     assert(error.getClass == expectedErrorType)
-    expectedService.foreach(service => {
+    expectedService.foreach(service =>
       error match {
-        case e: AppError.UpstreamAuthFailed => assertEquals(e.service, service)
+        case e: AppError.UpstreamAuthFailed  => assertEquals(e.service, service)
         case e: AppError.UpstreamUnavailable => assertEquals(e.service, service)
-        case e: AppError.RateLimited => assertEquals(e.service, service)
-        case _ =>
+        case e: AppError.RateLimited         => assertEquals(e.service, service)
+        case _                               =>
       }
-    })
-    expectedMessageContains.foreach(msg => {
+    )
+    expectedMessageContains.foreach(msg =>
       error match {
-        case e: AppError.BadRequest => assert(e.message.contains(msg))
-        case e: AppError.NotFound => assert(e.message.contains(msg))
-        case e: AppError.UpstreamAuthFailed => assert(e.message.contains(msg))
-        case e: AppError.RateLimited => assert(e.message.contains(msg))
+        case e: AppError.BadRequest          => assert(e.message.contains(msg))
+        case e: AppError.NotFound            => assert(e.message.contains(msg))
+        case e: AppError.UpstreamAuthFailed  => assert(e.message.contains(msg))
+        case e: AppError.RateLimited         => assert(e.message.contains(msg))
         case e: AppError.UpstreamUnavailable => assert(e.message.contains(msg))
-        case e: AppError.UnexpectedError => assert(e.message.contains(msg))
-        case _ => fail(s"Unexpected error type: ${error.getClass}")
+        case e: AppError.UnexpectedError     => assert(e.message.contains(msg))
+        case _                               => fail(s"Unexpected error type: ${error.getClass}")
       }
-    })
+    )
   }
 
   test("toAppError with SocketTimeoutException should return UpstreamUnavailable") {
@@ -95,31 +105,54 @@ class OneFrameErrorsSpec extends FunSuite {
 
   test("toAppError with unknown exception should return UnexpectedError") {
     val exception = new RuntimeException("Unknown error")
-    val error = errors.toAppError(exception)
-    
+    val error     = errors.toAppError(exception)
+
     assert(error.isInstanceOf[AppError.UnexpectedError])
     val unexpectedError = error.asInstanceOf[AppError.UnexpectedError]
     assert(unexpectedError.message.contains("Unexpected upstream error"))
   }
 
   test("toAppError with 'Invalid Currency Pair' should return Validation") {
-    testStringMapping("Invalid Currency Pair", classOf[AppError.Validation], expectedMessage = Some("Invalid currency pair"))
+    testStringMapping(
+      "Invalid Currency Pair",
+      classOf[AppError.Validation],
+      expectedMessage = Some("Invalid currency pair")
+    )
   }
 
   test("toAppError with 'No currency pair provided' should return Validation") {
-    testStringMapping("No currency pair provided", classOf[AppError.Validation], expectedMessage = Some("Invalid currency pair"))
+    testStringMapping(
+      "No currency pair provided",
+      classOf[AppError.Validation],
+      expectedMessage = Some("Invalid currency pair")
+    )
   }
 
   test("toAppError with 'Quota reached' should return RateLimited") {
-    testStringMapping("Quota reached", classOf[AppError.RateLimited], expectedService = Some("one-frame"), expectedMessage = Some("Rate limited"))
+    testStringMapping(
+      "Quota reached",
+      classOf[AppError.RateLimited],
+      expectedService = Some("one-frame"),
+      expectedMessage = Some("Rate limited")
+    )
   }
 
   test("toAppError with 'Rate limited' should return RateLimited") {
-    testStringMapping("Rate limited", classOf[AppError.RateLimited], expectedService = Some("one-frame"), expectedMessage = Some("Rate limited"))
+    testStringMapping(
+      "Rate limited",
+      classOf[AppError.RateLimited],
+      expectedService = Some("one-frame"),
+      expectedMessage = Some("Rate limited")
+    )
   }
 
   test("toAppError with 'Forbidden' should return UpstreamAuthFailed") {
-    testStringMapping("Forbidden", classOf[AppError.UpstreamAuthFailed], expectedService = Some("one-frame"), expectedMessage = Some("Upstream service authentication failed"))
+    testStringMapping(
+      "Forbidden",
+      classOf[AppError.UpstreamAuthFailed],
+      expectedService = Some("one-frame"),
+      expectedMessage = Some("Upstream service authentication failed")
+    )
   }
 
   test("toAppError with 'Empty Rate' should return NotFound") {
@@ -139,11 +172,21 @@ class OneFrameErrorsSpec extends FunSuite {
   }
 
   test("toAppError with status 401 should return UpstreamAuthFailed") {
-    testStatusMapping(401, classOf[AppError.UpstreamAuthFailed], expectedService = Some("one-frame"), expectedMessageContains = Some("Upstream service authentication failed"))
+    testStatusMapping(
+      401,
+      classOf[AppError.UpstreamAuthFailed],
+      expectedService = Some("one-frame"),
+      expectedMessageContains = Some("Upstream service authentication failed")
+    )
   }
 
   test("toAppError with status 403 should return UpstreamAuthFailed") {
-    testStatusMapping(403, classOf[AppError.UpstreamAuthFailed], expectedService = Some("one-frame"), expectedMessageContains = Some("Upstream service authentication failed"))
+    testStatusMapping(
+      403,
+      classOf[AppError.UpstreamAuthFailed],
+      expectedService = Some("one-frame"),
+      expectedMessageContains = Some("Upstream service authentication failed")
+    )
   }
 
   test("toAppError with status 404 should return NotFound") {
@@ -151,15 +194,30 @@ class OneFrameErrorsSpec extends FunSuite {
   }
 
   test("toAppError with status 429 should return RateLimited") {
-    testStatusMapping(429, classOf[AppError.RateLimited], expectedService = Some("one-frame"), expectedMessageContains = Some("Rate limited"))
+    testStatusMapping(
+      429,
+      classOf[AppError.RateLimited],
+      expectedService = Some("one-frame"),
+      expectedMessageContains = Some("Rate limited")
+    )
   }
 
   test("toAppError with status 500 should return UpstreamUnavailable") {
-    testStatusMapping(500, classOf[AppError.UpstreamUnavailable], expectedService = Some("one-frame"), expectedMessageContains = Some("Upstream error 500"))
+    testStatusMapping(
+      500,
+      classOf[AppError.UpstreamUnavailable],
+      expectedService = Some("one-frame"),
+      expectedMessageContains = Some("Upstream error 500")
+    )
   }
 
   test("toAppError with status 503 should return UpstreamUnavailable") {
-    testStatusMapping(503, classOf[AppError.UpstreamUnavailable], expectedService = Some("one-frame"), expectedMessageContains = Some("Upstream error 503"))
+    testStatusMapping(
+      503,
+      classOf[AppError.UpstreamUnavailable],
+      expectedService = Some("one-frame"),
+      expectedMessageContains = Some("Upstream error 503")
+    )
   }
 
   test("toAppError with unknown status should return UnexpectedError") {
@@ -191,28 +249,28 @@ class OneFrameErrorsSpec extends FunSuite {
         val upstreamError = error.asInstanceOf[AppError.UpstreamUnavailable]
         assertEquals(upstreamError.service, service)
         assert(upstreamError.message.contains(messageContains))
-      
+
       case (input: String, expectedMessage: String) =>
         val error = errors.toAppError(input)
         error match {
-          case e: AppError.Validation => assertEquals(e.message, expectedMessage)
-          case e: AppError.NotFound => assertEquals(e.message, expectedMessage)
+          case e: AppError.Validation         => assertEquals(e.message, expectedMessage)
+          case e: AppError.NotFound           => assertEquals(e.message, expectedMessage)
           case e: AppError.UpstreamAuthFailed => assertEquals(e.message, expectedMessage)
-          case e: AppError.RateLimited => assertEquals(e.message, expectedMessage)
-          case e: AppError.UnexpectedError => assertEquals(e.message, expectedMessage)
-          case _ => fail(s"Unexpected error type: ${error.getClass}")
+          case e: AppError.RateLimited        => assertEquals(e.message, expectedMessage)
+          case e: AppError.UnexpectedError    => assertEquals(e.message, expectedMessage)
+          case _                              => fail(s"Unexpected error type: ${error.getClass}")
         }
-      
+
       case (input: Int, expectedMessageContains: String) =>
         val error = errors.toAppError(input)
         error match {
-          case e: AppError.BadRequest => assert(e.message.contains(expectedMessageContains))
-          case e: AppError.NotFound => assert(e.message.contains(expectedMessageContains))
-          case e: AppError.UpstreamAuthFailed => assert(e.message.contains(expectedMessageContains))
-          case e: AppError.RateLimited => assert(e.message.contains(expectedMessageContains))
+          case e: AppError.BadRequest          => assert(e.message.contains(expectedMessageContains))
+          case e: AppError.NotFound            => assert(e.message.contains(expectedMessageContains))
+          case e: AppError.UpstreamAuthFailed  => assert(e.message.contains(expectedMessageContains))
+          case e: AppError.RateLimited         => assert(e.message.contains(expectedMessageContains))
           case e: AppError.UpstreamUnavailable => assert(e.message.contains(expectedMessageContains))
-          case e: AppError.UnexpectedError => assert(e.message.contains(expectedMessageContains))
-          case _ => fail(s"Unexpected error type: ${error.getClass}")
+          case e: AppError.UnexpectedError     => assert(e.message.contains(expectedMessageContains))
+          case _                               => fail(s"Unexpected error type: ${error.getClass}")
         }
     }
   }

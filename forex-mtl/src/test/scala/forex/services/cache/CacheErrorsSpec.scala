@@ -8,19 +8,24 @@ import java.util.concurrent.TimeoutException
 class CacheErrorsSpec extends FunSuite {
 
   object TestData {
-    def arbitraryTimeoutException: TimeoutException = 
+    def arbitraryTimeoutException: TimeoutException =
       new TimeoutException("Test timeout")
-    
-    def arbitraryIOException: IOException = 
+
+    def arbitraryIOException: IOException =
       new IOException("Test IO")
-    
-    def arbitraryRuntimeException: RuntimeException = 
+
+    def arbitraryRuntimeException: RuntimeException =
       new RuntimeException("Test runtime")
-    
+
     def arbitraryOperation: String = "GET"
   }
 
-  def testExceptionMapping(operation: String, exception: Throwable, expectedService: String, expectedMessageContains: String): Unit = {
+  def testExceptionMapping(
+      operation: String,
+      exception: Throwable,
+      expectedService: String,
+      expectedMessageContains: String
+  ): Unit = {
     val error = errors.toAppError(operation, exception)
     assert(error.isInstanceOf[AppError.UpstreamUnavailable])
     val upstreamError = error.asInstanceOf[AppError.UpstreamUnavailable]
@@ -33,8 +38,8 @@ class CacheErrorsSpec extends FunSuite {
     val error = errors.toAppError(operation, exception)
     error match {
       case e: AppError.UpstreamUnavailable => assert(e.message.contains(operation))
-      case e: AppError.UnexpectedError => assert(e.message.contains(operation))
-      case _ => fail("Unexpected error type")
+      case e: AppError.UnexpectedError     => assert(e.message.contains(operation))
+      case _                               => fail("Unexpected error type")
     }
   }
 
@@ -53,54 +58,54 @@ class CacheErrorsSpec extends FunSuite {
   test("toAppError with unknown exception should return UnexpectedError") {
     val operation = "CLEAR"
     val exception = new RuntimeException("Unknown cache error")
-    val error = errors.toAppError(operation, exception)
-    
+    val error     = errors.toAppError(operation, exception)
+
     assert(error.isInstanceOf[AppError.UnexpectedError])
     error match {
       case e: AppError.UnexpectedError => assertEquals(e.message, "Unexpected cache error")
-      case _ => fail("Expected UnexpectedError")
+      case _                           => fail("Expected UnexpectedError")
     }
   }
 
   test("toAppError should include operation name in message") {
     val timeoutException = new TimeoutException("Timeout")
-    val getError = errors.toAppError("GET", timeoutException)
-    val putError = errors.toAppError("PUT", timeoutException)
-    val clearError = errors.toAppError("CLEAR", timeoutException)
-    
+    val getError         = errors.toAppError("GET", timeoutException)
+    val putError         = errors.toAppError("PUT", timeoutException)
+    val clearError       = errors.toAppError("CLEAR", timeoutException)
+
     getError match {
       case e: AppError.UpstreamUnavailable => assert(e.message.contains("GET"))
-      case _ => fail("Expected UpstreamUnavailable")
+      case _                               => fail("Expected UpstreamUnavailable")
     }
     putError match {
       case e: AppError.UpstreamUnavailable => assert(e.message.contains("PUT"))
-      case _ => fail("Expected UpstreamUnavailable")
+      case _                               => fail("Expected UpstreamUnavailable")
     }
     clearError match {
       case e: AppError.UpstreamUnavailable => assert(e.message.contains("CLEAR"))
-      case _ => fail("Expected UpstreamUnavailable")
+      case _                               => fail("Expected UpstreamUnavailable")
     }
   }
 
   test("toAppError should preserve exception message") {
     val operation = "GET"
     val exception = new TimeoutException("Custom timeout message")
-    val error = errors.toAppError(operation, exception)
-    
+    val error     = errors.toAppError(operation, exception)
+
     error match {
       case e: AppError.UpstreamUnavailable => assert(e.message.contains("Custom timeout message"))
-      case _ => fail("Expected UpstreamUnavailable")
+      case _                               => fail("Expected UpstreamUnavailable")
     }
   }
 
   test("toAppError should handle different operation types") {
     val operations = List("GET", "PUT", "DELETE", "CLEAR", "EXISTS", "SIZE")
-    val exception = new TimeoutException("Test timeout")
-    
+    val exception  = new TimeoutException("Test timeout")
+
     operations.foreach { operation =>
       val error = errors.toAppError(operation, exception)
       error match {
-        case e: AppError.UpstreamUnavailable => 
+        case e: AppError.UpstreamUnavailable =>
           assert(e.message.contains(operation))
           assert(e.isInstanceOf[AppError.UpstreamUnavailable])
         case _ => fail("Expected UpstreamUnavailable")
@@ -110,23 +115,23 @@ class CacheErrorsSpec extends FunSuite {
 
   test("toAppError should handle empty operation name") {
     val exception = new TimeoutException("Test timeout")
-    val error = errors.toAppError("", exception)
-    
+    val error     = errors.toAppError("", exception)
+
     assert(error.isInstanceOf[AppError.UpstreamUnavailable])
     error match {
       case e: AppError.UpstreamUnavailable => assert(e.message.contains("Timeout"))
-      case _ => fail("Expected UpstreamUnavailable")
+      case _                               => fail("Expected UpstreamUnavailable")
     }
   }
 
   test("toAppError should handle null exception message") {
     val operation = "GET"
     val exception = new TimeoutException(null)
-    val error = errors.toAppError(operation, exception)
-    
+    val error     = errors.toAppError(operation, exception)
+
     assert(error.isInstanceOf[AppError.UpstreamUnavailable])
     error match {
-      case e: AppError.UpstreamUnavailable => 
+      case e: AppError.UpstreamUnavailable =>
         assert(e.message.contains("GET"))
         assert(e.message.contains("Timeout"))
       case _ => fail("Expected UpstreamUnavailable")
@@ -144,7 +149,7 @@ class CacheErrorsSpec extends FunSuite {
     operations.foreach { operation =>
       exceptions.foreach { exception =>
         val error = errors.toAppError(operation, exception)
-        
+
         exception match {
           case _: TimeoutException =>
             assert(error.isInstanceOf[AppError.UpstreamUnavailable])
@@ -152,19 +157,19 @@ class CacheErrorsSpec extends FunSuite {
             assertEquals(upstreamError.service, "cache")
             assert(upstreamError.message.contains("Timeout"))
             assert(upstreamError.message.contains(operation))
-          
+
           case _: IOException =>
             assert(error.isInstanceOf[AppError.UpstreamUnavailable])
             val upstreamError = error.asInstanceOf[AppError.UpstreamUnavailable]
             assertEquals(upstreamError.service, "cache")
             assert(upstreamError.message.contains("I/O error"))
             assert(upstreamError.message.contains(operation))
-          
+
           case _: RuntimeException =>
             assert(error.isInstanceOf[AppError.UnexpectedError])
             error match {
               case e: AppError.UnexpectedError => assertEquals(e.message, "Unexpected cache error")
-              case _ => fail("Expected UnexpectedError")
+              case _                           => fail("Expected UnexpectedError")
             }
         }
       }
@@ -173,36 +178,36 @@ class CacheErrorsSpec extends FunSuite {
 
   test("toAppError should handle very long operation names") {
     val longOperation = "VERY_LONG_OPERATION_NAME_THAT_MIGHT_CAUSE_ISSUES"
-    val exception = new TimeoutException("Test timeout")
-    val error = errors.toAppError(longOperation, exception)
-    
+    val exception     = new TimeoutException("Test timeout")
+    val error         = errors.toAppError(longOperation, exception)
+
     assert(error.isInstanceOf[AppError.UpstreamUnavailable])
     error match {
       case e: AppError.UpstreamUnavailable => assert(e.message.contains(longOperation))
-      case _ => fail("Expected UpstreamUnavailable")
+      case _                               => fail("Expected UpstreamUnavailable")
     }
   }
 
   test("toAppError should handle special characters in operation names") {
     val specialOperation = "GET-WITH-SPECIAL-CHARS_123"
-    val exception = new TimeoutException("Test timeout")
-    val error = errors.toAppError(specialOperation, exception)
-    
+    val exception        = new TimeoutException("Test timeout")
+    val error            = errors.toAppError(specialOperation, exception)
+
     assert(error.isInstanceOf[AppError.UpstreamUnavailable])
     error match {
       case e: AppError.UpstreamUnavailable => assert(e.message.contains(specialOperation))
-      case _ => fail("Expected UpstreamUnavailable")
+      case _                               => fail("Expected UpstreamUnavailable")
     }
   }
 
   test("toAppError should handle null operation name") {
     val exception = new TimeoutException("Test timeout")
-    val error = errors.toAppError(null, exception)
-    
+    val error     = errors.toAppError(null, exception)
+
     assert(error.isInstanceOf[AppError.UpstreamUnavailable])
     error match {
       case e: AppError.UpstreamUnavailable => assert(e.message.contains("Timeout"))
-      case _ => fail("Expected UpstreamUnavailable")
+      case _                               => fail("Expected UpstreamUnavailable")
     }
   }
 }
