@@ -2,6 +2,7 @@ package forex.services.rates
 
 import cats.effect.Concurrent
 import cats.syntax.all._
+import cats.data.EitherT
 import forex.domain.cache.{ FetchStrategy, PivotRate }
 import forex.domain.currency.Currency
 import forex.domain.rates.{ Rate, Timestamp }
@@ -11,6 +12,7 @@ import forex.domain.error.AppError
 import forex.services.PivotPair
 import forex.services.cache.{ Algebra => CacheAlgebra }
 import org.typelevel.log4cats.Logger
+import forex.services.rates.{ errors => Error }
 
 import scala.concurrent.duration._
 
@@ -35,12 +37,9 @@ class Service[F[_]: Concurrent: Logger](oneFrameClient: OneFrameClient[F], cache
 
   private def getRateOrFetch(pair: Rate.Pair): F[AppError Either PivotPair] =
     (getFromCachePivot(pair.from), getFromCachePivot(pair.to)).tupled.flatMap {
-      case (Right(Some(base)), Right(Some(quote))) =>
-        (base -> quote).asRight[AppError].pure[F]
-      case (Right(baseOpt), Right(quoteOpt)) =>
-        fetchWithStrategy(pair, baseOpt, quoteOpt)
-      case (Left(error), _) => error.asLeft[PivotPair].pure[F]
-      case (_, Left(error)) => error.asLeft[PivotPair].pure[F]
+      case (Right(Some(base)), Right(Some(quote))) => (base -> quote).asRight[AppError].pure[F]
+      case (Right(baseOpt), Right(quoteOpt))       => fetchWithStrategy(pair, baseOpt, quoteOpt)
+      case (baseRes, quoteRes)                     => Error.combine(baseRes, quoteRes).asLeft[PivotPair].pure[F]
     }
 
   private def getFromCachePivot(currency: Currency): F[AppError Either Option[PivotRate]] =
@@ -48,10 +47,11 @@ class Service[F[_]: Concurrent: Logger](oneFrameClient: OneFrameClient[F], cache
     else
       cache
         .get[String, PivotRate](cacheKey(currency))
-        .map(_.map {
-          case Some(pr) if Timestamp.isWithinTTL(pr.timestamp, ttl) => Some(pr)
-          case _                                                    => None
-        })
+        .map {
+          case Right(Some(pr)) if Timestamp.isWithinTTL(pr.timestamp, ttl) => Some(pr).asRight
+          case Right(_)                                                    => None.asRight
+          case Left(err)                                                   => err.asLeft
+        }
 
   private def fetchWithStrategy(
       pair: Rate.Pair,
@@ -64,14 +64,12 @@ class Service[F[_]: Concurrent: Logger](oneFrameClient: OneFrameClient[F], cache
       case FetchStrategy.LeastUsed => Currency.leastUsedCurrencies.map(Rate.Pair(Pivot, _))
       case FetchStrategy.All       => Currency.allCurrencies.map(Rate.Pair(Pivot, _))
     }
-    oneFrameClient.getRates(requestPairs).flatMap {
-      case Left(err: AppError) => err.asLeft[PivotPair].pure[F]
-      case Right(response)     =>
-        for {
-          pivotPair <- extractPivotRates(response, pair, baseOpt, quoteOpt).map(_.asRight[AppError])
-          _ <- cacheRates(response).map(_ => ())
-        } yield pivotPair
-    }
+
+    (for {
+      response <- EitherT(oneFrameClient.getRates(requestPairs))
+      pivotPair <- EitherT.fromEither[F](extractPivotRates(response, pair, baseOpt, quoteOpt))
+      _ <- EitherT(cacheRates(response))
+    } yield pivotPair).value
   }
 
   private def cacheRates(response: OneFrameRatesResponse): F[AppError Either Unit] =
@@ -96,17 +94,19 @@ class Service[F[_]: Concurrent: Logger](oneFrameClient: OneFrameClient[F], cache
       pair: Rate.Pair,
       baseOpt: Option[PivotRate],
       quoteOpt: Option[PivotRate]
-  ): F[(PivotRate, PivotRate)] = {
+  ): AppError Either PivotPair = {
     def lookup(cur: Currency): Option[PivotRate] =
       response.collectFirst {
         case r if r.from == Pivot.toString && r.to == cur.toString =>
           PivotRate.fromResponse(cur, r.price, r.time_stamp)
       }
 
-    def pick(cur: Currency, cached: Option[PivotRate]): PivotRate =
-      cached.orElse(lookup(cur)).getOrElse(PivotRate.default(cur))
+    def pick(cur: Currency, cached: Option[PivotRate]): Option[PivotRate] = cached.orElse(lookup(cur))
 
-    (pick(pair.from, baseOpt) -> pick(pair.to, quoteOpt)).pure[F]
+    (pick(pair.from, baseOpt), pick(pair.to, quoteOpt)) match {
+      case (Some(base), Some(quote)) => Right(base -> quote)
+      case _                         => Left(Error.notFound(pair))
+    }
   }
 
 }
