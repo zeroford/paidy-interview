@@ -171,6 +171,7 @@ object Currency {
 
   // Top 30 except USD most traded currencies
   val mostUsedCurrencies: List[Currency] = List(
+    USD,
     EUR,
     JPY,
     GBP,
@@ -203,7 +204,8 @@ object Currency {
     PHP
   )
 
-  val leastUsedCurrencies: List[Currency] = List(
+  // Less commonly used currencies, not in the top 30
+  val otherCurrencies: List[Currency] = List(
     AFN,
     ALL,
     AMD,
@@ -337,7 +339,8 @@ object Currency {
     ZWD
   )
 
-  val allCurrencies: List[Currency] = mostUsedCurrencies ++ leastUsedCurrencies
+  // All currencies available
+  val allCurrencies: List[Currency] = List(USD) ++ mostUsedCurrencies ++ otherCurrencies
 
   private val Iso3 = "^[A-Za-z]{3}$".r
 

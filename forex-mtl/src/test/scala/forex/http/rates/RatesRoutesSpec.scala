@@ -2,6 +2,7 @@ package forex.http.rates
 
 import cats.effect.IO
 import forex.domain.currency.Currency
+import forex.domain.error.AppError
 import forex.domain.rates.{ Price, Rate, Timestamp }
 import forex.programs.rates.Protocol.GetRatesRequest
 import forex.programs.rates.Algebra
@@ -21,7 +22,8 @@ class RatesRoutesSpec extends CatsEffectSuite {
 
   val successProgram: Algebra[IO] = (_: GetRatesRequest) => IO.pure(Right(validRate))
 
-  val errorProgram: Algebra[IO] = (_: GetRatesRequest) => IO.pure(Left(RateProgramError.RateLookupFailed("API Down")))
+  val errorProgram: Algebra[IO] = (_: GetRatesRequest) =>
+    IO.pure(Left(AppError.UpstreamUnavailable("one-frame", "API Down")))
 
   test("GET /rates should return 200 and correct JSON") {
     val routes  = new RatesRoutes[IO](successProgram).routes
@@ -89,13 +91,13 @@ class RatesRoutesSpec extends CatsEffectSuite {
     } yield ()
   }
 
-  test("GET /rates but service fails should return 502") {
+  test("GET /rates but service fails should return 503") {
     val routes  = new RatesRoutes[IO](errorProgram).routes
     val request = Request[IO](Method.GET, uri"/rates?from=USD&to=JPY")
 
     for {
       response <- routes.orNotFound.run(request)
-      _ <- IO(assertEquals(response.status, Status.BadGateway))
+      _ <- IO(assertEquals(response.status, Status.ServiceUnavailable))
     } yield ()
   }
 }

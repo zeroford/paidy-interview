@@ -4,7 +4,6 @@ import cats.effect.Sync
 import cats.syntax.applicative._
 import forex.domain.error.AppError
 import org.http4s.{ Method, Response, Status }
-import org.http4s.dsl.Http4sDsl
 import org.http4s.headers.Allow
 
 object ErrorMapper {
@@ -25,13 +24,15 @@ object ErrorMapper {
   }
 
   def badRequest[F[_]: Sync](messages: List[String]): F[Response[F]] = {
-    val dsl     = new Http4sDsl[F] {}; import dsl._
     val message = if (messages.isEmpty) "Bad Request: Invalid query parameters" else messages.mkString("; ")
-    BadRequest(ErrorResponse(Status.BadRequest.code, message))
+    getErrorResponse(Status.BadRequest, message)
   }
 
-  def methodNotAllow[F[_]: Sync](method: Method): F[Response[F]] = {
-    val dsl = new Http4sDsl[F] {}; import dsl._
-    MethodNotAllowed(Allow(), ErrorResponse(Status.MethodNotAllowed.code, s"Method ${method} not allowed"))
+  def methodNotAllow[F[_]: Sync](method: Method, allow: Allow): F[Response[F]] = {
+    val message = s"Method ${method} not allowed"
+    Response[F](Status.MethodNotAllowed)
+      .withEntity(ErrorResponse(Status.MethodNotAllowed.code, message))
+      .withHeaders(allow)
+      .pure[F]
   }
 }

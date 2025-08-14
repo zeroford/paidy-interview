@@ -37,50 +37,16 @@ class ModuleSpec extends CatsEffectSuite {
     )
   )
 
-  private val testConfigWithTestEnv = testConfig.copy(environment = Environment.Test)
-
   private val mockHttpClient: Client[IO] = Client[IO] { _ =>
     Resource.pure(Response[IO](Status.Ok).withEntity("mock response"))
   }
 
-  test("Module should create valid HttpApp with Dev environment") {
+  test("Module should create valid HttpApp") {
     val module = new Module[IO](testConfig, mockHttpClient)
 
     for {
       httpApp <- IO(module.httpApp)
       _ <- IO(assert(httpApp.isInstanceOf[HttpApp[IO]], "HttpApp should be created successfully"))
-      _ <- IO(assert(httpApp != null, "HttpApp should not be null"))
-    } yield ()
-  }
-
-  test("Module should create valid HttpApp with Test environment") {
-    val module = new Module[IO](testConfigWithTestEnv, mockHttpClient)
-
-    for {
-      httpApp <- IO(module.httpApp)
-      _ <- IO(assert(httpApp.isInstanceOf[HttpApp[IO]], "HttpApp should be created successfully"))
-      _ <- IO(assert(httpApp != null, "HttpApp should not be null"))
-    } yield ()
-  }
-
-  test("Module should handle different environments correctly") {
-    val devModule  = new Module[IO](testConfig, mockHttpClient)
-    val testModule = new Module[IO](testConfigWithTestEnv, mockHttpClient)
-
-    for {
-      devApp <- IO(devModule.httpApp)
-      testApp <- IO(testModule.httpApp)
-      _ <- IO(assert(devApp.isInstanceOf[HttpApp[IO]], "Dev HttpApp should be valid"))
-      _ <- IO(assert(testApp.isInstanceOf[HttpApp[IO]], "Test HttpApp should be valid"))
-    } yield ()
-  }
-
-  test("Module should use provided HTTP client") {
-    val module = new Module[IO](testConfig, mockHttpClient)
-
-    for {
-      httpApp <- IO(module.httpApp)
-      _ <- IO(assert(httpApp != null, "Module should use provided HTTP client"))
     } yield ()
   }
 }

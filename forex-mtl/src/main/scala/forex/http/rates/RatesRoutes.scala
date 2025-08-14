@@ -8,7 +8,8 @@ import forex.programs.RatesProgram
 import forex.programs.rates.Protocol.GetRatesRequest
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.Router
-import org.http4s.HttpRoutes
+import org.http4s.{ HttpRoutes, Method }
+import org.http4s.headers.Allow
 
 class RatesRoutes[F[_]: Sync](ratesProgram: RatesProgram[F]) extends Http4sDsl[F] {
 
@@ -26,7 +27,7 @@ class RatesRoutes[F[_]: Sync](ratesProgram: RatesProgram[F]) extends Http4sDsl[F
           }
         case Invalid(err) => ErrorMapper.badRequest[F](err.toList)
       }
-    case method -> Root => ErrorMapper.methodNotAllow[F](method)
+    case method -> Root => ErrorMapper.methodNotAllow[F](method, Allow(Method.GET)) // Handle unsupported methods
   }
 
   val routes: HttpRoutes[F] = Router(prefixPath -> httpRoutes)

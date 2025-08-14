@@ -4,6 +4,7 @@ import cats.effect.IO
 import forex.domain.error.AppError
 import munit.CatsEffectSuite
 import org.http4s.{ Method, Status }
+import org.http4s.headers.Allow
 
 class ErrorMapperSpec extends CatsEffectSuite {
 
@@ -107,9 +108,10 @@ class ErrorMapperSpec extends CatsEffectSuite {
 
   test("methodNotAllow should return MethodNotAllowed with Allow header") {
     val method = Method.GET
+    val allow  = Allow(Method.GET)
 
     for {
-      response <- ErrorMapper.methodNotAllow[IO](method)
+      response <- ErrorMapper.methodNotAllow[IO](method, allow)
       _ <- IO(assertEquals(response.status, Status.MethodNotAllowed))
       _ <- IO(assert(response.headers.get(org.typelevel.ci.CIString("Allow")).isDefined))
     } yield ()
@@ -117,9 +119,10 @@ class ErrorMapperSpec extends CatsEffectSuite {
 
   test("methodNotAllow should include method name in error message") {
     val method = Method.POST
+    val allow  = Allow(Method.GET)
 
     for {
-      response <- ErrorMapper.methodNotAllow[IO](method)
+      response <- ErrorMapper.methodNotAllow[IO](method, allow)
       _ <- IO(assertEquals(response.status, Status.MethodNotAllowed))
     } yield ()
   }

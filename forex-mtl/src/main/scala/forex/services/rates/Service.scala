@@ -61,7 +61,7 @@ class Service[F[_]: Concurrent: Logger](oneFrameClient: OneFrameClient[F], cache
     val strategy     = FetchStrategy.fromPair(pair, baseOpt.isEmpty, quoteOpt.isEmpty)
     val requestPairs = strategy match {
       case FetchStrategy.MostUsed  => Currency.mostUsedCurrencies.map(Rate.Pair(Pivot, _))
-      case FetchStrategy.LeastUsed => Currency.leastUsedCurrencies.map(Rate.Pair(Pivot, _))
+      case FetchStrategy.LeastUsed => Currency.otherCurrencies.map(Rate.Pair(Pivot, _))
       case FetchStrategy.All       => Currency.allCurrencies.map(Rate.Pair(Pivot, _))
     }
 
