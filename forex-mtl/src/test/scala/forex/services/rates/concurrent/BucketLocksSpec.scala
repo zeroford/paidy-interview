@@ -14,55 +14,67 @@ class BucketLocksSpec extends CatsEffectSuite {
 
   test("BucketLocks should execute withBucket for MostUsed bucket") {
     BucketLocks.create[IO].flatMap { locks =>
-      locks.withBucket(RatesBucket.MostUsed) {
-        IO.pure("success")
-      }.map { result =>
-        assertEquals(result, "success")
-      }
+      locks
+        .withBucket(RatesBucket.MostUsed) {
+          IO.pure("success")
+        }
+        .map { result =>
+          assertEquals(result, "success")
+        }
     }
   }
 
   test("BucketLocks should execute withBucket for LeastUsed bucket") {
     BucketLocks.create[IO].flatMap { locks =>
-      locks.withBucket(RatesBucket.LeastUsed) {
-        IO.pure("success")
-      }.map { result =>
-        assertEquals(result, "success")
-      }
+      locks
+        .withBucket(RatesBucket.LeastUsed) {
+          IO.pure("success")
+        }
+        .map { result =>
+          assertEquals(result, "success")
+        }
     }
   }
 
   test("BucketLocks should execute withBuckets for all buckets") {
     BucketLocks.create[IO].flatMap { locks =>
-      locks.withBuckets {
-        IO.pure("success")
-      }.map { result =>
-        assertEquals(result, "success")
-      }
+      locks
+        .withBuckets {
+          IO.pure("success")
+        }
+        .map { result =>
+          assertEquals(result, "success")
+        }
     }
   }
 
   test("BucketLocks should handle exceptions in withBucket") {
     BucketLocks.create[IO].flatMap { locks =>
       val exception = new RuntimeException("test exception")
-      locks.withBucket(RatesBucket.MostUsed) {
-        IO.raiseError(exception)
-      }.attempt.map { result =>
-        assert(result.isLeft)
-        assertEquals(result.left.toOption.get, exception)
-      }
+      locks
+        .withBucket(RatesBucket.MostUsed) {
+          IO.raiseError(exception)
+        }
+        .attempt
+        .map { result =>
+          assert(result.isLeft)
+          assertEquals(result.left.toOption.get, exception)
+        }
     }
   }
 
   test("BucketLocks should handle exceptions in withBuckets") {
     BucketLocks.create[IO].flatMap { locks =>
       val exception = new RuntimeException("test exception")
-      locks.withBuckets {
-        IO.raiseError(exception)
-      }.attempt.map { result =>
-        assert(result.isLeft)
-        assertEquals(result.left.toOption.get, exception)
-      }
+      locks
+        .withBuckets {
+          IO.raiseError(exception)
+        }
+        .attempt
+        .map { result =>
+          assert(result.isLeft)
+          assertEquals(result.left.toOption.get, exception)
+        }
     }
   }
 
