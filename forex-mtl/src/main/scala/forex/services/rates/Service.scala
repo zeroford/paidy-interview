@@ -3,21 +3,26 @@ package forex.services.rates
 import cats.effect.Concurrent
 import cats.syntax.all._
 import cats.data.EitherT
-import forex.domain.cache.{ FetchStrategy, PivotRate }
+import forex.domain.cache.FetchStrategy
 import forex.domain.currency.Currency
-import forex.domain.rates.{ Rate, Timestamp }
+import forex.domain.rates.{PivotRate, Rate, Timestamp}
 import forex.clients.OneFrameClient
 import forex.clients.oneframe.Protocol.OneFrameRatesResponse
 import forex.domain.error.AppError
 import forex.services.PivotPair
-import forex.services.cache.{ Algebra => CacheAlgebra }
+import forex.services.cache.{Algebra => CacheAlgebra}
+import forex.services.rates.concurrent.BucketLocks
 import org.typelevel.log4cats.Logger
-import forex.services.rates.{ errors => Error }
+import forex.services.rates.{errors => Error}
 
 import scala.concurrent.duration._
 
-class Service[F[_]: Concurrent: Logger](oneFrameClient: OneFrameClient[F], cache: CacheAlgebra[F], ttl: FiniteDuration)
-    extends Algebra[F] {
+class Service[F[_]: Concurrent: Logger](
+    oneFrameClient: OneFrameClient[F],
+    cache: CacheAlgebra[F],
+    locks: BucketLocks[F],
+    ttl: FiniteDuration
+) extends Algebra[F] {
 
   private val Pivot = Currency.USD
 
@@ -36,15 +41,30 @@ class Service[F[_]: Concurrent: Logger](oneFrameClient: OneFrameClient[F], cache
     }
 
   private def getRateOrFetch(pair: Rate.Pair): F[AppError Either PivotPair] =
-    (getFromCachePivot(pair.from), getFromCachePivot(pair.to)).tupled.flatMap {
-      case (Right(Some(base)), Right(Some(quote))) => (base -> quote).asRight[AppError].pure[F]
-      case (Right(baseOpt), Right(quoteOpt))       => fetchWithStrategy(pair, baseOpt, quoteOpt)
-      case (baseRes, quoteRes)                     => Error.combine(baseRes, quoteRes).asLeft[PivotPair].pure[F]
+    FetchStrategy.fromPair(pair) match {
+      case FetchStrategy.All =>
+        locks.withBuckets {
+          (getFromCachePivot(pair.from), getFromCachePivot(pair.to)).tupled.flatMap {
+            case (Right(Some(base)), Right(Some(quote))) => (base -> quote).asRight[AppError].pure[F]
+            case (Right(baseOpt), Right(quoteOpt))       => fetchWithStrategy(pair, baseOpt, quoteOpt)
+            case (baseRes, quoteRes)                     => Error.combine(baseRes, quoteRes).asLeft[PivotPair].pure[F]
+          }
+        }
+
+      case other =>
+        val bucket = BucketLocks.bucketFor(other)
+        locks.withBucket(bucket) {
+          (getFromCachePivot(pair.from), getFromCachePivot(pair.to)).tupled.flatMap {
+            case (Right(Some(base)), Right(Some(quote))) => (base -> quote).asRight[AppError].pure[F]
+            case (Right(baseOpt), Right(quoteOpt))       => fetchWithStrategy(pair, baseOpt, quoteOpt)
+            case (baseRes, quoteRes)                     => Error.combine(baseRes, quoteRes).asLeft[PivotPair].pure[F]
+          }
+        }
     }
 
   private def getFromCachePivot(currency: Currency): F[AppError Either Option[PivotRate]] =
     if (currency == Pivot) PivotRate.default(Pivot).some.asRight[AppError].pure[F]
-    else
+    else {
       cache
         .get[String, PivotRate](cacheKey(currency))
         .map {
@@ -52,6 +72,7 @@ class Service[F[_]: Concurrent: Logger](oneFrameClient: OneFrameClient[F], cache
           case Right(_)                                                    => None.asRight
           case Left(err)                                                   => err.asLeft
         }
+    }
 
   private def fetchWithStrategy(
       pair: Rate.Pair,
@@ -115,6 +136,7 @@ object Service {
   def apply[F[_]: Concurrent: Logger](
       oneFrameClient: OneFrameClient[F],
       cache: CacheAlgebra[F],
+      locks: BucketLocks[F],
       ttl: FiniteDuration
-  ): Algebra[F] = new Service[F](oneFrameClient, cache, ttl)
+  ): Algebra[F] = new Service[F](oneFrameClient, cache, locks, ttl)
 }

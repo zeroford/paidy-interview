@@ -1,9 +1,8 @@
-package forex.domain.cache
+package forex.domain.rates
 
 import forex.domain.currency.Currency
-import forex.domain.rates.{ Price, Timestamp }
-import io.circe.{ Decoder, Encoder }
 import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
+import io.circe.{ Decoder, Encoder }
 
 import java.time.OffsetDateTime
 

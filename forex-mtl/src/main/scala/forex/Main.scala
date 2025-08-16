@@ -14,7 +14,7 @@ object Main extends IOApp.Simple {
     val app: Resource[IO, Unit] = for {
       config <- Config.resource[IO]("app")
       client <- HttpClientBuilder.build[IO]
-      module = new Module[IO](config, client)
+      module <- Module.make[IO](config, client)
       _ <- HttpServerBuilder.build[IO](module.httpApp, config.http)
     } yield ()
 

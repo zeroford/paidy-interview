@@ -1,20 +1,21 @@
 package forex
 
-import cats.effect.Async
-import cats.implicits.toSemigroupKOps
+import cats.effect.{ Async, Resource }
+import cats.implicits.{ toFunctorOps, toSemigroupKOps }
 import forex.config.{ ApplicationConfig, Environment }
 import forex.http.health.HealthRoutes
 import forex.http.middleware.ErrorHandlerMiddleware
 import forex.http.rates.RatesRoutes
 import forex.clients.OneFrameClient
 import forex.programs.RatesProgram
+import forex.services.rates.concurrent.BucketLocks
 import forex.services.{ CacheService, RatesService }
 import org.http4s._
 import org.http4s.client.Client
 import org.http4s.server.middleware.{ AutoSlash, Timeout }
 import org.typelevel.log4cats.Logger
 
-class Module[F[_]: Async: Logger](config: ApplicationConfig, httpClient: Client[F]) {
+class Module[F[_]: Async: Logger](config: ApplicationConfig, httpClient: Client[F], locks: BucketLocks[F]) {
 
   private val oneFrameClient: OneFrameClient[F] = config.environment match {
     case Environment.Dev =>
@@ -23,8 +24,9 @@ class Module[F[_]: Async: Logger](config: ApplicationConfig, httpClient: Client[
       OneFrameClient.mockClient[F]
   }
 
-  private val cacheService: CacheService[F]  = CacheService[F](config.cache.rates.maxSize, config.cache.rates.ttl)
-  private val ratesService: RatesService[F]  = RatesService[F](oneFrameClient, cacheService, config.cache.rates.ttl)
+  private val cacheService: CacheService[F] = CacheService[F](config.cache.rates.maxSize, config.cache.rates.ttl)
+  private val ratesService: RatesService[F] =
+    RatesService[F](oneFrameClient, cacheService, locks, config.cache.rates.ttl)
   private val ratesProgram: RatesProgram[F]  = RatesProgram[F](ratesService)
   private val ratesHttpRoutes: HttpRoutes[F] = new RatesRoutes[F](ratesProgram).routes
   private val healthRoutes: HttpRoutes[F]    = new HealthRoutes[F].routes
@@ -37,4 +39,9 @@ class Module[F[_]: Async: Logger](config: ApplicationConfig, httpClient: Client[
 
   val httpApp: HttpApp[F] = appMiddleware
 
+}
+
+object Module {
+  def make[F[_]: Async: Logger](config: ApplicationConfig, httpClient: Client[F]): Resource[F, Module[F]] =
+    Resource.eval(BucketLocks.create[F].map(locks => new Module[F](config, httpClient, locks)))
 }
