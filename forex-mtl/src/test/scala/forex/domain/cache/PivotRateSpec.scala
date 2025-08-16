@@ -1,10 +1,11 @@
 package forex.domain.cache
 
 import forex.domain.currency.Currency
-import forex.domain.rates.{ Price, Timestamp }
+import forex.domain.rates.{ PivotRate, Price, Timestamp }
 import io.circe.parser.decode
 import io.circe.syntax._
 import munit.FunSuite
+
 import java.time.OffsetDateTime
 
 class PivotRateSpec extends FunSuite {

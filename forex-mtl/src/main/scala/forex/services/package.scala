@@ -1,6 +1,6 @@
 package forex
 
-import forex.domain.cache.PivotRate
+import forex.domain.rates.PivotRate
 
 package object services {
   type RatesService[F[_]] = rates.Algebra[F]
