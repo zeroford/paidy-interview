@@ -1,6 +1,5 @@
 package forex.domain.rates
 
-import forex.domain.cache.PivotRate
 import forex.domain.currency.Currency
 import forex.domain.currency.Currency.USD
 import io.circe.{ Decoder, Encoder }

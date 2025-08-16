@@ -9,7 +9,7 @@ object FetchStrategy {
   case object LeastUsed extends FetchStrategy
   case object All extends FetchStrategy
 
-  def fromPair(pair: Rate.Pair, needBase: Boolean, needQuote: Boolean): FetchStrategy = {
+  def fromPair(pair: Rate.Pair, needBase: Boolean = false, needQuote: Boolean = false): FetchStrategy = {
 
     val baseMostUsed  = Currency.isMostUsed(pair.from)
     val quoteMostUsed = Currency.isMostUsed(pair.to)

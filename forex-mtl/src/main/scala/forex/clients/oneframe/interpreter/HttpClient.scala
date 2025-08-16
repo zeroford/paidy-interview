@@ -2,7 +2,6 @@ package forex.clients.oneframe.interpreter
 
 import cats.effect.Concurrent
 import cats.syntax.all._
-import com.sun.org.apache.xerces.internal.util.XMLChar.trim
 import forex.clients.oneframe.Protocol.{ OneFrameApiError, OneFrameRatesResponse }
 import forex.clients.oneframe.{ errors => Error }
 import forex.config.OneFrameConfig
@@ -51,7 +50,7 @@ class HttpClient[F[_]: Concurrent: Logger](client: Client[F], config: OneFrameCo
             Logger[F].warn(s"[OneFrameAPI] Received error: $res") >>
               Error.toAppError(res.error).asLeft[OneFrameRatesResponse].pure[F]
           case Left(e) =>
-            Logger[F].error(s"[OneFrameAPI] decode failed, ${e.getMessage}; body:${trim(body)}") >>
+            Logger[F].error(s"[OneFrameAPI] decode failed, ${e.getMessage}; body:${body.trim}") >>
               Error.toAppError(body).asLeft[OneFrameRatesResponse].pure[F]
         }
     }

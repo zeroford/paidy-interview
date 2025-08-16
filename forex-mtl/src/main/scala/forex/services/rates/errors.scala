@@ -1,9 +1,8 @@
 package forex.services.rates
 
-import forex.domain.cache.PivotRate
 import forex.domain.error.AppError
 import forex.domain.error.AppError.UpstreamUnavailable
-import forex.domain.rates.Rate
+import forex.domain.rates.{ PivotRate, Rate }
 
 object errors {
 

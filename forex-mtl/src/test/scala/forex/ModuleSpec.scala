@@ -9,6 +9,7 @@ import org.typelevel.log4cats.Logger
 import com.comcast.ip4s.{ Host, Port }
 import org.http4s.{ HttpApp, Response, Status }
 import org.http4s.client.Client
+import forex.services.rates.concurrent.BucketLocks
 import scala.concurrent.duration._
 
 class ModuleSpec extends CatsEffectSuite {
@@ -42,9 +43,9 @@ class ModuleSpec extends CatsEffectSuite {
   }
 
   test("Module should create valid HttpApp") {
-    val module = new Module[IO](testConfig, mockHttpClient)
-
     for {
+      locks <- BucketLocks.create[IO]
+      module = new Module[IO](testConfig, mockHttpClient, locks)
       httpApp <- IO(module.httpApp)
       _ <- IO(assert(httpApp.isInstanceOf[HttpApp[IO]], "HttpApp should be created successfully"))
     } yield ()

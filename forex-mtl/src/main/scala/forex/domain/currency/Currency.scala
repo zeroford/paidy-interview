@@ -171,7 +171,6 @@ object Currency {
 
   // Top 30 except USD most traded currencies
   val mostUsedCurrencies: List[Currency] = List(
-    USD,
     EUR,
     JPY,
     GBP,

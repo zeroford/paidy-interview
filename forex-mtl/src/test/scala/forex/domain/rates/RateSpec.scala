@@ -2,6 +2,7 @@ package forex.domain.rates
 
 import forex.domain.currency.Currency
 import munit.FunSuite
+
 import java.time.OffsetDateTime
 
 class RateSpec extends FunSuite {
@@ -32,9 +33,9 @@ class RateSpec extends FunSuite {
 
   test("fromPivotRate should handle USD as base correctly") {
     val usdPivot =
-      forex.domain.cache.PivotRate(Currency.USD, Price(1.0), Timestamp(OffsetDateTime.parse("2024-08-04T13:00:00Z")))
+      PivotRate(Currency.USD, Price(1.0), Timestamp(OffsetDateTime.parse("2024-08-04T13:00:00Z")))
     val eurPivot =
-      forex.domain.cache.PivotRate(Currency.EUR, Price(0.85), Timestamp(OffsetDateTime.parse("2024-08-04T14:00:00Z")))
+      PivotRate(Currency.EUR, Price(0.85), Timestamp(OffsetDateTime.parse("2024-08-04T14:00:00Z")))
 
     val rate = Rate.fromPivotRate(usdPivot, eurPivot)
 
@@ -45,9 +46,9 @@ class RateSpec extends FunSuite {
 
   test("fromPivotRate should handle USD as quote correctly") {
     val eurPivot =
-      forex.domain.cache.PivotRate(Currency.EUR, Price(0.85), Timestamp(OffsetDateTime.parse("2024-08-04T13:00:00Z")))
+      PivotRate(Currency.EUR, Price(0.85), Timestamp(OffsetDateTime.parse("2024-08-04T13:00:00Z")))
     val usdPivot =
-      forex.domain.cache.PivotRate(Currency.USD, Price(1.0), Timestamp(OffsetDateTime.parse("2024-08-04T14:00:00Z")))
+      PivotRate(Currency.USD, Price(1.0), Timestamp(OffsetDateTime.parse("2024-08-04T14:00:00Z")))
 
     val rate = Rate.fromPivotRate(eurPivot, usdPivot)
 
@@ -58,9 +59,9 @@ class RateSpec extends FunSuite {
 
   test("fromPivotRate should handle cross-rate correctly") {
     val eurPivot =
-      forex.domain.cache.PivotRate(Currency.EUR, Price(0.85), Timestamp(OffsetDateTime.parse("2024-08-04T13:00:00Z")))
+      PivotRate(Currency.EUR, Price(0.85), Timestamp(OffsetDateTime.parse("2024-08-04T13:00:00Z")))
     val jpyPivot =
-      forex.domain.cache.PivotRate(Currency.JPY, Price(110.0), Timestamp(OffsetDateTime.parse("2024-08-04T14:00:00Z")))
+      PivotRate(Currency.JPY, Price(110.0), Timestamp(OffsetDateTime.parse("2024-08-04T14:00:00Z")))
 
     val rate = Rate.fromPivotRate(eurPivot, jpyPivot)
 
@@ -71,9 +72,9 @@ class RateSpec extends FunSuite {
 
   test("fromPivotRate should use older timestamp for cross-rate when quote is older") {
     val eurPivot =
-      forex.domain.cache.PivotRate(Currency.EUR, Price(0.85), Timestamp(OffsetDateTime.parse("2024-08-04T14:00:00Z")))
+      PivotRate(Currency.EUR, Price(0.85), Timestamp(OffsetDateTime.parse("2024-08-04T14:00:00Z")))
     val jpyPivot =
-      forex.domain.cache.PivotRate(Currency.JPY, Price(110.0), Timestamp(OffsetDateTime.parse("2024-08-04T13:00:00Z")))
+      PivotRate(Currency.JPY, Price(110.0), Timestamp(OffsetDateTime.parse("2024-08-04T13:00:00Z")))
 
     val rate = Rate.fromPivotRate(eurPivot, jpyPivot)
 
