@@ -8,6 +8,7 @@ import forex.clients.oneframe.Protocol.OneFrameRatesResponse
 import forex.clients.oneframe.Algebra
 import forex.services.cache.Service
 import forex.services.rates.{ Service => RatesService }
+import forex.services.rates.concurrent.BucketLocks
 import munit.CatsEffectSuite
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
@@ -81,11 +82,11 @@ class ServiceSpec extends CatsEffectSuite {
     IO.pure(Left(AppError.UpstreamUnavailable("one-frame", "API Down")))
 
   test("Service should return rate when OneFrame client succeeds") {
-    val cache   = Service[IO](100, 5.minutes)
-    val service = RatesService[IO](successOneFrameClient, cache, 5.minutes)
-    val pair    = Rate.Pair(Currency.USD, Currency.JPY)
-
     for {
+      cache <- IO(Service[IO](100, 5.minutes))
+      locks <- BucketLocks.create[IO]
+      service = RatesService[IO](successOneFrameClient, cache, locks, 5.minutes)
+      pair    = Rate.Pair(Currency.USD, Currency.JPY)
       result <- service.get(pair)
       _ <- IO(assert(result.isRight))
       rate <- IO(result.toOption.get)
@@ -96,22 +97,22 @@ class ServiceSpec extends CatsEffectSuite {
   }
 
   test("Service should return error when OneFrame client fails") {
-    val cache   = Service[IO](100, 5.minutes)
-    val service = RatesService[IO](errorOneFrameClient, cache, 5.minutes)
-    val pair    = Rate.Pair(Currency.USD, Currency.JPY)
-
     for {
+      cache <- IO(Service[IO](100, 5.minutes))
+      locks <- BucketLocks.create[IO]
+      service = RatesService[IO](errorOneFrameClient, cache, locks, 5.minutes)
+      pair    = Rate.Pair(Currency.USD, Currency.JPY)
       result <- service.get(pair)
       _ <- IO(assert(result.isLeft))
     } yield ()
   }
 
   test("Service should handle different currency pairs") {
-    val cache   = Service[IO](100, 5.minutes)
-    val service = RatesService[IO](successOneFrameClient, cache, 5.minutes)
-    val pair    = Rate.Pair(Currency.EUR, Currency.GBP)
-
     for {
+      cache <- IO(Service[IO](100, 5.minutes))
+      locks <- BucketLocks.create[IO]
+      service = RatesService[IO](successOneFrameClient, cache, locks, 5.minutes)
+      pair    = Rate.Pair(Currency.EUR, Currency.GBP)
       result <- service.get(pair)
       _ <- IO(assert(result.isRight))
       rate <- IO(result.toOption.get)
@@ -121,11 +122,11 @@ class ServiceSpec extends CatsEffectSuite {
   }
 
   test("Service should handle cache miss and put to cache") {
-    val cache   = Service[IO](100, 5.minutes)
-    val service = RatesService[IO](successOneFrameClient, cache, 5.minutes)
-    val pair    = Rate.Pair(Currency.USD, Currency.JPY)
-
     for {
+      cache <- IO(Service[IO](100, 5.minutes))
+      locks <- BucketLocks.create[IO]
+      service = RatesService[IO](successOneFrameClient, cache, locks, 5.minutes)
+      pair    = Rate.Pair(Currency.USD, Currency.JPY)
       _ <- cache.clear()
 
       result <- service.get(pair)
@@ -137,11 +138,11 @@ class ServiceSpec extends CatsEffectSuite {
   }
 
   test("Service should use consistent timestamp for USD as base") {
-    val cache   = Service[IO](100, 5.minutes)
-    val service = RatesService[IO](successOneFrameClient, cache, 5.minutes)
-    val pair    = Rate.Pair(Currency.USD, Currency.EUR)
-
     for {
+      cache <- IO(Service[IO](100, 5.minutes))
+      locks <- BucketLocks.create[IO]
+      service = RatesService[IO](successOneFrameClient, cache, locks, 5.minutes)
+      pair    = Rate.Pair(Currency.USD, Currency.EUR)
       _ <- cache.clear()
 
       result1 <- service.get(pair)
@@ -159,11 +160,11 @@ class ServiceSpec extends CatsEffectSuite {
   }
 
   test("Service should use consistent timestamp for USD as quote") {
-    val cache   = Service[IO](100, 5.minutes)
-    val service = RatesService[IO](successOneFrameClient, cache, 5.minutes)
-    val pair    = Rate.Pair(Currency.EUR, Currency.USD)
-
     for {
+      cache <- IO(Service[IO](100, 5.minutes))
+      locks <- BucketLocks.create[IO]
+      service = RatesService[IO](successOneFrameClient, cache, locks, 5.minutes)
+      pair    = Rate.Pair(Currency.EUR, Currency.USD)
       _ <- cache.clear()
 
       result1 <- service.get(pair)
@@ -181,11 +182,11 @@ class ServiceSpec extends CatsEffectSuite {
   }
 
   test("Service should handle cross-rate with older timestamp") {
-    val cache   = Service[IO](100, 5.minutes)
-    val service = RatesService[IO](successOneFrameClient, cache, 5.minutes)
-    val pair    = Rate.Pair(Currency.EUR, Currency.GBP)
-
     for {
+      cache <- IO(Service[IO](100, 5.minutes))
+      locks <- BucketLocks.create[IO]
+      service = RatesService[IO](successOneFrameClient, cache, locks, 5.minutes)
+      pair    = Rate.Pair(Currency.EUR, Currency.GBP)
       _ <- cache.clear()
 
       result1 <- service.get(pair)

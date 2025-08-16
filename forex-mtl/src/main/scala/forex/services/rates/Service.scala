@@ -5,15 +5,15 @@ import cats.syntax.all._
 import cats.data.EitherT
 import forex.domain.cache.FetchStrategy
 import forex.domain.currency.Currency
-import forex.domain.rates.{PivotRate, Rate, Timestamp}
+import forex.domain.rates.{ PivotRate, Rate, Timestamp }
 import forex.clients.OneFrameClient
 import forex.clients.oneframe.Protocol.OneFrameRatesResponse
 import forex.domain.error.AppError
 import forex.services.PivotPair
-import forex.services.cache.{Algebra => CacheAlgebra}
+import forex.services.cache.{ Algebra => CacheAlgebra }
 import forex.services.rates.concurrent.BucketLocks
 import org.typelevel.log4cats.Logger
-import forex.services.rates.{errors => Error}
+import forex.services.rates.{ errors => Error }
 
 import scala.concurrent.duration._
 
