@@ -3,9 +3,8 @@ package forex
 import cats.effect.{ IO, IOApp, Resource, Sync }
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-
 import forex.config.Config
-import forex.modules.{ HttpClientBuilder, HttpServerBuilder }
+import forex.modules.{ HttpClientBuilder, HttpServerBuilder, Module }
 
 object Main extends IOApp.Simple {
 

@@ -10,7 +10,6 @@ import org.http4s.headers.Allow
 
 import forex.http.util.ErrorMapper
 import forex.programs.RatesProgram
-import forex.programs.rates.Protocol.GetRatesRequest
 
 final class RatesRoutes[F[_]: Monad](ratesProgram: RatesProgram[F]) extends Http4sDsl[F] {
 
@@ -22,8 +21,8 @@ final class RatesRoutes[F[_]: Monad](ratesProgram: RatesProgram[F]) extends Http
     case GET -> Root :? FromQueryParam(fromOpt) +& ToQueryParam(toOpt) =>
       QueryValidator.validate(fromOpt, toOpt) match {
         case Valid((from, to)) =>
-          ratesProgram.get(GetRatesRequest(from, to)).flatMap {
-            case Right(rate) => Ok(rate.asGetApiResponse)
+          ratesProgram.get(toRatePair(from, to)).flatMap {
+            case Right(rate) => Ok(fromRate(rate))
             case Left(err)   => ErrorMapper.toErrorResponse(err)
           }
         case Invalid(err) => ErrorMapper.badRequest[F](err.toList)

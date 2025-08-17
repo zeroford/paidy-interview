@@ -8,7 +8,6 @@ import munit.CatsEffectSuite
 import forex.domain.currency.Currency
 import forex.domain.error.AppError
 import forex.domain.rates.{ Price, Rate, Timestamp }
-import forex.programs.rates.Protocol.GetRatesRequest
 import forex.services.rates.Algebra
 
 class ProgramSpec extends CatsEffectSuite {
@@ -26,7 +25,7 @@ class ProgramSpec extends CatsEffectSuite {
     val program = Program[IO](successService)
 
     for {
-      result <- program.get(GetRatesRequest(Currency.USD, Currency.JPY))
+      result <- program.get(Rate.Pair(Currency.USD, Currency.JPY))
       _ <- IO(assert(result.isRight, "Program should return success"))
       rate <- IO(result.toOption.get)
       _ <- IO(assertEquals(rate.pair.from, Currency.USD))
@@ -39,7 +38,7 @@ class ProgramSpec extends CatsEffectSuite {
     val program = Program[IO](errorService)
 
     for {
-      result <- program.get(GetRatesRequest(Currency.USD, Currency.JPY))
+      result <- program.get(Rate.Pair(Currency.USD, Currency.JPY))
       _ <- IO(assert(result.isLeft, "Program should return error"))
       error <- IO(result.left.toOption.get)
       _ <- IO(assert(error.isInstanceOf[AppError.UpstreamUnavailable], "Should be UpstreamUnavailable error"))
@@ -50,7 +49,7 @@ class ProgramSpec extends CatsEffectSuite {
     val program = Program[IO](errorService)
 
     for {
-      result <- program.get(GetRatesRequest(Currency.USD, Currency.USD))
+      result <- program.get(Rate.Pair(Currency.USD, Currency.USD))
       _ <- IO(assert(result.isRight, "Program should return success for same currency"))
       rate <- IO(result.toOption.get)
       _ <- IO(assertEquals(rate.pair.from, Currency.USD))

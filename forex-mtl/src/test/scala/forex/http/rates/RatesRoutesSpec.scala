@@ -10,8 +10,7 @@ import org.http4s.implicits._
 import forex.domain.currency.Currency
 import forex.domain.error.AppError
 import forex.domain.rates.{ Price, Rate, Timestamp }
-import forex.programs.RatesProgram
-import forex.programs.rates.Protocol.GetRatesRequest
+import forex.programs.rates.Algebra
 
 class RatesRoutesSpec extends CatsEffectSuite {
 
@@ -22,9 +21,15 @@ class RatesRoutesSpec extends CatsEffectSuite {
     timestamp = Timestamp(fixedInstant)
   )
 
-  private val successProgram: RatesProgram[IO] = (_: GetRatesRequest) => IO.pure(Right(validRate))
-  private val errorProgram: RatesProgram[IO]   = (_: GetRatesRequest) =>
-    IO.pure(Left(AppError.UpstreamUnavailable("one-frame", "API Down")))
+  // Mock Algebra that matches the interface
+  private val successProgram = new Algebra[IO] {
+    def get(pair: Rate.Pair): IO[AppError Either Rate] = IO.pure(Right(validRate))
+  }
+
+  private val errorProgram = new Algebra[IO] {
+    def get(pair: Rate.Pair): IO[AppError Either Rate] =
+      IO.pure(Left(AppError.UpstreamUnavailable("one-frame", "API Down")))
+  }
 
   test("GET /rates should return rate when program succeeds") {
     val routes  = new RatesRoutes[IO](successProgram)

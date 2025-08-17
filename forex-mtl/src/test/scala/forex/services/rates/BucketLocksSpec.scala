@@ -1,9 +1,10 @@
-package forex.services.rates.concurrent
+package forex.services.rates
 
 import cats.effect.IO
 import munit.CatsEffectSuite
 
 import forex.domain.cache.FetchStrategy
+import forex.services.rates.concurrent.{ BucketLocks, RatesBucket }
 
 class BucketLocksSpec extends CatsEffectSuite {
 

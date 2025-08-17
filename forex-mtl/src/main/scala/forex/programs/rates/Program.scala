@@ -10,9 +10,7 @@ import forex.services.RatesService
 
 final class Program[F[_]: Monad: Clock](ratesService: RatesService[F]) extends Algebra[F] {
 
-  override def get(request: Protocol.GetRatesRequest): F[AppError Either Rate] = {
-    val pair = Rate.Pair(request.from, request.to)
-
+  override def get(pair: Rate.Pair): F[AppError Either Rate] =
     Clock[F].realTimeInstant.flatMap { now =>
       if (pair.from === pair.to)
         Rate(
@@ -22,7 +20,6 @@ final class Program[F[_]: Monad: Clock](ratesService: RatesService[F]) extends A
         ).asRight[AppError].pure[F]
       else ratesService.get(pair, now)
     }
-  }
 }
 
 object Program {
