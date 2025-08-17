@@ -41,6 +41,7 @@ final class Service[F[_]: Sync: Logger](maxSize: Long, ttl: FiniteDuration) exte
       case Left(e: Throwable) =>
         Logger[F].error(s"[Cache] clear error, ${e.getMessage}") >> Error.toAppError("CLEAR", e).asLeft[Unit].pure[F]
     }
+
 }
 
 object Service {

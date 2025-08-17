@@ -9,6 +9,8 @@ import forex.clients.oneframe.Algebra
 import forex.domain.error.AppError
 import org.typelevel.log4cats.Logger
 
+import java.time.Instant
+
 class MockClient[F[_]: Applicative: Logger] extends Algebra[F] {
 
   override def getRates(pairs: List[Rate.Pair]): F[AppError Either OneFrameRatesResponse] = {
@@ -21,7 +23,7 @@ class MockClient[F[_]: Applicative: Logger] extends Algebra[F] {
           bid = BigDecimal(100),
           ask = BigDecimal(100),
           price = BigDecimal(100),
-          time_stamp = "2025-01-01T00:00:00Z"
+          time_stamp = Instant.parse("2025-01-01T00:00:00Z")
         )
       }
       .asRight[AppError]

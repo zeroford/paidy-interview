@@ -1,5 +1,6 @@
 package forex.domain.currency
 
+import cats.Eq
 import forex.domain.currency.errors.CurrencyError
 import io.circe.{ Decoder, Encoder }
 
@@ -358,6 +359,7 @@ object Currency {
 
   def isMostUsed(currency: Currency): Boolean = mostUsedCurrencies.contains(currency)
 
+  implicit val eqCurrency: Eq[Currency]   = Eq.fromUniversalEquals
   implicit val encoder: Encoder[Currency] = Encoder.encodeString.contramap(_.toString)
   implicit val decoder: Decoder[Currency] = Decoder.decodeString.emap(fromString(_).left.map(_.toString))
 }

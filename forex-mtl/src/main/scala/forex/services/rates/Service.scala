@@ -2,7 +2,7 @@ package forex.services.rates
 
 import scala.concurrent.duration._
 import cats.data.EitherT
-import cats.effect.{ Clock, Concurrent }
+import cats.effect.Concurrent
 import cats.syntax.all._
 import forex.clients.OneFrameClient
 import forex.clients.oneframe.Protocol.OneFrameRatesResponse
@@ -15,7 +15,9 @@ import forex.services.rates.concurrent.BucketLocks
 import forex.services.rates.{ errors => Error }
 import org.typelevel.log4cats.Logger
 
-final class Service[F[_]: Concurrent: Clock: Logger](
+import java.time.Instant
+
+final class Service[F[_]: Concurrent: Logger](
     oneFrameClient: OneFrameClient[F],
     cache: CacheService[F],
     locks: BucketLocks[F],
@@ -26,8 +28,8 @@ final class Service[F[_]: Concurrent: Clock: Logger](
 
   private def cacheKey(currency: Currency): String = s"$Pivot$currency"
 
-  override def get(pair: Rate.Pair): F[AppError Either Rate] =
-    getRateOrFetch(pair).flatMap {
+  override def get(pair: Rate.Pair, now: Instant): F[AppError Either Rate] =
+    getRateOrFetch(pair, now).flatMap {
       case Right((base, quote)) =>
         val rate = Rate.fromPivotRate(base, quote)
         Logger[F].debug(
@@ -38,40 +40,27 @@ final class Service[F[_]: Concurrent: Clock: Logger](
       case Left(err) => err.asLeft[Rate].pure[F]
     }
 
-  private def getRateOrFetch(pair: Rate.Pair): F[AppError Either PivotPair] =
+  private def getRateOrFetch(pair: Rate.Pair, now: Instant): F[AppError Either PivotPair] = {
+    val action =
+      (getFromCachePivot(pair.from, now), getFromCachePivot(pair.to, now)).tupled.flatMap {
+        case (Right(Some(base)), Right(Some(quote))) => (base -> quote).asRight[AppError].pure[F]
+        case (Right(baseOpt), Right(quoteOpt))       => fetchWithStrategy(pair, baseOpt, quoteOpt)
+        case (baseRes, quoteRes)                     => Error.combine(baseRes, quoteRes).asLeft[PivotPair].pure[F]
+      }
     FetchStrategy.fromPair(pair) match {
-      case FetchStrategy.All =>
-        locks.withBuckets {
-          (getFromCachePivot(pair.from), getFromCachePivot(pair.to)).tupled.flatMap {
-            case (Right(Some(base)), Right(Some(quote))) => (base -> quote).asRight[AppError].pure[F]
-            case (Right(baseOpt), Right(quoteOpt))       => fetchWithStrategy(pair, baseOpt, quoteOpt)
-            case (baseRes, quoteRes)                     => Error.combine(baseRes, quoteRes).asLeft[PivotPair].pure[F]
-          }
-        }
-
-      case other =>
-        val bucket = BucketLocks.bucketFor(other)
-        locks.withBucket(bucket) {
-          (getFromCachePivot(pair.from), getFromCachePivot(pair.to)).tupled.flatMap {
-            case (Right(Some(base)), Right(Some(quote))) => (base -> quote).asRight[AppError].pure[F]
-            case (Right(baseOpt), Right(quoteOpt))       => fetchWithStrategy(pair, baseOpt, quoteOpt)
-            case (baseRes, quoteRes)                     => Error.combine(baseRes, quoteRes).asLeft[PivotPair].pure[F]
-          }
-        }
+      case FetchStrategy.All => locks.withBuckets(action)
+      case other             => locks.withBucket(BucketLocks.bucketFor(other))(action)
     }
+  }
 
-  private def getFromCachePivot(currency: Currency): F[AppError Either Option[PivotRate]] =
-    if (currency == Pivot) PivotRate.default(Pivot).some.asRight[AppError].pure[F]
+  private def getFromCachePivot(currency: Currency, now: Instant): F[AppError Either Option[PivotRate]] =
+    if (currency == Pivot) PivotRate.default(Pivot, now).some.asRight[AppError].pure[F]
     else {
       cache
         .get[String, PivotRate](cacheKey(currency))
         .flatMap {
-          case Right(Some(pr)) =>
-            Timestamp.isWithinTTL[F](pr.timestamp, ttl).map { isValid =>
-              if (isValid) Some(pr).asRight else None.asRight
-            }
-          case Right(_)  => (None: Option[PivotRate]).asRight[AppError].pure[F]
-          case Left(err) => err.asLeft[Option[PivotRate]].pure[F]
+          case Right(prOpt) => prOpt.filter(pr => Timestamp.withinTtl(pr.timestamp, now, ttl)).asRight[AppError].pure[F]
+          case Left(err)    => err.asLeft[Option[PivotRate]].pure[F]
         }
     }
 
@@ -134,7 +123,7 @@ final class Service[F[_]: Concurrent: Clock: Logger](
 }
 
 object Service {
-  def apply[F[_]: Concurrent: Clock: Logger](
+  def apply[F[_]: Concurrent: Logger](
       oneFrameClient: OneFrameClient[F],
       cache: CacheService[F],
       locks: BucketLocks[F],
