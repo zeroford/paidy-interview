@@ -2,14 +2,14 @@ package forex
 
 import cats.effect.{ Async, Resource }
 import cats.implicits.{ toFunctorOps, toSemigroupKOps }
+import forex.clients.OneFrameClient
 import forex.config.{ ApplicationConfig, Environment }
 import forex.http.health.HealthRoutes
 import forex.http.middleware.ErrorHandlerMiddleware
 import forex.http.rates.RatesRoutes
-import forex.clients.OneFrameClient
 import forex.programs.RatesProgram
-import forex.services.rates.concurrent.BucketLocks
 import forex.services.{ CacheService, RatesService }
+import forex.services.rates.concurrent.BucketLocks
 import org.http4s._
 import org.http4s.client.Client
 import org.http4s.server.middleware.{ AutoSlash, Timeout }

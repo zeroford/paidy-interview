@@ -2,9 +2,9 @@ package forex.config
 
 import cats.effect.{ Resource, Sync }
 import com.comcast.ip4s.{ Host, Port }
-import pureconfig.{ ConfigReader, ConfigSource }
-import pureconfig.generic.auto._
 import pureconfig.error.CannotConvert
+import pureconfig.generic.auto._
+import pureconfig.{ ConfigReader, ConfigSource }
 
 object Config {
 

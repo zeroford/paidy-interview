@@ -1,21 +1,20 @@
 package forex.services.rates
 
+import scala.concurrent.duration._
+import cats.data.EitherT
 import cats.effect.{ Clock, Concurrent }
 import cats.syntax.all._
-import cats.data.EitherT
-import forex.domain.cache.FetchStrategy
-import forex.domain.currency.Currency
-import forex.domain.rates.{ PivotRate, Rate, Timestamp }
 import forex.clients.OneFrameClient
 import forex.clients.oneframe.Protocol.OneFrameRatesResponse
+import forex.domain.cache.FetchStrategy
+import forex.domain.currency.Currency
 import forex.domain.error.AppError
+import forex.domain.rates.{ PivotRate, Rate, Timestamp }
 import forex.services.PivotPair
 import forex.services.cache.{ Algebra => CacheAlgebra }
 import forex.services.rates.concurrent.BucketLocks
-import org.typelevel.log4cats.Logger
 import forex.services.rates.{ errors => Error }
-
-import scala.concurrent.duration._
+import org.typelevel.log4cats.Logger
 
 final class Service[F[_]: Concurrent: Logger: Clock](
     oneFrameClient: OneFrameClient[F],

@@ -1,13 +1,12 @@
 package forex.services.cache
 
+import scala.concurrent.duration.FiniteDuration
 import cats.effect.Sync
-import cats.syntax.all._
+import cats.implicits._
 import com.github.blemale.scaffeine.Scaffeine
 import forex.domain.error.AppError
 import forex.services.cache.{ errors => Error }
 import org.typelevel.log4cats.Logger
-
-import scala.concurrent.duration.FiniteDuration
 
 final class Service[F[_]: Sync: Logger](maxSize: Long, ttl: FiniteDuration) extends Algebra[F] {
 

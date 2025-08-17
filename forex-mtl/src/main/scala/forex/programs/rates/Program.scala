@@ -2,7 +2,8 @@ package forex.programs.rates
 
 import cats.Applicative
 import cats.effect.Clock
-import cats.syntax.all._
+import cats.syntax.either._
+import cats.syntax.functor._
 import forex.domain.error.AppError
 import forex.domain.rates.Rate
 import forex.services.RatesService

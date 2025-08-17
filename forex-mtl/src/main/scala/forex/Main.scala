@@ -1,7 +1,7 @@
 package forex
 
-import cats.effect._
-import forex.config._
+import cats.effect.{ IO, IOApp, Resource, Sync }
+import forex.config.Config
 import forex.modules.{ HttpClientBuilder, HttpServerBuilder }
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
