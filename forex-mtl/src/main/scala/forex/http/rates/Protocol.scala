@@ -9,9 +9,6 @@ import forex.domain.currency.Currency
 import forex.domain.rates.{ Price, Timestamp }
 
 object Protocol {
-
-  implicit val configuration: Configuration = Configuration.default.withSnakeCaseMemberNames
-
   final case class GetApiResponse(
       from: Currency,
       to: Currency,
@@ -19,5 +16,6 @@ object Protocol {
       timestamp: Timestamp
   )
 
+  implicit val configuration: Configuration             = Configuration.default.withSnakeCaseMemberNames
   implicit val responseEncoder: Encoder[GetApiResponse] = deriveConfiguredEncoder[GetApiResponse]
 }

@@ -12,6 +12,7 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import forex.config.{ ApplicationConfig, Environment }
 import forex.config.{ CacheConfig, HttpConfig, OneFrameConfig, SecretConfig }
+import forex.modules.Module
 import forex.services.rates.concurrent.BucketLocks
 
 class ModuleSpec extends CatsEffectSuite {

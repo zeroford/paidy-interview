@@ -6,7 +6,7 @@ import munit.FunSuite
 
 import forex.domain.currency.Currency
 import forex.domain.rates.{ Price, Rate, Timestamp }
-import forex.http.rates.Converters._
+import forex.http.rates.Converters
 
 class ConvertersSpec extends FunSuite {
 
@@ -18,7 +18,7 @@ class ConvertersSpec extends FunSuite {
   )
 
   test("GetApiResponse should convert from Rate correctly") {
-    val response = testRate.asGetApiResponse
+    val response = Converters.fromRate(testRate)
 
     assertEquals(response.from, Currency.USD)
     assertEquals(response.to, Currency.EUR)
@@ -32,7 +32,7 @@ class ConvertersSpec extends FunSuite {
       price = Price(BigDecimal(0.90)),
       timestamp = Timestamp(fixedInstant)
     )
-    val response = rate2.asGetApiResponse
+    val response = Converters.fromRate(rate2)
 
     assertEquals(response.from, Currency.EUR)
     assertEquals(response.to, Currency.GBP)
@@ -45,7 +45,7 @@ class ConvertersSpec extends FunSuite {
       price = Price(BigDecimal(123.45)),
       timestamp = Timestamp(fixedInstant)
     )
-    val response = rate3.asGetApiResponse
+    val response = Converters.fromRate(rate3)
 
     assertEquals(response.from, Currency.USD)
     assertEquals(response.to, Currency.JPY)
@@ -58,7 +58,7 @@ class ConvertersSpec extends FunSuite {
       price = Price(BigDecimal(1.0)),
       timestamp = Timestamp(fixedInstant)
     )
-    val response = sameCurrencyRate.asGetApiResponse
+    val response = Converters.fromRate(sameCurrencyRate)
 
     assertEquals(response.from, Currency.USD)
     assertEquals(response.to, Currency.USD)
@@ -66,7 +66,7 @@ class ConvertersSpec extends FunSuite {
   }
 
   test("GetApiResponse should be immutable") {
-    val response1 = testRate.asGetApiResponse
+    val response1 = Converters.fromRate(testRate)
     val response2 = response1.copy(from = Currency.EUR)
 
     assertEquals(response1.from, Currency.USD)

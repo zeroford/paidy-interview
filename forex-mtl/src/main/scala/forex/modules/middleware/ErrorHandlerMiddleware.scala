@@ -1,7 +1,7 @@
-package forex.http.middleware
+package forex.modules.middleware
 
 import cats.MonadThrow
-import cats.implicits.catsSyntaxApplicativeId
+import cats.syntax.applicative._
 import cats.syntax.applicativeError._
 import cats.syntax.flatMap._
 import io.circe.syntax._

@@ -9,7 +9,6 @@ import cats.syntax.all._
 import org.typelevel.log4cats.Logger
 
 import forex.clients.OneFrameClient
-import forex.clients.oneframe.Protocol.OneFrameRatesResponse
 import forex.domain.cache.FetchStrategy
 import forex.domain.currency.Currency
 import forex.domain.error.AppError
@@ -84,41 +83,28 @@ final class Service[F[_]: Concurrent: Logger](
     } yield pivotPair).value
   }
 
-  private def cacheRates(response: OneFrameRatesResponse): F[AppError Either Unit] =
-    response.traverse { r =>
-      Currency.fromString(r.to) match {
-        case Right(currency) =>
-          val pivotRate = PivotRate.fromResponse(currency, r.price, r.time_stamp)
-          cache.put(cacheKey(currency), pivotRate)
-        case Left(_) => ().asRight[AppError].pure[F]
-      }
-    } flatMap { results =>
-      results.collectFirst { case Left(e) => e } match {
-        case Some(e) =>
-          e.asLeft[Unit].pure[F]
-        case None =>
-          ().asRight[AppError].pure[F]
-      }
+  private def cacheRates(response: List[PivotRate]): F[AppError Either Unit] =
+    response.traverse_(r => EitherT(cache.put(cacheKey(r.currency), r))).value.flatTap {
+      case Right(_)  => Logger[F].debug(s"[RatesService] Cached ${response.size} pivot rates")
+      case Left(err) => Logger[F].error(s"[RatesService] Failed to cache pivot rates: ${err.getMessage}")
     }
 
   private def extractPivotRates(
-      response: OneFrameRatesResponse,
+      response: List[PivotRate],
       pair: Rate.Pair,
       baseOpt: Option[PivotRate],
       quoteOpt: Option[PivotRate]
   ): AppError Either PivotPair = {
-    def lookup(cur: Currency): Option[PivotRate] =
-      response.collectFirst {
-        case r if r.from == Pivot.toString && r.to == cur.toString =>
-          PivotRate.fromResponse(cur, r.price, r.time_stamp)
-      }
+    lazy val idx: Map[Currency, PivotRate] =
+      response.iterator.map(r => r.currency -> r).toMap
 
-    def pick(cur: Currency, cached: Option[PivotRate]): Option[PivotRate] = cached.orElse(lookup(cur))
+    def pick(currency: Currency, cached: Option[PivotRate]): Option[PivotRate] =
+      cached.orElse(idx.get(currency))
 
-    (pick(pair.from, baseOpt), pick(pair.to, quoteOpt)) match {
-      case (Some(base), Some(quote)) => Right(base -> quote)
-      case _                         => Left(Error.notFound(pair))
-    }
+    (for {
+      base <- pick(pair.from, baseOpt)
+      quote <- pick(pair.to, quoteOpt)
+    } yield (base, quote)).toRight(Error.notFound(pair))
   }
 
 }

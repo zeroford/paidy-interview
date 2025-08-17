@@ -61,9 +61,8 @@ class HttpClientSpec extends CatsEffectSuite {
       rates <- IO(result.toOption.get)
       _ <- IO(assert(rates.nonEmpty))
       firstRate <- IO(rates.head)
-      _ <- IO(assertEquals(firstRate.from, "USD"))
-      _ <- IO(assertEquals(firstRate.to, "JPY"))
-      _ <- IO(assert(firstRate.price > 0))
+      _ <- IO(assertEquals(firstRate.currency, Currency.JPY))
+      _ <- IO(assert(firstRate.price.value > 0))
     } yield ()
   }
 
@@ -80,7 +79,7 @@ class HttpClientSpec extends CatsEffectSuite {
       _ <- IO(assert(result.isRight))
       rates <- IO(result.toOption.get)
       _ <- IO(assertEquals(rates.size, 3))
-      _ <- IO(assert(rates.forall(_.price > 0)))
+      _ <- IO(assert(rates.forall(_.price.value > 0)))
     } yield ()
   }
 
@@ -94,9 +93,8 @@ class HttpClientSpec extends CatsEffectSuite {
       rates <- IO(result.toOption.get)
       _ <- IO(assert(rates.nonEmpty))
       firstRate <- IO(rates.head)
-      _ <- IO(assertEquals(firstRate.from, "EUR"))
-      _ <- IO(assertEquals(firstRate.to, "GBP"))
-      _ <- IO(assert(firstRate.price > 0))
+      _ <- IO(assertEquals(firstRate.currency, Currency.GBP))
+      _ <- IO(assert(firstRate.price.value > 0))
     } yield ()
   }
 
@@ -110,9 +108,8 @@ class HttpClientSpec extends CatsEffectSuite {
       rates <- IO(result.toOption.get)
       _ <- IO(assert(rates.nonEmpty))
       firstRate <- IO(rates.head)
-      _ <- IO(assertEquals(firstRate.from, "USD"))
-      _ <- IO(assertEquals(firstRate.to, "EUR"))
-      _ <- IO(assert(firstRate.price > 0))
+      _ <- IO(assertEquals(firstRate.currency, Currency.EUR))
+      _ <- IO(assert(firstRate.price.value > 0))
     } yield ()
   }
 
@@ -129,7 +126,7 @@ class HttpClientSpec extends CatsEffectSuite {
       _ <- IO(assert(result.isRight))
       rates <- IO(result.toOption.get)
       _ <- IO(assert(rates.nonEmpty))
-      _ <- IO(assert(rates.forall(_.price > 0)))
+      _ <- IO(assert(rates.forall(_.price.value > 0)))
     } yield ()
   }
 
@@ -145,9 +142,8 @@ class HttpClientSpec extends CatsEffectSuite {
       rates <- IO(result.toOption.get)
       _ <- IO(assert(rates.nonEmpty))
       firstRate <- IO(rates.head)
-      _ <- IO(assertEquals(firstRate.from, "USD"))
-      _ <- IO(assertEquals(firstRate.to, "JPY"))
-      _ <- IO(assert(firstRate.price > 0))
+      _ <- IO(assertEquals(firstRate.currency, Currency.JPY))
+      _ <- IO(assert(firstRate.price.value > 0))
     } yield ()
   }
 
@@ -157,9 +153,9 @@ class HttpClientSpec extends CatsEffectSuite {
 
     for {
       result <- httpClient.getRates(pairs)
-      _ <- IO(assert(result.isLeft))
+      _ <- IO(assert(result.isLeft, "Empty pairs should return error"))
       error <- IO(result.left.toOption.get)
-      _ <- IO(assert(error.isInstanceOf[AppError.NotFound]))
+      _ <- IO(assert(error.isInstanceOf[AppError.NotFound], "Should be NotFound error"))
     } yield ()
   }
 }

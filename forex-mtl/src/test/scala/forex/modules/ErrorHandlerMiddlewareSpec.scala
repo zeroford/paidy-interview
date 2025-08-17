@@ -1,6 +1,7 @@
-package forex.http.middleware
+package forex.modules
 
 import cats.effect.IO
+import forex.modules.middleware.ErrorHandlerMiddleware
 import io.circe.parser._
 import munit.CatsEffectSuite
 import org.http4s._

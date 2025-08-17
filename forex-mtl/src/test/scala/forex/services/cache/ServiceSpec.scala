@@ -10,7 +10,6 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import forex.domain.currency.Currency
 import forex.domain.rates.{ Price, Rate, Timestamp }
-import forex.services.cache.Service
 
 class ServiceSpec extends CatsEffectSuite {
 
