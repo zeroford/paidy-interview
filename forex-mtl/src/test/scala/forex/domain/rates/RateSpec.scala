@@ -17,7 +17,7 @@ class RateSpec extends FunSuite {
     )
     val rate2 = Rate(
       pair = Rate.Pair(Currency.EUR, Currency.GBP),
-      price = Price(priceInt),
+      price = Price.fromInt(priceInt),
       timestamp = Timestamp(OffsetDateTime.parse("2024-08-04T15:00:00Z"))
     )
 

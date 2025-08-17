@@ -7,7 +7,7 @@ import forex.domain.error.AppError
 import forex.domain.rates.{ Price, Rate, Timestamp }
 import forex.services.RatesService
 
-class Program[F[_]: Applicative: Clock](ratesService: RatesService[F]) extends Algebra[F] {
+final class Program[F[_]: Applicative: Clock](ratesService: RatesService[F]) extends Algebra[F] {
 
   override def get(request: Protocol.GetRatesRequest): F[AppError Either Rate] = {
     val pair = Rate.Pair(request.from, request.to)

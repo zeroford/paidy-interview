@@ -26,10 +26,12 @@ object errors {
       case _                              => AppError.UnexpectedError("Unexpected error")
     }
 
-  def toAppError(status: Int): AppError =
+  def toAppError(service: String, message: String): AppError = AppError.DecodingFailed(service, message)
+
+  def toAppError(status: Int, body: String = ""): AppError =
     status match {
       case 400 =>
-        AppError.BadRequest(s"Bad request")
+        AppError.BadRequest(s"Bad request: $body")
       case 401 | 403 =>
         AppError.UpstreamAuthFailed("one-frame", "Upstream service authentication failed")
       case 404 =>
@@ -37,7 +39,7 @@ object errors {
       case 429 =>
         AppError.RateLimited("one-frame", "Rate limited")
       case x if x >= 500 =>
-        AppError.UpstreamUnavailable("one-frame", s"Upstream error $x")
+        AppError.UpstreamUnavailable("one-frame", s"Upstream error $x: $body")
       case _ =>
         AppError.UnexpectedError("Unexpected error")
     }

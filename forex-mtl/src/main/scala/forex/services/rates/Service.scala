@@ -17,7 +17,7 @@ import forex.services.rates.{ errors => Error }
 
 import scala.concurrent.duration._
 
-class Service[F[_]: Concurrent: Logger: Clock](
+final class Service[F[_]: Concurrent: Logger: Clock](
     oneFrameClient: OneFrameClient[F],
     cache: CacheAlgebra[F],
     locks: BucketLocks[F],

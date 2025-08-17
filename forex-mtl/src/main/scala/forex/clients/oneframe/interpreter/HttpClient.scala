@@ -12,7 +12,7 @@ import io.circe.parser.decode
 import org.http4s.client.Client
 import org.typelevel.log4cats.Logger
 
-class HttpClient[F[_]: Concurrent: Logger](client: Client[F], config: OneFrameConfig, token: String)
+final class HttpClient[F[_]: Concurrent: Logger](client: Client[F], config: OneFrameConfig, token: String)
     extends Algebra[F] {
 
   private val builder = RequestBuilder(config.host, config.port, token)
@@ -26,7 +26,7 @@ class HttpClient[F[_]: Concurrent: Logger](client: Client[F], config: OneFrameCo
           case Right(body)                              =>
             Logger[F]
               .error(s"[OneFrameAPI] Receive error, http error: ${response.status}, $body")
-              .as(Error.toAppError(response.status.code).asLeft[OneFrameRatesResponse])
+              .as(Error.toAppError(response.status.code, body).asLeft[OneFrameRatesResponse])
           case Left(t) =>
             Logger[F]
               .error(s"[OneFrameAPI] Receive error, read-body failed: ${t.getMessage}")
@@ -51,7 +51,7 @@ class HttpClient[F[_]: Concurrent: Logger](client: Client[F], config: OneFrameCo
               Error.toAppError(res.error).asLeft[OneFrameRatesResponse].pure[F]
           case Left(e) =>
             Logger[F].error(s"[OneFrameAPI] decode failed, ${e.getMessage}; body:${body.trim}") >>
-              Error.toAppError(body).asLeft[OneFrameRatesResponse].pure[F]
+              Error.toAppError("one-frame", s"Decoding failed: ${e.getMessage}").asLeft[OneFrameRatesResponse].pure[F]
         }
     }
 

@@ -1,6 +1,6 @@
 package forex.domain.rates
 
-import io.circe.{Decoder, Encoder}
+import io.circe.{ Decoder, Encoder }
 
 final case class Price(value: BigDecimal) extends AnyVal
 object Price {
