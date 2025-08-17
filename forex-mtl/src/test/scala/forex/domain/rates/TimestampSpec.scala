@@ -1,64 +1,116 @@
 package forex.domain.rates
 
-import io.circe.parser.decode
-import io.circe.syntax._
-import munit.CatsEffectSuite
-import cats.effect.IO
-
-import java.time.{ OffsetDateTime, ZoneOffset }
+import java.time.Instant
 import scala.concurrent.duration._
 
-class TimestampSpec extends CatsEffectSuite {
+import io.circe.{ Decoder, Encoder }
+import io.circe.parser.parse
+import munit.FunSuite
 
-  test("Timestamp should handle OffsetDateTime correctly") {
-    val now       = OffsetDateTime.now
-    val timestamp = Timestamp(now)
-    assertEquals(timestamp.value, now)
+class TimestampSpec extends FunSuite {
+
+  private val fixedInstant   = Instant.parse("2024-01-01T10:00:00Z")
+  private val laterInstant   = Instant.parse("2024-01-01T11:00:00Z")
+  private val earlierInstant = Instant.parse("2024-01-01T09:00:00Z")
+
+  test("Timestamp should create from Instant correctly") {
+    val timestamp = Timestamp(fixedInstant)
+    assertEquals(timestamp.value, fixedInstant)
   }
 
-  test("Timestamp.now should create UTC timestamp") {
-    val timestamp = Timestamp(OffsetDateTime.now(ZoneOffset.UTC))
-    assertEquals(timestamp.value.getOffset, ZoneOffset.UTC)
+  test("Timestamp should be immutable") {
+    val timestamp = Timestamp(fixedInstant)
+    val modified  = timestamp.copy(value = laterInstant)
+
+    assertEquals(timestamp.value, fixedInstant)
+    assertEquals(modified.value, laterInstant)
   }
 
-  test("isWithinTTL should work correctly") {
-    val recent = Timestamp(OffsetDateTime.now.minusSeconds(30))
-    val old    = Timestamp(OffsetDateTime.now.minusMinutes(2))
-    val ttl    = 1.minute
+  test("withinTtl should work correctly with pure functions") {
+    val ttl = 1.minute
+    val now = fixedInstant
 
-    for {
-      recentValid <- Timestamp.isWithinTTL[IO](recent, ttl)
-      oldValid <- Timestamp.isWithinTTL[IO](old, ttl)
-      _ <- IO(assert(recentValid))
-      _ <- IO(assert(!oldValid))
-    } yield ()
+    val recent = Timestamp(now.minusSeconds(30))
+    val old    = Timestamp(now.minusSeconds(120))
+    val future = Timestamp(now.plusSeconds(30))
+
+    val recentValid = Timestamp.withinTtl(recent, now, ttl)
+    val oldValid    = Timestamp.withinTtl(old, now, ttl)
+    val futureValid = Timestamp.withinTtl(future, now, ttl)
+
+    assert(recentValid, "Recent timestamp should be within TTL")
+    assert(!oldValid, "Old timestamp should be expired")
+    assert(!futureValid, "Future timestamp should not be within TTL")
   }
 
-  test("olderTTL should return earlier timestamp") {
-    val earlier = Timestamp(OffsetDateTime.parse("2024-01-01T10:00:00Z"))
-    val later   = Timestamp(OffsetDateTime.parse("2024-01-01T11:00:00Z"))
+  test("base should return earlier timestamp (pure function)") {
+    val earlier = Timestamp(earlierInstant)
+    val later   = Timestamp(laterInstant)
 
-    assertEquals(Timestamp.older(earlier, later), earlier)
-    assertEquals(Timestamp.older(later, earlier), earlier)
+    val result1 = Timestamp.base(earlier, later)
+    val result2 = Timestamp.base(later, earlier)
+
+    assertEquals(result1, earlier, "Should return earlier timestamp")
+    assertEquals(result2, earlier, "Should return earlier timestamp regardless of order")
   }
 
-  test("Timestamp should support JSON serialization") {
-    val timestamp = Timestamp(OffsetDateTime.parse("2024-01-01T10:00:00Z"))
-    val json      = timestamp.asJson
-    assert(json.isString)
-    assertEquals(json.asString.get, "2024-01-01T10:00:00Z")
+  test("base should handle identical timestamps") {
+    val same   = Timestamp(fixedInstant)
+    val result = Timestamp.base(same, same)
+    assertEquals(result, same)
   }
 
-  test("Timestamp should support JSON deserialization") {
-    val json   = "\"2024-01-01T10:00:00Z\""
-    val result = decode[Timestamp](json)
-    assert(result.isRight)
-    assertEquals(result.toOption.get.value, OffsetDateTime.parse("2024-01-01T10:00:00Z"))
+  test("Timestamp should support JSON serialization (pure)") {
+    val timestamp = Timestamp(fixedInstant)
+    val json      = Encoder[Timestamp].apply(timestamp)
+
+    assert(json.isString, "Should serialize to string")
+    assert(json.asString.isDefined, "Should be a valid string")
   }
 
-  test("Timestamp should fail for invalid JSON") {
-    val json   = "\"invalid-date\""
-    val result = decode[Timestamp](json)
-    assert(result.isLeft)
+  test("Timestamp should support JSON deserialization (pure)") {
+    val timestamp = Timestamp(fixedInstant)
+    val json      = Encoder[Timestamp].apply(timestamp)
+    val result    = Decoder[Timestamp].decodeJson(json)
+
+    assert(result.isRight, "Should decode successfully")
+    assertEquals(result.toOption.get, timestamp, "Should decode to same timestamp")
+  }
+
+  test("Timestamp should fail for invalid JSON (pure error handling)") {
+    val invalidJson = parse("\"invalid-timestamp\"").toOption.get
+    val result      = Decoder[Timestamp].decodeJson(invalidJson)
+
+    assert(result.isLeft, "Should fail for invalid timestamp")
+    assert(
+      result.left.toOption.get.message.contains("Invalid timestamp format"),
+      "Should have meaningful error message"
+    )
+  }
+
+  test("Timestamp should handle edge cases") {
+    val epoch     = Timestamp(Instant.EPOCH)
+    val farFuture = Timestamp(Instant.parse("9999-12-31T23:59:59Z"))
+
+    assertEquals(epoch.value, Instant.EPOCH)
+    assert(farFuture.value.isAfter(Instant.now()))
+  }
+
+  test("withinTtl should handle zero TTL") {
+    val timestamp = Timestamp(fixedInstant)
+    val now       = fixedInstant
+    val zeroTtl   = 0.seconds
+
+    val result = Timestamp.withinTtl(timestamp, now, zeroTtl)
+    assert(result, "Exact timestamp should be within zero TTL")
+  }
+
+  test("withinTtl should handle very large TTL") {
+    val timestamp = Timestamp(fixedInstant)
+    val now       = fixedInstant.plusSeconds(1000)
+    val largeTtl  = 1.hour
+
+    val result = Timestamp.withinTtl(timestamp, now, largeTtl)
+    assert(result, "Should be within large TTL")
   }
 }

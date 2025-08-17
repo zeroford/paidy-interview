@@ -1,63 +1,61 @@
 package forex.programs.rates
 
+import java.time.Instant
+
 import cats.effect.IO
+import munit.CatsEffectSuite
+
 import forex.domain.currency.Currency
 import forex.domain.error.AppError
 import forex.domain.rates.{ Price, Rate, Timestamp }
 import forex.programs.rates.Protocol.GetRatesRequest
 import forex.services.rates.Algebra
-import munit.CatsEffectSuite
-import java.time.OffsetDateTime
 
 class ProgramSpec extends CatsEffectSuite {
 
-  val validRate: Rate = Rate(
+  private val validRate = Rate(
     pair = Rate.Pair(Currency.USD, Currency.JPY),
     price = Price(BigDecimal(123.45)),
-    timestamp = Timestamp(OffsetDateTime.parse("2024-08-04T12:34:56Z"))
+    timestamp = Timestamp(Instant.parse("2024-08-04T12:34:56Z"))
   )
 
-  val successService: Algebra[IO] = (_: Rate.Pair) => IO.pure(Right(validRate))
-
-  val errorService: Algebra[IO] = (_: Rate.Pair) => IO.pure(Left(AppError.UpstreamUnavailable("one-frame", "API Down")))
+  private val successService: Algebra[IO] = (_, _) => IO.pure(Right(validRate))
+  private val errorService: Algebra[IO] = (_, _) => IO.pure(Left(AppError.UpstreamUnavailable("one-frame", "API Down")))
 
   test("Program should return rate when service succeeds") {
     val program = Program[IO](successService)
-    val request = GetRatesRequest(Currency.USD, Currency.JPY)
 
     for {
-      result <- program.get(request)
-      _ <- IO(assert(result.isRight))
+      result <- program.get(GetRatesRequest(Currency.USD, Currency.JPY))
+      _ <- IO(assert(result.isRight, "Program should return success"))
       rate <- IO(result.toOption.get)
       _ <- IO(assertEquals(rate.pair.from, Currency.USD))
       _ <- IO(assertEquals(rate.pair.to, Currency.JPY))
+      _ <- IO(assertEquals(rate.price.value, BigDecimal(123.45)))
     } yield ()
   }
 
   test("Program should return error when service fails") {
     val program = Program[IO](errorService)
-    val request = GetRatesRequest(Currency.USD, Currency.JPY)
 
     for {
-      result <- program.get(request)
-      _ <- IO(assert(result.isLeft))
+      result <- program.get(GetRatesRequest(Currency.USD, Currency.JPY))
+      _ <- IO(assert(result.isLeft, "Program should return error"))
       error <- IO(result.left.toOption.get)
-      _ <- IO(assert(error.isInstanceOf[AppError.UpstreamUnavailable]))
+      _ <- IO(assert(error.isInstanceOf[AppError.UpstreamUnavailable], "Should be UpstreamUnavailable error"))
     } yield ()
   }
 
   test("Program should return rate 1.0 for same currency") {
-    val program = Program[IO](errorService) // Even with error service, same currency should work
-    val request = GetRatesRequest(Currency.USD, Currency.USD)
+    val program = Program[IO](errorService)
 
     for {
-      result <- program.get(request)
-      _ <- IO(assert(result.isRight))
+      result <- program.get(GetRatesRequest(Currency.USD, Currency.USD))
+      _ <- IO(assert(result.isRight, "Program should return success for same currency"))
       rate <- IO(result.toOption.get)
       _ <- IO(assertEquals(rate.pair.from, Currency.USD))
       _ <- IO(assertEquals(rate.pair.to, Currency.USD))
-      _ <- IO(assertEquals(rate.price.value, BigDecimal(1.0)))
+      _ <- IO(assertEquals(rate.price.value, BigDecimal(1.0), "Same currency should have price 1.0"))
     } yield ()
   }
-
 }

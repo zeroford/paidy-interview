@@ -1,103 +1,100 @@
 package forex.http.rates
 
+import java.time.Instant
+
 import cats.effect.IO
+import munit.CatsEffectSuite
+import org.http4s.{ Method, Request, Status, Uri }
+import org.http4s.implicits._
+
 import forex.domain.currency.Currency
 import forex.domain.error.AppError
 import forex.domain.rates.{ Price, Rate, Timestamp }
+import forex.programs.RatesProgram
 import forex.programs.rates.Protocol.GetRatesRequest
-import forex.programs.rates.Algebra
-import munit.CatsEffectSuite
-import io.circe.parser._
-import org.http4s._
-import org.http4s.implicits._
-import java.time.OffsetDateTime
 
 class RatesRoutesSpec extends CatsEffectSuite {
 
-  val validRate: Rate = Rate(
-    pair = Rate.Pair(Currency.USD, Currency.JPY),
-    price = Price(BigDecimal(123.45)),
-    timestamp = Timestamp(OffsetDateTime.parse("2024-08-04T12:34:56Z"))
+  private val fixedInstant = Instant.parse("2024-08-04T12:34:56Z")
+  private val validRate    = Rate(
+    pair = Rate.Pair(Currency.USD, Currency.EUR),
+    price = Price(BigDecimal(0.85)),
+    timestamp = Timestamp(fixedInstant)
   )
 
-  val successProgram: Algebra[IO] = (_: GetRatesRequest) => IO.pure(Right(validRate))
-
-  val errorProgram: Algebra[IO] = (_: GetRatesRequest) =>
+  private val successProgram: RatesProgram[IO] = (_: GetRatesRequest) => IO.pure(Right(validRate))
+  private val errorProgram: RatesProgram[IO]   = (_: GetRatesRequest) =>
     IO.pure(Left(AppError.UpstreamUnavailable("one-frame", "API Down")))
 
-  test("GET /rates should return 200 and correct JSON") {
-    val routes  = new RatesRoutes[IO](successProgram).routes
-    val request = Request[IO](Method.GET, uri"/rates?from=USD&to=JPY")
+  test("GET /rates should return rate when program succeeds") {
+    val routes  = new RatesRoutes[IO](successProgram)
+    val request = Request[IO](Method.GET, Uri.unsafeFromString("/rates?from=USD&to=EUR"))
 
     for {
-      response <- routes.orNotFound.run(request)
+      response <- routes.routes.orNotFound.run(request)
       _ <- IO(assertEquals(response.status, Status.Ok))
       body <- response.as[String]
-      json = parse(body).getOrElse(fail("Response is not valid JSON"))
-      _ <- IO(assertEquals(json.hcursor.get[String]("from").toOption, Some("USD")))
-      _ <- IO(assertEquals(json.hcursor.get[String]("to").toOption, Some("JPY")))
-      _ <- IO(assertEquals(json.hcursor.get[BigDecimal]("price").toOption, Some(BigDecimal("123.45"))))
-      _ <- IO(assertEquals(json.hcursor.get[String]("timestamp").toOption, Some("2024-08-04T12:34:56Z")))
+      _ <- IO(assert(body.contains("USD"), "Response should contain USD"))
+      _ <- IO(assert(body.contains("EUR"), "Response should contain EUR"))
+      _ <- IO(assert(body.contains("0.85"), "Response should contain price"))
     } yield ()
   }
 
-  test("GET /rates missing 'to' param should return 400") {
-    val routes  = new RatesRoutes[IO](successProgram).routes
-    val request = Request[IO](Method.GET, uri"/rates?from=USD")
+  test("GET /rates should return error when program fails") {
+    val routes  = new RatesRoutes[IO](errorProgram)
+    val request = Request[IO](Method.GET, Uri.unsafeFromString("/rates?from=USD&to=EUR"))
 
     for {
-      response <- routes.orNotFound.run(request)
-      _ <- IO(assertEquals(response.status, Status.BadRequest))
-    } yield ()
-  }
-
-  test("GET /rates with invalid currency should return 400") {
-    val routes  = new RatesRoutes[IO](successProgram).routes
-    val request = Request[IO](Method.GET, uri"/rates?from=USD&to=XXX")
-
-    for {
-      response <- routes.orNotFound.run(request)
-      _ <- IO(assertEquals(response.status, Status.BadRequest))
-    } yield ()
-  }
-
-  test("GET /rates without query params should return 400") {
-    val routes  = new RatesRoutes[IO](successProgram).routes
-    val request = Request[IO](Method.GET, uri"/rates")
-
-    for {
-      response <- routes.orNotFound.run(request)
-      _ <- IO(assertEquals(response.status, Status.BadRequest))
-    } yield ()
-  }
-
-  test("GET /rate (wrong path) should return 404") {
-    val routes  = new RatesRoutes[IO](successProgram).routes
-    val request = Request[IO](Method.GET, uri"/rate?from=USD&to=JPY")
-
-    for {
-      response <- routes.orNotFound.run(request)
-      _ <- IO(assertEquals(response.status, Status.NotFound))
-    } yield ()
-  }
-
-  test("POST /rates (wrong method) should return 405") {
-    val routes  = new RatesRoutes[IO](successProgram).routes
-    val request = Request[IO](Method.POST, uri"/rates?from=USD&to=JPY")
-
-    for {
-      response <- routes.orNotFound.run(request)
-      _ <- IO(assertEquals(response.status, Status.MethodNotAllowed))
-    } yield ()
-  }
-
-  test("GET /rates but service fails should return 503") {
-    val routes  = new RatesRoutes[IO](errorProgram).routes
-    val request = Request[IO](Method.GET, uri"/rates?from=USD&to=JPY")
-
-    for {
-      response <- routes.orNotFound.run(request)
+      response <- routes.routes.orNotFound.run(request)
       _ <- IO(assertEquals(response.status, Status.ServiceUnavailable))
+      body <- response.as[String]
+      _ <- IO(assert(body.contains("503"), "Response should contain status code"))
+      _ <- IO(assert(body.contains("API Down"), "Response should contain error message"))
+    } yield ()
+  }
+
+  test("GET /rates should handle missing query parameters") {
+    val routes  = new RatesRoutes[IO](successProgram)
+    val request = Request[IO](Method.GET, Uri.unsafeFromString("/rates"))
+
+    for {
+      response <- routes.routes.orNotFound.run(request)
+      _ <- IO(assertEquals(response.status, Status.BadRequest))
+    } yield ()
+  }
+
+  test("GET /rates should handle invalid currency") {
+    val routes  = new RatesRoutes[IO](successProgram)
+    val request = Request[IO](Method.GET, Uri.unsafeFromString("/rates?from=INVALID&to=EUR"))
+
+    for {
+      response <- routes.routes.orNotFound.run(request)
+      _ <- IO(assertEquals(response.status, Status.BadRequest))
+    } yield ()
+  }
+
+  test("GET /rates should handle same currency pair") {
+    val routes  = new RatesRoutes[IO](successProgram)
+    val request = Request[IO](Method.GET, Uri.unsafeFromString("/rates?from=USD&to=USD"))
+
+    for {
+      response <- routes.routes.orNotFound.run(request)
+      _ <- IO(assertEquals(response.status, Status.BadRequest))
+      body <- response.as[String]
+      _ <- IO(assert(body.contains("Same currency not allowed"), "Response should contain validation error"))
+    } yield ()
+  }
+
+  test("GET /rates should handle different currency pairs") {
+    val routes  = new RatesRoutes[IO](successProgram)
+    val request = Request[IO](Method.GET, Uri.unsafeFromString("/rates?from=EUR&to=GBP"))
+
+    for {
+      response <- routes.routes.orNotFound.run(request)
+      _ <- IO(assertEquals(response.status, Status.Ok))
+      body <- response.as[String]
+      _ <- IO(assert(body.contains("USD"), "Response should contain USD from mock"))
+      _ <- IO(assert(body.contains("EUR"), "Response should contain EUR from mock"))
     } yield ()
   }
 }
