@@ -1,10 +1,11 @@
 package forex.domain.rates
 
-import forex.domain.currency.Currency
-import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
-import io.circe.{ Decoder, Encoder }
-
 import java.time.Instant
+
+import io.circe.{ Decoder, Encoder }
+import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
+
+import forex.domain.currency.Currency
 
 final case class PivotRate(currency: Currency, price: Price, timestamp: Timestamp)
 

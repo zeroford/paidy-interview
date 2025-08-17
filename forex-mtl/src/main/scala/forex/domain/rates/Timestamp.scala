@@ -1,12 +1,13 @@
 package forex.domain.rates
 
 import scala.concurrent.duration.FiniteDuration
-import io.circe.{ Decoder, Encoder }
-import cats.syntax.either._
 
 import java.time.Instant
 import java.time.format.{ DateTimeFormatter, DateTimeFormatterBuilder }
 import java.time.temporal.ChronoUnit.MILLIS
+
+import cats.syntax.either._
+import io.circe.{ Decoder, Encoder }
 
 final case class Timestamp(value: Instant) extends AnyVal
 object Timestamp {

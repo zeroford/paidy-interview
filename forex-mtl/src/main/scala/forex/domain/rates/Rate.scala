@@ -1,9 +1,10 @@
 package forex.domain.rates
 
-import forex.domain.currency.Currency
-import forex.domain.currency.Currency.USD
 import io.circe.{ Decoder, Encoder }
 import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
+
+import forex.domain.currency.Currency
+import forex.domain.currency.Currency.USD
 
 final case class Rate(
     pair: Rate.Pair,

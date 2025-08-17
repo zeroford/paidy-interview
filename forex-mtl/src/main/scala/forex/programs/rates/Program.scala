@@ -3,6 +3,7 @@ package forex.programs.rates
 import cats.Monad
 import cats.effect.Clock
 import cats.syntax.all._
+
 import forex.domain.error.AppError
 import forex.domain.rates.{ Price, Rate, Timestamp }
 import forex.services.RatesService

@@ -1,8 +1,9 @@
 package forex.domain.currency
 
 import cats.Eq
-import forex.domain.currency.errors.CurrencyError
 import io.circe.{ Decoder, Encoder }
+
+import forex.domain.currency.errors.CurrencyError
 
 sealed trait Currency
 object Currency {

@@ -2,6 +2,7 @@ package forex.clients.oneframe
 
 import java.time.{ Instant, OffsetDateTime }
 import java.time.format.DateTimeFormatter
+
 import cats.effect.Concurrent
 import cats.syntax.either._
 import io.circe.Decoder

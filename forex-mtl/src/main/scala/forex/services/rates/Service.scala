@@ -1,9 +1,13 @@
 package forex.services.rates
 
+import java.time.Instant
 import scala.concurrent.duration._
+
 import cats.data.EitherT
 import cats.effect.Concurrent
 import cats.syntax.all._
+import org.typelevel.log4cats.Logger
+
 import forex.clients.OneFrameClient
 import forex.clients.oneframe.Protocol.OneFrameRatesResponse
 import forex.domain.cache.FetchStrategy
@@ -13,9 +17,6 @@ import forex.domain.rates.{ PivotRate, Rate, Timestamp }
 import forex.services.{ CacheService, PivotPair }
 import forex.services.rates.concurrent.BucketLocks
 import forex.services.rates.{ errors => Error }
-import org.typelevel.log4cats.Logger
-
-import java.time.Instant
 
 final class Service[F[_]: Concurrent: Logger](
     oneFrameClient: OneFrameClient[F],
