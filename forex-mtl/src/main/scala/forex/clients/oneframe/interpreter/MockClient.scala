@@ -1,13 +1,16 @@
 package forex.clients.oneframe.interpreter
 
+import java.time.Instant
+
 import cats.Applicative
 import cats.syntax.applicative._
 import cats.syntax.either._
-import forex.domain.rates.Rate
-import forex.clients.oneframe.Protocol.{ OneFrameRate, OneFrameRatesResponse }
-import forex.clients.oneframe.Algebra
-import forex.domain.error.AppError
 import org.typelevel.log4cats.Logger
+
+import forex.clients.oneframe.Algebra
+import forex.clients.oneframe.Protocol.{ OneFrameRate, OneFrameRatesResponse }
+import forex.domain.error.AppError
+import forex.domain.rates.Rate
 
 class MockClient[F[_]: Applicative: Logger] extends Algebra[F] {
 
@@ -21,7 +24,7 @@ class MockClient[F[_]: Applicative: Logger] extends Algebra[F] {
           bid = BigDecimal(100),
           ask = BigDecimal(100),
           price = BigDecimal(100),
-          time_stamp = "2025-01-01T00:00:00Z"
+          time_stamp = Instant.parse("2025-01-01T00:00:00Z")
         )
       }
       .asRight[AppError]

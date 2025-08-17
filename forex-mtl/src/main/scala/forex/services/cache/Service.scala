@@ -1,12 +1,14 @@
 package forex.services.cache
 
 import scala.concurrent.duration.FiniteDuration
+
 import cats.effect.Sync
 import cats.syntax.all._
 import com.github.blemale.scaffeine.Scaffeine
+import org.typelevel.log4cats.Logger
+
 import forex.domain.error.AppError
 import forex.services.cache.{ errors => Error }
-import org.typelevel.log4cats.Logger
 
 final class Service[F[_]: Sync: Logger](maxSize: Long, ttl: FiniteDuration) extends Algebra[F] {
 
@@ -41,6 +43,7 @@ final class Service[F[_]: Sync: Logger](maxSize: Long, ttl: FiniteDuration) exte
       case Left(e: Throwable) =>
         Logger[F].error(s"[Cache] clear error, ${e.getMessage}") >> Error.toAppError("CLEAR", e).asLeft[Unit].pure[F]
     }
+
 }
 
 object Service {

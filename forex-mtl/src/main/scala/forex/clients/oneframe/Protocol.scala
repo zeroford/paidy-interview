@@ -1,6 +1,10 @@
 package forex.clients.oneframe
 
+import java.time.{ Instant, OffsetDateTime }
+import java.time.format.DateTimeFormatter
+
 import cats.effect.Concurrent
+import cats.syntax.either._
 import io.circe.Decoder
 import io.circe.generic.semiauto.deriveDecoder
 import org.http4s.EntityDecoder
@@ -16,10 +20,18 @@ object Protocol {
       bid: BigDecimal,
       ask: BigDecimal,
       price: BigDecimal,
-      time_stamp: String
+      time_stamp: Instant
   )
 
   object OneFrameRate {
+    implicit val instantDecoder: Decoder[Instant] =
+      Decoder.decodeString.emap { s0 =>
+        val s = s0.trim
+        Either
+          .catchNonFatal(Instant.from(DateTimeFormatter.ISO_INSTANT.parse(s)))
+          .orElse(Either.catchNonFatal(OffsetDateTime.parse(s, DateTimeFormatter.ISO_OFFSET_DATE_TIME).toInstant))
+          .leftMap(_ => s"Invalid provider time_stamp: $s")
+      }
     implicit val decoder: Decoder[OneFrameRate]                                  = deriveDecoder[OneFrameRate]
     implicit def entityDecoder[F[_]: Concurrent]: EntityDecoder[F, OneFrameRate] = jsonOf[F, OneFrameRate]
   }

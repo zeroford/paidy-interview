@@ -1,41 +1,33 @@
 package forex.domain.rates
 
-import java.time.{ Duration, Instant, OffsetDateTime, ZoneOffset }
-import io.circe.{ Decoder, Encoder }
-import cats.effect.Clock
-import cats.syntax.either._
-import cats.syntax.functor._
-import cats.Functor
-
-import java.time.format.DateTimeFormatter
 import scala.concurrent.duration.FiniteDuration
 
-final case class Timestamp(value: OffsetDateTime) extends AnyVal
+import java.time.Instant
+import java.time.format.{ DateTimeFormatter, DateTimeFormatterBuilder }
+import java.time.temporal.ChronoUnit.MILLIS
+
+import cats.syntax.either._
+import io.circe.{ Decoder, Encoder }
+
+final case class Timestamp(value: Instant) extends AnyVal
 object Timestamp {
+  private val fmt: DateTimeFormatter = new DateTimeFormatterBuilder().appendInstant(3).toFormatter()
 
-  def now[F[_]: Clock: Functor]: F[Timestamp] =
-    Clock[F].realTime.map { d =>
-      Timestamp(OffsetDateTime.ofInstant(Instant.ofEpochMilli(d.toMillis), ZoneOffset.UTC))
-    }
+  def withinTtl(timestamp: Timestamp, now: Instant, ttl: FiniteDuration): Boolean = {
+    val tsVal      = timestamp.value
+    val expireTime = tsVal.plusNanos(ttl.toNanos)
+    !now.isBefore(tsVal) && !now.isAfter(expireTime)
+  }
 
-  def isWithinTTL[F[_]: Clock: Functor](timestamp: Timestamp, ttl: FiniteDuration): F[Boolean] =
-    now[F].map { currentTime =>
-      val diff = Duration.between(timestamp.value, currentTime.value)
-      diff.compareTo(Duration.ofSeconds(ttl.toSeconds)) < 0
-    }
-
-  def older(t1: Timestamp, t2: Timestamp): Timestamp =
-    if (t1.value.isBefore(t2.value)) t1 else t2
-
-  private val fmt: DateTimeFormatter = DateTimeFormatter.ISO_INSTANT
+  def base(t1: Timestamp, t2: Timestamp): Timestamp = if (t1.value.isBefore(t2.value)) t1 else t2
 
   implicit val encoder: Encoder[Timestamp] =
-    Encoder.encodeString.contramap(timestamp => fmt.format(timestamp.value.toInstant))
+    Encoder.encodeString.contramap(ts => fmt.format(ts.value.truncatedTo(MILLIS)))
 
   implicit val decoder: Decoder[Timestamp] = Decoder.decodeString.emap { str =>
     Either
-      .catchNonFatal(Instant.parse(str))
-      .map(i => Timestamp(OffsetDateTime.ofInstant(i, ZoneOffset.UTC)))
+      .catchNonFatal(Instant.from(fmt.parse(str.trim)))
+      .map(Timestamp.apply)
       .leftMap(_ => "Invalid timestamp format")
   }
 }
