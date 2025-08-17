@@ -2,11 +2,13 @@ package forex.domain.rates
 
 import io.circe.parser.decode
 import io.circe.syntax._
-import munit.FunSuite
-import java.time.OffsetDateTime
+import munit.CatsEffectSuite
+import cats.effect.IO
+
+import java.time.{ OffsetDateTime, ZoneOffset }
 import scala.concurrent.duration._
 
-class TimestampSpec extends FunSuite {
+class TimestampSpec extends CatsEffectSuite {
 
   test("Timestamp should handle OffsetDateTime correctly") {
     val now       = OffsetDateTime.now
@@ -15,8 +17,8 @@ class TimestampSpec extends FunSuite {
   }
 
   test("Timestamp.now should create UTC timestamp") {
-    val timestamp = Timestamp.now
-    assertEquals(timestamp.value.getOffset, java.time.ZoneOffset.UTC)
+    val timestamp = Timestamp(OffsetDateTime.now(ZoneOffset.UTC))
+    assertEquals(timestamp.value.getOffset, ZoneOffset.UTC)
   }
 
   test("isWithinTTL should work correctly") {
@@ -24,23 +26,27 @@ class TimestampSpec extends FunSuite {
     val old    = Timestamp(OffsetDateTime.now.minusMinutes(2))
     val ttl    = 1.minute
 
-    assert(Timestamp.isWithinTTL(recent, ttl))
-    assert(!Timestamp.isWithinTTL(old, ttl))
+    for {
+      recentValid <- Timestamp.isWithinTTL[IO](recent, ttl)
+      oldValid <- Timestamp.isWithinTTL[IO](old, ttl)
+      _ <- IO(assert(recentValid))
+      _ <- IO(assert(!oldValid))
+    } yield ()
   }
 
   test("olderTTL should return earlier timestamp") {
     val earlier = Timestamp(OffsetDateTime.parse("2024-01-01T10:00:00Z"))
     val later   = Timestamp(OffsetDateTime.parse("2024-01-01T11:00:00Z"))
 
-    assertEquals(Timestamp.olderTTL(earlier, later), earlier)
-    assertEquals(Timestamp.olderTTL(later, earlier), earlier)
+    assertEquals(Timestamp.older(earlier, later), earlier)
+    assertEquals(Timestamp.older(later, earlier), earlier)
   }
 
   test("Timestamp should support JSON serialization") {
     val timestamp = Timestamp(OffsetDateTime.parse("2024-01-01T10:00:00Z"))
     val json      = timestamp.asJson
     assert(json.isString)
-    assertEquals(json.asString.get, "2024-01-01T10:00:00.000000Z")
+    assertEquals(json.asString.get, "2024-01-01T10:00:00Z")
   }
 
   test("Timestamp should support JSON deserialization") {

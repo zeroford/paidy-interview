@@ -12,7 +12,7 @@ class PriceSpec extends FunSuite {
   }
 
   test("Price should handle Integer conversion") {
-    val price = Price(42: Integer)
+    val price = Price.fromInt(42).toOption.get
     assertEquals(price.value, BigDecimal(42))
   }
 

@@ -9,7 +9,7 @@ import org.typelevel.log4cats.Logger
 
 import scala.concurrent.duration.FiniteDuration
 
-class Service[F[_]: Sync: Logger](maxSize: Long, ttl: FiniteDuration) extends Algebra[F] {
+final class Service[F[_]: Sync: Logger](maxSize: Long, ttl: FiniteDuration) extends Algebra[F] {
 
   private val cache = Scaffeine()
     .maximumSize(maxSize)

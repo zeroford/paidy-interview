@@ -15,7 +15,7 @@ import org.http4s.client.Client
 import org.http4s.server.middleware.{ AutoSlash, Timeout }
 import org.typelevel.log4cats.Logger
 
-class Module[F[_]: Async: Logger](config: ApplicationConfig, httpClient: Client[F], locks: BucketLocks[F]) {
+final class Module[F[_]: Async: Logger](config: ApplicationConfig, httpClient: Client[F], locks: BucketLocks[F]) {
 
   private val oneFrameClient: OneFrameClient[F] = config.environment match {
     case Environment.Dev =>

@@ -11,7 +11,7 @@ import org.http4s.server.Router
 import org.http4s.{ HttpRoutes, Method }
 import org.http4s.headers.Allow
 
-class RatesRoutes[F[_]: Sync](ratesProgram: RatesProgram[F]) extends Http4sDsl[F] {
+final class RatesRoutes[F[_]: Sync](ratesProgram: RatesProgram[F]) extends Http4sDsl[F] {
 
   import Converters._, QueryParams._, Protocol._
 
