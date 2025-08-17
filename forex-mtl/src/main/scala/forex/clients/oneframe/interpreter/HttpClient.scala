@@ -2,15 +2,16 @@ package forex.clients.oneframe.interpreter
 
 import cats.effect.Concurrent
 import cats.syntax.all._
+import io.circe.parser.decode
+import org.http4s.client.Client
+import org.typelevel.log4cats.Logger
+
 import forex.clients.oneframe.{ Algebra, RequestBuilder }
 import forex.clients.oneframe.Protocol.{ OneFrameApiError, OneFrameRatesResponse }
 import forex.clients.oneframe.{ errors => Error }
 import forex.config.OneFrameConfig
 import forex.domain.error.AppError
 import forex.domain.rates.Rate
-import io.circe.parser.decode
-import org.http4s.client.Client
-import org.typelevel.log4cats.Logger
 
 final class HttpClient[F[_]: Concurrent: Logger](client: Client[F], config: OneFrameConfig, token: String)
     extends Algebra[F] {

@@ -1,11 +1,12 @@
 package forex.http
 package rates
 
-import forex.domain.currency.Currency
-import forex.domain.rates.{ Price, Timestamp }
+import io.circe.Encoder
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto.deriveConfiguredEncoder
-import io.circe.Encoder
+
+import forex.domain.currency.Currency
+import forex.domain.rates.{ Price, Timestamp }
 
 object Protocol {
 

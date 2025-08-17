@@ -1,6 +1,7 @@
 package forex.domain.currency
 
 import munit.FunSuite
+
 import forex.domain.currency.errors.CurrencyError
 
 class CurrencySpec extends FunSuite {

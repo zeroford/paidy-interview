@@ -1,9 +1,10 @@
 package forex.http.rates
 
-import forex.domain.currency.Currency
-import org.http4s.ParseFailure
 import cats.data.{ NonEmptyList, Validated, ValidatedNel }
 import munit.FunSuite
+import org.http4s.ParseFailure
+
+import forex.domain.currency.Currency
 
 class QueryValidatorSpec extends FunSuite {
 

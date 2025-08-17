@@ -3,6 +3,11 @@ package forex
 import cats.effect.{ Async, Resource }
 import cats.syntax.functor._
 import cats.syntax.semigroupk._
+import org.http4s._
+import org.http4s.client.Client
+import org.http4s.server.middleware.{ AutoSlash, Timeout }
+import org.typelevel.log4cats.Logger
+
 import forex.clients.OneFrameClient
 import forex.config.{ ApplicationConfig, Environment }
 import forex.http.health.HealthRoutes
@@ -11,10 +16,6 @@ import forex.http.rates.RatesRoutes
 import forex.programs.RatesProgram
 import forex.services.{ CacheService, RatesService }
 import forex.services.rates.concurrent.BucketLocks
-import org.http4s._
-import org.http4s.client.Client
-import org.http4s.server.middleware.{ AutoSlash, Timeout }
-import org.typelevel.log4cats.Logger
 
 final class Module[F[_]: Async: Logger](config: ApplicationConfig, httpClient: Client[F], locks: BucketLocks[F]) {
 

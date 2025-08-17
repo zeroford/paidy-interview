@@ -1,8 +1,8 @@
 package forex.domain.rates
 
-import io.circe.{ Decoder, Encoder }
-
 import scala.math.BigDecimal.RoundingMode
+
+import io.circe.{ Decoder, Encoder }
 
 final case class Price(value: BigDecimal) extends AnyVal
 object Price {

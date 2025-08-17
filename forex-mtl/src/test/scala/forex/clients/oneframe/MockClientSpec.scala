@@ -1,12 +1,13 @@
 package forex.clients.oneframe
 
 import cats.effect.IO
+import munit.CatsEffectSuite
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
+
+import forex.clients.oneframe.interpreter.MockClient
 import forex.domain.currency.Currency
 import forex.domain.rates.Rate
-import forex.clients.oneframe.interpreter.MockClient
-import munit.CatsEffectSuite
-import org.typelevel.log4cats.slf4j.Slf4jLogger
-import org.typelevel.log4cats.Logger
 
 class MockClientSpec extends CatsEffectSuite {
 

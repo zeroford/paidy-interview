@@ -1,8 +1,8 @@
 package forex.http.middleware
 
 import cats.effect.IO
-import munit.CatsEffectSuite
 import io.circe.parser._
+import munit.CatsEffectSuite
 import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.implicits._

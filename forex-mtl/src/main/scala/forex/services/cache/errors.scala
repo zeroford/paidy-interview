@@ -1,9 +1,9 @@
 package forex.services.cache
 
-import forex.domain.error.AppError
-
 import java.io.IOException
 import java.util.concurrent.TimeoutException
+
+import forex.domain.error.AppError
 
 object errors {
 

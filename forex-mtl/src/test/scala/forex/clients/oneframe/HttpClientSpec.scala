@@ -1,15 +1,16 @@
 package forex.clients.oneframe
 
 import cats.effect.IO
-import forex.domain.currency.Currency
-import forex.domain.rates.Rate
-import forex.domain.error.AppError
+import munit.CatsEffectSuite
+import org.http4s.client.Client
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
+
 import forex.clients.oneframe.interpreter.HttpClient
 import forex.config.OneFrameConfig
-import munit.CatsEffectSuite
-import org.typelevel.log4cats.slf4j.Slf4jLogger
-import org.typelevel.log4cats.Logger
-import org.http4s.client.Client
+import forex.domain.currency.Currency
+import forex.domain.error.AppError
+import forex.domain.rates.Rate
 
 class HttpClientSpec extends CatsEffectSuite {
 

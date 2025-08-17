@@ -1,10 +1,12 @@
 package forex.clients.oneframe
 
-import forex.domain.error.AppError
-import munit.FunSuite
 import java.io.IOException
 import java.net.{ ConnectException, SocketTimeoutException }
 import java.util.concurrent.TimeoutException
+
+import munit.FunSuite
+
+import forex.domain.error.AppError
 
 class ErrorsSpec extends FunSuite {
 

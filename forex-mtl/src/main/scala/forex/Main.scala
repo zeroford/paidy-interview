@@ -1,10 +1,11 @@
 package forex
 
 import cats.effect.{ IO, IOApp, Resource, Sync }
-import forex.config.Config
-import forex.modules.{ HttpClientBuilder, HttpServerBuilder }
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+
+import forex.config.Config
+import forex.modules.{ HttpClientBuilder, HttpServerBuilder }
 
 object Main extends IOApp.Simple {
 

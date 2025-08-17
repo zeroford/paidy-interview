@@ -2,11 +2,12 @@ package forex.clients.oneframe
 
 import cats.Applicative
 import cats.effect.Concurrent
-import forex.config.OneFrameConfig
-import forex.clients.oneframe.interpreter.{ HttpClient, MockClient }
-import forex.clients.OneFrameClient
 import org.http4s.client.Client
 import org.typelevel.log4cats.Logger
+
+import forex.clients.OneFrameClient
+import forex.clients.oneframe.interpreter.{ HttpClient, MockClient }
+import forex.config.OneFrameConfig
 
 object Interpreters {
   def httpClient[F[_]: Concurrent: Logger](

@@ -4,11 +4,12 @@ import cats.MonadThrow
 import cats.implicits.catsSyntaxApplicativeId
 import cats.syntax.applicativeError._
 import cats.syntax.flatMap._
-import forex.http.util.ErrorResponse
-import org.http4s._
-import org.http4s.dsl.Http4sDsl
-import org.http4s.circe._
 import io.circe.syntax._
+import org.http4s._
+import org.http4s.circe._
+import org.http4s.dsl.Http4sDsl
+
+import forex.http.util.ErrorResponse
 
 object ErrorHandlerMiddleware {
   def apply[F[_]: MonadThrow](routes: HttpRoutes[F]): HttpRoutes[F] = {

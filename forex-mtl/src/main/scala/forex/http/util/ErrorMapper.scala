@@ -2,9 +2,10 @@ package forex.http.util
 
 import cats.Applicative
 import cats.syntax.applicative._
-import forex.domain.error.AppError
 import org.http4s.{ Method, Response, Status }
 import org.http4s.headers.Allow
+
+import forex.domain.error.AppError
 
 object ErrorMapper {
 
