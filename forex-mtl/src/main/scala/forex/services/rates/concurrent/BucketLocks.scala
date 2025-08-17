@@ -1,9 +1,9 @@
 package forex.services.rates.concurrent
 
-import cats.effect.Async
-import cats.effect.kernel.Concurrent
+import cats.effect.Concurrent
 import cats.effect.std.Semaphore
-import cats.syntax.all._
+import cats.syntax.flatMap._
+import cats.syntax.functor._
 import forex.domain.cache.FetchStrategy
 
 final class BucketLocks[F[_]: Concurrent](most: Semaphore[F], other: Semaphore[F]) {
@@ -21,7 +21,7 @@ final class BucketLocks[F[_]: Concurrent](most: Semaphore[F], other: Semaphore[F
 }
 
 object BucketLocks {
-  def create[F[_]: Async]: F[BucketLocks[F]] = for {
+  def create[F[_]: Concurrent]: F[BucketLocks[F]] = for {
     most <- Semaphore.apply(1)
     other <- Semaphore.apply(1)
   } yield new BucketLocks[F](most, other)

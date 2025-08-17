@@ -2,12 +2,12 @@ package forex.clients.oneframe.interpreter
 
 import cats.effect.Concurrent
 import cats.syntax.all._
+import forex.clients.oneframe.{ Algebra, RequestBuilder }
 import forex.clients.oneframe.Protocol.{ OneFrameApiError, OneFrameRatesResponse }
 import forex.clients.oneframe.{ errors => Error }
 import forex.config.OneFrameConfig
-import forex.domain.rates.Rate
-import forex.clients.oneframe.{ Algebra, RequestBuilder }
 import forex.domain.error.AppError
+import forex.domain.rates.Rate
 import io.circe.parser.decode
 import org.http4s.client.Client
 import org.typelevel.log4cats.Logger

@@ -1,25 +1,23 @@
 package forex.services.rates
 
+import scala.concurrent.duration._
+import cats.data.EitherT
 import cats.effect.{ Clock, Concurrent }
 import cats.syntax.all._
-import cats.data.EitherT
-import forex.domain.cache.FetchStrategy
-import forex.domain.currency.Currency
-import forex.domain.rates.{ PivotRate, Rate, Timestamp }
 import forex.clients.OneFrameClient
 import forex.clients.oneframe.Protocol.OneFrameRatesResponse
+import forex.domain.cache.FetchStrategy
+import forex.domain.currency.Currency
 import forex.domain.error.AppError
-import forex.services.PivotPair
-import forex.services.cache.{ Algebra => CacheAlgebra }
+import forex.domain.rates.{ PivotRate, Rate, Timestamp }
+import forex.services.{ CacheService, PivotPair }
 import forex.services.rates.concurrent.BucketLocks
-import org.typelevel.log4cats.Logger
 import forex.services.rates.{ errors => Error }
+import org.typelevel.log4cats.Logger
 
-import scala.concurrent.duration._
-
-final class Service[F[_]: Concurrent: Logger: Clock](
+final class Service[F[_]: Concurrent: Clock: Logger](
     oneFrameClient: OneFrameClient[F],
-    cache: CacheAlgebra[F],
+    cache: CacheService[F],
     locks: BucketLocks[F],
     ttl: FiniteDuration
 ) extends Algebra[F] {
@@ -136,9 +134,9 @@ final class Service[F[_]: Concurrent: Logger: Clock](
 }
 
 object Service {
-  def apply[F[_]: Concurrent: Logger: Clock](
+  def apply[F[_]: Concurrent: Clock: Logger](
       oneFrameClient: OneFrameClient[F],
-      cache: CacheAlgebra[F],
+      cache: CacheService[F],
       locks: BucketLocks[F],
       ttl: FiniteDuration
   ): Algebra[F] = new Service[F](oneFrameClient, cache, locks, ttl)

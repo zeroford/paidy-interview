@@ -18,12 +18,5 @@ object Protocol {
       timestamp: Timestamp
   )
 
-  final case class ErrorResponse(
-      error: String,
-      message: String,
-      details: Option[Map[String, String]] = None
-  )
-
-  implicit val responseEncoder: Encoder[GetApiResponse]     = deriveConfiguredEncoder[GetApiResponse]
-  implicit val errorResponseEncoder: Encoder[ErrorResponse] = deriveConfiguredEncoder[ErrorResponse]
+  implicit val responseEncoder: Encoder[GetApiResponse] = deriveConfiguredEncoder[GetApiResponse]
 }

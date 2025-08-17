@@ -1,6 +1,6 @@
 package forex.http.rates
 
-import cats.data._
+import cats.data.{ Validated, ValidatedNel }
 import cats.syntax.all._
 import forex.domain.currency.Currency
 import org.http4s.ParseFailure
