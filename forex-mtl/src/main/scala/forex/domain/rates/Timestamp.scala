@@ -11,7 +11,6 @@ import java.time.format.DateTimeFormatter
 import scala.concurrent.duration.FiniteDuration
 
 final case class Timestamp(value: OffsetDateTime) extends AnyVal
-
 object Timestamp {
 
   def now[F[_]: Clock: Functor]: F[Timestamp] =

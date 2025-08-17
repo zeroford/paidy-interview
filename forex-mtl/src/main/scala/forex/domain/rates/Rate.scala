@@ -1,5 +1,8 @@
 package forex.domain.rates
 
+import cats.Functor
+import cats.effect.Clock
+import cats.syntax.functor._
 import forex.domain.currency.Currency
 import forex.domain.currency.Currency.USD
 import io.circe.{ Decoder, Encoder }
@@ -10,12 +13,20 @@ final case class Rate(
     price: Price,
     timestamp: Timestamp
 )
-
 object Rate {
   final case class Pair(
       from: Currency,
       to: Currency
   )
+
+  def default[F[_]: Clock: Functor](currency: Currency): F[Rate] =
+    Timestamp.now[F].map { ts =>
+      Rate(
+        pair = Rate.Pair(currency, currency),
+        price = Price(1.0),
+        timestamp = ts
+      )
+    }
 
   def fromPivotRate(pivotBase: PivotRate, pivotQuote: PivotRate): Rate = {
     val (price, timestamp) = (pivotBase.currency, pivotQuote.currency) match {
