@@ -6,7 +6,7 @@ import io.circe.parser.decode
 import io.circe.syntax._
 import munit.FunSuite
 
-import java.time.OffsetDateTime
+import java.time.{ OffsetDateTime, ZoneOffset }
 
 class PivotRateSpec extends FunSuite {
 
@@ -27,7 +27,7 @@ class PivotRateSpec extends FunSuite {
 
     assertEquals(pivotRate.currency, currency)
     assertEquals(pivotRate.price.value, BigDecimal(1))
-    assert(pivotRate.timestamp.value.getOffset == java.time.ZoneOffset.UTC)
+    assert(pivotRate.timestamp.value.getOffset == ZoneOffset.UTC)
   }
 
   test("fromResponse should create PivotRate from OneFrame response") {

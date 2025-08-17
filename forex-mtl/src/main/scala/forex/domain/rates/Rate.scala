@@ -24,7 +24,7 @@ object Rate {
       case (_, USD) =>
         (1.0 / pivotBase.price.value, pivotBase.timestamp)
       case (_, _) =>
-        (pivotQuote.price.value / pivotBase.price.value, Timestamp.olderTTL(pivotBase.timestamp, pivotQuote.timestamp))
+        (pivotQuote.price.value / pivotBase.price.value, Timestamp.older(pivotBase.timestamp, pivotQuote.timestamp))
     }
 
     Rate(

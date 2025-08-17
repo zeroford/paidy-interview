@@ -1,6 +1,6 @@
 package forex.services.rates
 
-import cats.effect.Concurrent
+import cats.effect.{ Clock, Concurrent }
 import cats.syntax.all._
 import cats.data.EitherT
 import forex.domain.cache.FetchStrategy
@@ -17,7 +17,7 @@ import forex.services.rates.{ errors => Error }
 
 import scala.concurrent.duration._
 
-class Service[F[_]: Concurrent: Logger](
+class Service[F[_]: Concurrent: Logger: Clock](
     oneFrameClient: OneFrameClient[F],
     cache: CacheAlgebra[F],
     locks: BucketLocks[F],
@@ -34,7 +34,7 @@ class Service[F[_]: Concurrent: Logger](
         val rate = Rate.fromPivotRate(base, quote)
         Logger[F].debug(
           "[RatesService] Calculate price from pivot " +
-            s"${base.currency}(${base.price.value}) -> ${quote.currency}(${base.price.value})" +
+            s"${base.currency}(${base.price.value}) -> ${quote.currency}(${quote.price.value})" +
             s" => price: ${rate.price.value}"
         ) >> rate.asRight[AppError].pure[F]
       case Left(err) => err.asLeft[Rate].pure[F]
@@ -67,10 +67,13 @@ class Service[F[_]: Concurrent: Logger](
     else {
       cache
         .get[String, PivotRate](cacheKey(currency))
-        .map {
-          case Right(Some(pr)) if Timestamp.isWithinTTL(pr.timestamp, ttl) => Some(pr).asRight
-          case Right(_)                                                    => None.asRight
-          case Left(err)                                                   => err.asLeft
+        .flatMap {
+          case Right(Some(pr)) =>
+            Timestamp.isWithinTTL[F](pr.timestamp, ttl).map { isValid =>
+              if (isValid) Some(pr).asRight else None.asRight
+            }
+          case Right(_)  => (None: Option[PivotRate]).asRight[AppError].pure[F]
+          case Left(err) => err.asLeft[Option[PivotRate]].pure[F]
         }
     }
 
@@ -133,7 +136,7 @@ class Service[F[_]: Concurrent: Logger](
 }
 
 object Service {
-  def apply[F[_]: Concurrent: Logger](
+  def apply[F[_]: Concurrent: Logger: Clock](
       oneFrameClient: OneFrameClient[F],
       cache: CacheAlgebra[F],
       locks: BucketLocks[F],
