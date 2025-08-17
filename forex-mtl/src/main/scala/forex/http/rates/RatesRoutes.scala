@@ -1,7 +1,7 @@
 package forex.http.rates
 
 import cats.data.Validated.{ Invalid, Valid }
-import cats.effect.Sync
+import cats.Monad
 import cats.syntax.flatMap._
 import forex.http.util.ErrorMapper
 import forex.programs.RatesProgram
@@ -11,7 +11,7 @@ import org.http4s.server.Router
 import org.http4s.{ HttpRoutes, Method }
 import org.http4s.headers.Allow
 
-final class RatesRoutes[F[_]: Sync](ratesProgram: RatesProgram[F]) extends Http4sDsl[F] {
+final class RatesRoutes[F[_]: Monad](ratesProgram: RatesProgram[F]) extends Http4sDsl[F] {
 
   import Converters._, QueryParams._, Protocol._
 

@@ -25,5 +25,4 @@ object Main extends IOApp.Simple {
           IO.raiseError(error)
       }
   }
-
 }

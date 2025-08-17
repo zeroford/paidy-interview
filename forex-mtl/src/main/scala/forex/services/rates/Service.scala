@@ -10,15 +10,14 @@ import forex.domain.cache.FetchStrategy
 import forex.domain.currency.Currency
 import forex.domain.error.AppError
 import forex.domain.rates.{ PivotRate, Rate, Timestamp }
-import forex.services.PivotPair
-import forex.services.cache.{ Algebra => CacheAlgebra }
+import forex.services.{ CacheService, PivotPair }
 import forex.services.rates.concurrent.BucketLocks
 import forex.services.rates.{ errors => Error }
 import org.typelevel.log4cats.Logger
 
-final class Service[F[_]: Concurrent: Logger: Clock](
+final class Service[F[_]: Concurrent: Clock: Logger](
     oneFrameClient: OneFrameClient[F],
-    cache: CacheAlgebra[F],
+    cache: CacheService[F],
     locks: BucketLocks[F],
     ttl: FiniteDuration
 ) extends Algebra[F] {
@@ -135,9 +134,9 @@ final class Service[F[_]: Concurrent: Logger: Clock](
 }
 
 object Service {
-  def apply[F[_]: Concurrent: Logger: Clock](
+  def apply[F[_]: Concurrent: Clock: Logger](
       oneFrameClient: OneFrameClient[F],
-      cache: CacheAlgebra[F],
+      cache: CacheService[F],
       locks: BucketLocks[F],
       ttl: FiniteDuration
   ): Algebra[F] = new Service[F](oneFrameClient, cache, locks, ttl)

@@ -1,7 +1,8 @@
 package forex
 
 import cats.effect.{ Async, Resource }
-import cats.implicits.{ toFunctorOps, toSemigroupKOps }
+import cats.syntax.functor._
+import cats.syntax.semigroupk._
 import forex.clients.OneFrameClient
 import forex.config.{ ApplicationConfig, Environment }
 import forex.http.health.HealthRoutes
