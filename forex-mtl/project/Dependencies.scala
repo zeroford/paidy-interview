@@ -9,7 +9,6 @@ object Dependencies {
     val http4s     = "0.23.18"
     val circe      = "0.14.3" /* Do not upgrade more than 0.14.3 */
 
-    val newType       = "0.4.4"
     val pureConfig    = "0.17.4"
     val ip4s          = "3.3.0"
     val kindProjector = "0.13.2"
@@ -44,9 +43,6 @@ object Dependencies {
     lazy val circeGeneric    = circe("circe-generic")
     lazy val circeGenericExt = circe("circe-generic-extras")
     lazy val circeParser     = circe("circe-parser")
-
-    // Newtype
-    lazy val newType = "io.estatico" %% "newtype" % Versions.newType
 
     // Config
     lazy val pureConfig = "com.github.pureconfig" %% "pureconfig" % Versions.pureConfig
