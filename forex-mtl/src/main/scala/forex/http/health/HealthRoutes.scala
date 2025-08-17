@@ -1,10 +1,11 @@
 package forex.http.health
 
 import cats.Monad
-import forex.http.health.Protocol.HealthResponse
 import org.http4s.HttpRoutes
 import org.http4s.dsl.Http4sDsl
 import org.http4s.server.Router
+
+import forex.http.health.Protocol.HealthResponse
 
 final class HealthRoutes[F[_]: Monad] extends Http4sDsl[F] {
 

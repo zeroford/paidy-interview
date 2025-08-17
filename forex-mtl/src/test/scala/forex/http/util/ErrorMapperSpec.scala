@@ -1,10 +1,11 @@
 package forex.http.util
 
 import cats.effect.IO
-import forex.domain.error.AppError
 import munit.CatsEffectSuite
 import org.http4s.{ Method, Status }
 import org.http4s.headers.Allow
+
+import forex.domain.error.AppError
 
 class ErrorMapperSpec extends CatsEffectSuite {
 

@@ -1,8 +1,9 @@
 package forex.clients.oneframe
 
-import forex.domain.rates.Rate
 import org.http4s._
 import org.typelevel.ci.CIStringSyntax
+
+import forex.domain.rates.Rate
 
 final case class RequestBuilder(host: String, port: Int, token: String) {
 

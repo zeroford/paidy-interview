@@ -4,6 +4,7 @@ import cats.effect.Concurrent
 import cats.effect.std.Semaphore
 import cats.syntax.flatMap._
 import cats.syntax.functor._
+
 import forex.domain.cache.FetchStrategy
 
 final class BucketLocks[F[_]: Concurrent](most: Semaphore[F], other: Semaphore[F]) {

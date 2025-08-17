@@ -1,10 +1,10 @@
 package forex.clients.oneframe
 
-import forex.domain.error.AppError
-
 import java.io.IOException
 import java.net.{ ConnectException, SocketTimeoutException }
 import java.util.concurrent.TimeoutException
+
+import forex.domain.error.AppError
 
 object errors {
 

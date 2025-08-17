@@ -1,10 +1,10 @@
 package forex.http.health
 
 import cats.effect.IO
+import io.circe.parser._
 import munit.CatsEffectSuite
 import org.http4s._
 import org.http4s.implicits._
-import io.circe.parser._
 
 class HealthRoutesSpec extends CatsEffectSuite {
 

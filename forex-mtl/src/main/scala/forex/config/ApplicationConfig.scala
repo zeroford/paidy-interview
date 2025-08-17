@@ -1,8 +1,8 @@
 package forex.config
 
-import com.comcast.ip4s.{ Host, Port }
-
 import scala.concurrent.duration.FiniteDuration
+
+import com.comcast.ip4s.{ Host, Port }
 
 final case class ApplicationConfig(
     environment: Environment,

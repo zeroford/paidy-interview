@@ -1,10 +1,11 @@
 package forex.clients.oneframe
 
 import cats.effect.IO
+import munit.CatsEffectSuite
+
+import forex.config.OneFrameConfig
 import forex.domain.currency.Currency
 import forex.domain.rates.Rate
-import forex.config.OneFrameConfig
-import munit.CatsEffectSuite
 
 class RequestBuilderSpec extends CatsEffectSuite {
 

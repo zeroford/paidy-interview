@@ -1,9 +1,10 @@
 package forex.http.rates
 
-import forex.domain.currency.Currency
-import org.http4s.QueryParameterValue
 import cats.data.Validated
 import munit.FunSuite
+import org.http4s.QueryParameterValue
+
+import forex.domain.currency.Currency
 
 class QueryParamsSpec extends FunSuite {
 
