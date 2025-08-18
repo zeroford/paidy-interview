@@ -86,3 +86,15 @@ Compile / run / fork := true
 Compile / run / envVars ++= envFromDotEnv(baseDirectory.value)
 
 Test / fork := true
+
+// E2E Tests Configuration
+Test / unmanagedSourceDirectories += baseDirectory.value / "src" / "e2e" / "scala"
+
+lazy val Acceptance = config("acceptance") extend Test
+lazy val root = (project in file("."))
+  .configs(Acceptance)
+  .settings(
+    inConfig(Acceptance)(Defaults.testSettings),
+    Acceptance / fork := true,
+    Acceptance / parallelExecution := false
+  )

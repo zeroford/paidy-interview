@@ -1,18 +1,16 @@
-package forex
+package forex.modules
 
 import scala.concurrent.duration._
 
 import cats.effect.{ IO, Resource }
 import com.comcast.ip4s.{ Host, Port }
 import munit.CatsEffectSuite
-import org.http4s.{ HttpApp, Response, Status }
 import org.http4s.client.Client
+import org.http4s.{ HttpApp, Response, Status }
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-import forex.config.{ ApplicationConfig, Environment }
-import forex.config.{ CacheConfig, HttpConfig, OneFrameConfig, SecretConfig }
-import forex.modules.Module
+import forex.config._
 import forex.services.rates.concurrent.BucketLocks
 
 class ModuleSpec extends CatsEffectSuite {
