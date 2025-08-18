@@ -75,12 +75,7 @@ jobs:
           restore-keys: sbt-${{ runner.os }}-
 
       - name: Start OneFrame (docker-compose)
-        run: |
-          if [ -f docker-compose.yml ]; then
-            docker compose up -d one-frame || docker-compose up -d one-frame
-          else
-            echo "docker-compose.yml not found; skipping OneFrame start"
-          fi
+        run: docker-compose up -d one-frame
 ]
       - name: Start app server (background)
         run: nohup bash -lc "sbt -batch run" > app.log 2>&1 &
