@@ -2,6 +2,8 @@
 
 # Paidy Take-Home Coding Exercises
 
+### Go to [Ford's Forex Proxy](https://github.com/zeroford/paidy-interview/tree/forex-proxy/forex-mtl)
+
 ## What to expect?
 We understand that your time is valuable, and in anyone's busy schedule solving these exercises may constitute a fairly substantial chunk of time, so we really appreciate any effort you put in to helping us build a solid team.
 
