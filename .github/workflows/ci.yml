@@ -43,7 +43,7 @@ jobs:
           sbt clean test
 
   acceptance-test:
-    needs: validate
+    needs: build-and-test
     runs-on: ubuntu-latest
     env:
       ONE_FRAME_TOKEN: ${{ secrets.ONE_FRAME_TOKEN }}
