@@ -87,4 +87,35 @@ class RateSpec extends FunSuite {
     assertEquals(rate.price.value, BigDecimal(110.0) / BigDecimal(0.85))
     assertEquals(rate.timestamp, Timestamp(fixedInstant1))
   }
+
+  test("Rate.Pair.fractionalPip should return scale 3 for JPY pairs") {
+    val jpyFromPair = Rate.Pair(Currency.JPY, Currency.USD)
+    assertEquals(jpyFromPair.fractionalPip, 3, "JPY->USD pair should have fractionalPip 3")
+
+    val jpyToPair = Rate.Pair(Currency.USD, Currency.JPY)
+    assertEquals(jpyToPair.fractionalPip, 3, "USD->JPY pair should have fractionalPip 3")
+
+    val jpyToJpyPair = Rate.Pair(Currency.JPY, Currency.JPY)
+    assertEquals(jpyToJpyPair.fractionalPip, 3, "JPY->JPY pair should have fractionalPip 3")
+  }
+
+  test("Rate.Pair.fractionalPip should return scale 5 for non-JPY pairs") {
+    val usdEurPair = Rate.Pair(Currency.USD, Currency.EUR)
+    assertEquals(usdEurPair.fractionalPip, 5, "USD->EUR pair should have fractionalPip 5")
+
+    val eurGbpPair = Rate.Pair(Currency.EUR, Currency.GBP)
+    assertEquals(eurGbpPair.fractionalPip, 5, "EUR->GBP pair should have fractionalPip 5")
+
+    val audCadPair = Rate.Pair(Currency.AUD, Currency.CAD)
+    assertEquals(audCadPair.fractionalPip, 5, "AUD->CAD pair should have fractionalPip 5")
+  }
+
+  test("Rate.Pair.fractionalPip should work with all major currencies") {
+    val majorCurrencies = List(Currency.EUR, Currency.GBP, Currency.CHF, Currency.CAD, Currency.AUD, Currency.NZD)
+
+    majorCurrencies.foreach { currency =>
+      val pair = Rate.Pair(Currency.USD, currency)
+      assertEquals(pair.fractionalPip, 5, s"USD->$currency pair should have fractionalPip 5")
+    }
+  }
 }

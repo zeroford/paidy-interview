@@ -15,14 +15,16 @@ object Rate {
   final case class Pair(
       from: Currency,
       to: Currency
-  )
+  ) {
+    def fractionalPip: Int = if (from == Currency.JPY || to == Currency.JPY) 3 else 5
+  }
 
   def fromPivotRate(pivotBase: PivotRate, pivotQuote: PivotRate): Rate = {
     val (price, timestamp) = (pivotBase.currency, pivotQuote.currency) match {
       case (USD, _) =>
         (pivotQuote.price.value, pivotQuote.timestamp)
       case (_, USD) =>
-        (1.0 / pivotBase.price.value, pivotBase.timestamp)
+        (BigDecimal(1) / pivotBase.price.value, pivotBase.timestamp)
       case (_, _) =>
         (pivotQuote.price.value / pivotBase.price.value, Timestamp.base(pivotBase.timestamp, pivotQuote.timestamp))
     }
