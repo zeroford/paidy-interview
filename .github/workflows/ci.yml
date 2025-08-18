@@ -1,7 +1,7 @@
 name: CI
 on: [ push ]
 jobs:
-  validate:
+  build-and-test:
     runs-on: ubuntu-latest
     env:
       ONE_FRAME_TOKEN: ${{ secrets.ONE_FRAME_TOKEN }}
@@ -32,13 +32,73 @@ jobs:
             sbt-${{ runner.os }}-
 
       - name: Format check & compile
+        working-directory: forex-mtl 
         run: |
-          cd forex-mtl
           sbt scalafmtCheckAll
           sbt compile
       
       - name: Unit tests
+        working-directory: forex-mtl
         run: |
-          cd forex-mtl
           sbt clean test
-          
+
+  acceptance-test:
+    needs: validate
+    runs-on: ubuntu-latest
+    env:
+      ONE_FRAME_TOKEN: ${{ secrets.ONE_FRAME_TOKEN }}
+      APP_BASE_URL: http://localhost:8080
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set JDK17
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+      - name: Set up SBT
+        uses: sbt/setup-sbt@v1
+        with:
+          sbt-runner-version: 1.8.0
+
+      - name: Cache sbt and dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.ivy2/cache
+            ~/.sbt
+            ~/.cache/coursier
+          key: sbt-${{ runner.os }}-${{ hashFiles('**/*.sbt', '**/build.properties') }}
+          restore-keys: sbt-${{ runner.os }}-
+
+      - name: Start OneFrame (docker-compose)
+        working-directory: forex-mtl
+        run: |
+          if [ -f docker-compose.yml ]; then
+            docker compose up -d one-frame || docker-compose up -d one-frame
+          else
+            echo "docker-compose.yml not found; skipping OneFrame start"
+          fi
+
+      - name: Wait for /health
+        run: |
+          for i in {1..30}; do
+            if curl -fsS "$APP_BASE_URL/health" >/dev/null; then
+              echo "App is up"; exit 0
+            fi
+            sleep 2
+          done
+          echo "App did not become healthy in time"
+          exit 1
+
+      - name: Acceptance tests
+        working-directory: forex-mtl
+        run: |
+          sbt acceptance:test
+
+      - name: Teardown
+        if: always()
+        run: |
+          pkill -f "sbt.*run" || true
+          kill $(lsof -t -i:8080) 2>/dev/null || true
+          docker compose down || true
+  
