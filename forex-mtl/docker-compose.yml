@@ -7,19 +7,6 @@ services:
       - app-network
     restart: always
 
-  forex-api:
-    build: .
-    ports:
-      - "8080:8080"
-    environment:
-      APP_CONFIG: "application-docker.conf"
-      ONE_FRAME_TOKEN: ${ONE_FRAME_TOKEN}
-    depends_on:
-      - one-frame
-    networks:
-      - app-network
-    restart: unless-stopped
-
 networks:
   app-network:
     driver: bridge
