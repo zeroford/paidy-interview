@@ -1,6 +1,6 @@
 package forex.config
 
-import cats.effect.{ Resource, Sync }
+import cats.effect.{ Async, Resource }
 import com.comcast.ip4s.{ Host, Port }
 import pureconfig.error.CannotConvert
 import pureconfig.generic.auto._
@@ -21,8 +21,8 @@ object Config {
   implicit val portReader: ConfigReader[Port] =
     ConfigReader[Int].emap(n => Port.fromInt(n).toRight(CannotConvert(n.toString, "Port", s"Invalid port: $n")))
 
-  def resource[F[_]: Sync](path: String): Resource[F, ApplicationConfig] =
-    Resource.eval(Sync[F].delay {
+  def resource[F[_]: Async](path: String): Resource[F, ApplicationConfig] =
+    Resource.eval(Async[F].blocking {
       val configFile = sys.env.getOrElse("APP_CONFIG", "application.conf")
       val cfg        = ConfigSource
         .file(s"src/main/resources/$configFile")

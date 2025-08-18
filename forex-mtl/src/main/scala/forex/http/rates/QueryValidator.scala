@@ -17,13 +17,7 @@ object QueryValidator {
     (
       validateCurrencyParam("from", fromOpt),
       validateCurrencyParam("to", toOpt)
-    ).tupled.andThen { case (from, to) =>
-      if (from == to) {
-        Validated.invalidNel("Same currency not allowed for 'from' and 'to' parameters")
-      } else {
-        Validated.valid((from, to))
-      }
-    }
+    ).tupled
 
   private def validateCurrencyParam(
       paramName: String,
