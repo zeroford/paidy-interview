@@ -75,7 +75,7 @@ jobs:
           restore-keys: sbt-${{ runner.os }}-
 
       - name: Start OneFrame (docker-compose)
-        run: docker-compose up -d one-frame | docker compose up -d one-frame
+        run: docker compose -f docker-compose.acceptance.yml up -d
 
       - name: Start app server (background)
         run: nohup bash -lc "sbt -batch run" > app.log 2>&1 &
@@ -96,8 +96,5 @@ jobs:
 
       - name: Teardown
         if: always()
-        run: |
-          pkill -f "sbt.*run" || true
-          kill $(lsof -t -i:8080) 2>/dev/null || true
-          docker compose down || true
+        run: docker compose -f docker-compose.acceptance.yml down
   
