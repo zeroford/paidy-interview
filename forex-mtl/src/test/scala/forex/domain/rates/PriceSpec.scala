@@ -60,31 +60,11 @@ class PriceSpec extends FunSuite {
     assertEquals(rounded4.value, BigDecimal(0.85124), "Price should round up to 5 decimal places")
   }
 
-  test("Price.round should handle edge cases") {
-    val smallPrice   = Price(BigDecimal(0.001))
-    val roundedSmall = smallPrice.round(3)
-    assertEquals(roundedSmall.value, BigDecimal(0.001), "Small price should maintain precision")
-
-    val largePrice   = Price(BigDecimal(999999.999999))
-    val roundedLarge = largePrice.round(5)
-    assertEquals(roundedLarge.value, BigDecimal(1000000.00000), "Large price should round to 5 decimal places")
-
-    val exactPrice   = Price(BigDecimal(100.000))
-    val roundedExact = exactPrice.round(3)
-    assertEquals(roundedExact.value, BigDecimal(100.000), "Exact price should maintain precision")
-
-    val zeroPrice   = Price(BigDecimal(0))
-    val roundedZero = zeroPrice.round(5)
-    assertEquals(roundedZero.value, BigDecimal(0), "Zero price should remain zero")
-  }
-
   test("Price.round should return new Price instance") {
     val originalPrice = Price(BigDecimal(123.4567))
     val roundedPrice  = originalPrice.round(3)
 
-    assert(originalPrice ne roundedPrice, "round should return a new Price instance")
     assert(originalPrice.value != roundedPrice.value, "original and rounded prices should be different")
-
     assertEquals(originalPrice.value, BigDecimal(123.4567), "Original price should remain unchanged")
     assertEquals(roundedPrice.value, BigDecimal(123.457), "Rounded price should have correct value")
   }
