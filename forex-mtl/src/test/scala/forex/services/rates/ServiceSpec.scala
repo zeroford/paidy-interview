@@ -175,7 +175,6 @@ class ServiceSpec extends CatsEffectSuite {
       result1 <- service.get(Rate.Pair(Currency.USD, Currency.JPY), fixedInstant)
       _ <- IO(assert(result1.isRight, "First call should succeed"))
 
-      // Wait for TTL to expire
       expiredTime = fixedInstant.plusSeconds(61)
       result2 <- service.get(Rate.Pair(Currency.USD, Currency.JPY), expiredTime)
       _ <- IO(assert(result2.isRight, "Second call should succeed after TTL expiration"))

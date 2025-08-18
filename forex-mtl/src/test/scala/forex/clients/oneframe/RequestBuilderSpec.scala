@@ -20,7 +20,6 @@ class RequestBuilderSpec extends CatsEffectSuite {
   test("RequestBuilder should build URIs correctly") {
     val builder = RequestBuilder(config.host, config.port, testToken)
 
-    // Test single pair
     val singleRequest = builder.getRatesRequest[IO](testPairs)
     assertEquals(singleRequest.method.name, "GET")
     assertEquals(singleRequest.uri.path.toString, "/rates")
@@ -28,7 +27,6 @@ class RequestBuilderSpec extends CatsEffectSuite {
     assertEquals(singleRequest.uri.authority.get.host.toString, "localhost")
     assertEquals(singleRequest.uri.authority.get.port, Some(8081))
 
-    // Test multiple pairs
     val pairs = List(
       Rate.Pair(Currency.USD, Currency.EUR),
       Rate.Pair(Currency.EUR, Currency.GBP),

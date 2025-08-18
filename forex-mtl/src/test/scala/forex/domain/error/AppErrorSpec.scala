@@ -20,7 +20,6 @@ class AppErrorSpec extends FunSuite {
     val notFound   = AppError.NotFound("test")
     val upstream   = AppError.UpstreamUnavailable("service", "test")
 
-    // Verify they are different types
     assert(validation.isInstanceOf[AppError.Validation])
     assert(notFound.isInstanceOf[AppError.NotFound])
     assert(upstream.isInstanceOf[AppError.UpstreamUnavailable])

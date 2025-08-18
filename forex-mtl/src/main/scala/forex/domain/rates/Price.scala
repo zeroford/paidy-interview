@@ -1,17 +1,13 @@
 package forex.domain.rates
 
-import scala.math.BigDecimal.RoundingMode
-
+import cats.syntax.either._
 import io.circe.{ Decoder, Encoder }
 
 final case class Price(value: BigDecimal) extends AnyVal
 object Price {
-  private val Scale = 10
-  private val Mode  = RoundingMode.HALF_UP
-
   private def fromBigDecimal(n: BigDecimal): Either[String, Price] =
     if (n.signum < 0) Left("Price must be non-negative")
-    else Right(new Price(n.setScale(Scale, Mode)))
+    else Price(n).asRight
 
   def fromInt(n: Int): Either[String, Price] = fromBigDecimal(BigDecimal(n))
 
