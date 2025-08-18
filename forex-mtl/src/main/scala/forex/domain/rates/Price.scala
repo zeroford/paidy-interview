@@ -1,17 +1,16 @@
 package forex.domain.rates
 
-import scala.math.BigDecimal.RoundingMode
-
 import io.circe.{ Decoder, Encoder }
 
-final case class Price(value: BigDecimal) extends AnyVal
-object Price {
-  private val Scale = 10
-  private val Mode  = RoundingMode.HALF_UP
+import scala.math.BigDecimal.RoundingMode
 
+final case class Price(value: BigDecimal) extends AnyVal {
+  def round(scale: Int): Price = Price(value.setScale(scale, RoundingMode.HALF_UP))
+}
+object Price {
   private def fromBigDecimal(n: BigDecimal): Either[String, Price] =
     if (n.signum < 0) Left("Price must be non-negative")
-    else Right(new Price(n.setScale(Scale, Mode)))
+    else Right(Price(n))
 
   def fromInt(n: Int): Either[String, Price] = fromBigDecimal(BigDecimal(n))
 

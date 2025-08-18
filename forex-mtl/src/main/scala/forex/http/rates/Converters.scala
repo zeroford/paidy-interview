@@ -13,7 +13,7 @@ object Converters {
     GetApiResponse(
       from = rate.pair.from,
       to = rate.pair.to,
-      price = rate.price,
+      price = rate.price.round(rate.pair.fractionalPip),
       timestamp = rate.timestamp
     )
 }

@@ -21,7 +21,6 @@ class RatesRoutesSpec extends CatsEffectSuite {
     timestamp = Timestamp(fixedInstant)
   )
 
-  // Mock Algebra that matches the interface
   private val successProgram = new Algebra[IO] {
     def get(pair: Rate.Pair): IO[AppError Either Rate] = IO.pure(Right(validRate))
   }

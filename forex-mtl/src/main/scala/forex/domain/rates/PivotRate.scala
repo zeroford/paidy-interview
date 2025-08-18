@@ -8,7 +8,6 @@ import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
 import forex.domain.currency.Currency
 
 final case class PivotRate(currency: Currency, price: Price, timestamp: Timestamp)
-
 object PivotRate {
 
   def default(currency: Currency, now: Instant): PivotRate =

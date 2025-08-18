@@ -80,14 +80,12 @@ class ServiceSpec extends CatsEffectSuite {
     val keys  = List.tabulate(10)(i => s"key-$i")
 
     for {
-      // put concurrently
       putResults <- IO.parSequenceN(10)(keys.map(k => cache.put(k, testRate)))
       _ = assert(
             putResults.forall(_.isRight),
             s"put failures: ${putResults.collect { case Left(e) => e }.mkString(", ")}"
           )
 
-      // get concurrently
       getResults <- IO.parSequenceN(10)(keys.map(k => cache.get[String, Rate](k)))
       _ = assert(
             getResults.forall(_.isRight),

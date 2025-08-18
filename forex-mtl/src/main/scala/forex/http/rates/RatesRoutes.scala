@@ -27,7 +27,7 @@ final class RatesRoutes[F[_]: Monad](ratesProgram: RatesProgram[F]) extends Http
           }
         case Invalid(err) => ErrorMapper.badRequest[F](err.toList)
       }
-    case method -> Root => ErrorMapper.methodNotAllow[F](method, Allow(Method.GET)) // Handle unsupported methods
+    case method -> Root => ErrorMapper.methodNotAllow[F](method, Allow(Method.GET))
   }
 
   val routes: HttpRoutes[F] = Router(prefixPath -> httpRoutes)

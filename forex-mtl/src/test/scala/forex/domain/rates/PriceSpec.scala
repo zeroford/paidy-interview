@@ -41,4 +41,31 @@ class PriceSpec extends FunSuite {
     val result = decode[Price](json)
     assert(result.isLeft)
   }
+
+  test("Price.round should round correctly with HALF_UP") {
+    val price1   = Price(BigDecimal(123.4567))
+    val rounded1 = price1.round(3)
+    assertEquals(rounded1.value, BigDecimal(123.457), "Price should round up to 3 decimal places")
+
+    val price2   = Price(BigDecimal(123.4564))
+    val rounded2 = price2.round(3)
+    assertEquals(rounded2.value, BigDecimal(123.456), "Price should round down to 3 decimal places")
+
+    val price3   = Price(BigDecimal(0.851234))
+    val rounded3 = price3.round(5)
+    assertEquals(rounded3.value, BigDecimal(0.85123), "Price should round to 5 decimal places")
+
+    val price4   = Price(BigDecimal(0.851236))
+    val rounded4 = price4.round(5)
+    assertEquals(rounded4.value, BigDecimal(0.85124), "Price should round up to 5 decimal places")
+  }
+
+  test("Price.round should return new Price instance") {
+    val originalPrice = Price(BigDecimal(123.4567))
+    val roundedPrice  = originalPrice.round(3)
+
+    assert(originalPrice.value != roundedPrice.value, "original and rounded prices should be different")
+    assertEquals(originalPrice.value, BigDecimal(123.4567), "Original price should remain unchanged")
+    assertEquals(roundedPrice.value, BigDecimal(123.457), "Rounded price should have correct value")
+  }
 }
