@@ -76,7 +76,7 @@ jobs:
 
       - name: Start OneFrame (docker-compose)
         run: docker-compose up -d one-frame
-]
+
       - name: Start app server (background)
         run: nohup bash -lc "sbt -batch run" > app.log 2>&1 &
 
