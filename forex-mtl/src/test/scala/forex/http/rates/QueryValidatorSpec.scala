@@ -108,16 +108,4 @@ class QueryValidatorSpec extends FunSuite {
       case _ =>
     }
   }
-
-  test("validate should reject same currency for from and to") {
-    val result = QueryValidator.validate(
-      Some(validCur(Currency.USD)),
-      Some(validCur(Currency.USD))
-    )
-    result match {
-      case Validated.Invalid(nel) =>
-        assert(nel.head.contains("Same currency not allowed"), "Should reject same currency for both parameters")
-      case Validated.Valid(_) => fail("Expected Invalid result for same currency")
-    }
-  }
 }

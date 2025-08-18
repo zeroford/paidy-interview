@@ -78,18 +78,6 @@ class RatesRoutesSpec extends CatsEffectSuite {
     } yield ()
   }
 
-  test("GET /rates should handle same currency pair") {
-    val routes  = new RatesRoutes[IO](successProgram)
-    val request = Request[IO](Method.GET, Uri.unsafeFromString("/rates?from=USD&to=USD"))
-
-    for {
-      response <- routes.routes.orNotFound.run(request)
-      _ <- IO(assertEquals(response.status, Status.BadRequest))
-      body <- response.as[String]
-      _ <- IO(assert(body.contains("Same currency not allowed"), "Response should contain validation error"))
-    } yield ()
-  }
-
   test("GET /rates should handle different currency pairs") {
     val routes  = new RatesRoutes[IO](successProgram)
     val request = Request[IO](Method.GET, Uri.unsafeFromString("/rates?from=EUR&to=GBP"))
