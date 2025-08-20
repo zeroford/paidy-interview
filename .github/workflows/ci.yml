@@ -46,11 +46,11 @@ jobs:
           retention-days: 30
 
       - name: Upload coverage to Codacy
-        uses: codacy/codacy-coverage-reporter-action@v1
+        uses: codacy/codacy-coverage-reporter-action@v1.3.0
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: forex-mtl/target/scala-2.13/scoverage-report/scoverage.xml
-          extra-args: --language Scala --final
+          force-coverage-parser: cobertura
       
       - name: Cleanup ivy/coursier metadata
         if: always()
