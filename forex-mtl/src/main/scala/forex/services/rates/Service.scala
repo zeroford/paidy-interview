@@ -40,18 +40,27 @@ final class Service[F[_]: Concurrent: Logger](
       case Left(err) => err.asLeft[Rate].pure[F]
     }
 
-  private def getRateOrFetch(pair: Rate.Pair, now: Instant): F[AppError Either PivotPair] = {
-    val action =
-      (getFromCachePivot(pair.from, now), getFromCachePivot(pair.to, now)).tupled.flatMap {
-        case (Right(Some(base)), Right(Some(quote))) => (base -> quote).asRight[AppError].pure[F]
-        case (Right(baseOpt), Right(quoteOpt))       => fetchWithStrategy(pair, baseOpt, quoteOpt)
-        case (baseRes, quoteRes)                     => Error.combine(baseRes, quoteRes).asLeft[PivotPair].pure[F]
-      }
+  private def getRateOrFetch(pair: Rate.Pair, now: Instant): F[AppError Either PivotPair] =
     FetchStrategy.fromPair(pair) match {
-      case FetchStrategy.All => locks.withBuckets(action)
-      case other             => locks.withBucket(BucketLocks.bucketFor(other))(action)
+      case FetchStrategy.All =>
+        locks.withBuckets {
+          (getFromCachePivot(pair.from, now), getFromCachePivot(pair.to, now)).tupled.flatMap {
+            case (Right(Some(base)), Right(Some(quote))) => (base -> quote).asRight[AppError].pure[F]
+            case (Right(baseOpt), Right(quoteOpt))       => fetchWithStrategy(pair, baseOpt, quoteOpt)
+            case (baseRes, quoteRes)                     => Error.combine(baseRes, quoteRes).asLeft[PivotPair].pure[F]
+          }
+        }
+
+      case other =>
+        val bucket = BucketLocks.bucketFor(other)
+        locks.withBucket(bucket) {
+          (getFromCachePivot(pair.from, now), getFromCachePivot(pair.to, now)).tupled.flatMap {
+            case (Right(Some(base)), Right(Some(quote))) => (base -> quote).asRight[AppError].pure[F]
+            case (Right(baseOpt), Right(quoteOpt))       => fetchWithStrategy(pair, baseOpt, quoteOpt)
+            case (baseRes, quoteRes)                     => Error.combine(baseRes, quoteRes).asLeft[PivotPair].pure[F]
+          }
+        }
     }
-  }
 
   private def getFromCachePivot(currency: Currency, now: Instant): F[AppError Either Option[PivotRate]] =
     if (currency == Pivot) PivotRate.default(Pivot, now).some.asRight[AppError].pure[F]

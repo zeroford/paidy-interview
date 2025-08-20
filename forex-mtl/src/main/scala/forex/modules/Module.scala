@@ -26,9 +26,9 @@ final class Module[F[_]: Async: Logger](config: ApplicationConfig, httpClient: C
       OneFrameClient.mockClient[F]
   }
 
-  private val cacheService: CacheService[F] = CacheService[F](config.cache.rates.maxSize, config.cache.rates.ttl)
+  private val cacheService: CacheService[F] = CacheService[F](config.cache.maxSize, config.cache.ttl)
   private val ratesService: RatesService[F] =
-    RatesService[F](oneFrameClient, cacheService, locks, config.cache.rates.ttl)
+    RatesService[F](oneFrameClient, cacheService, locks, config.cache.ttl)
   private val ratesProgram: RatesProgram[F]  = RatesProgram[F](ratesService)
   private val ratesHttpRoutes: HttpRoutes[F] = new RatesRoutes[F](ratesProgram).routes
   private val healthRoutes: HttpRoutes[F]    = new HealthRoutes[F].routes

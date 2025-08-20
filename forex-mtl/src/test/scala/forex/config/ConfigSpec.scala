@@ -20,10 +20,13 @@ class ConfigSpec extends FunSuite {
         port = 8081
       ),
       cache = CacheConfig(
-        rates = CacheConfig.RatesConfig(
-          maxSize = 1000L,
-          ttl = 10.seconds
-        )
+        maxSize = 1000L,
+        ttl = 10.seconds
+      ),
+      clientDefault = ClientDefault(
+        totalTimeout = 2.seconds,
+        idleTimeout = 30.seconds,
+        maxTotal = 50
       ),
       secrets = SecretConfig(
         oneFrameToken = "test-secret-token"
@@ -36,8 +39,11 @@ class ConfigSpec extends FunSuite {
     assertEquals(config.http.timeout, 10.seconds)
     assertEquals(config.oneFrame.host, "localhost")
     assertEquals(config.oneFrame.port, 8081)
-    assertEquals(config.cache.rates.maxSize, 1000L)
-    assertEquals(config.cache.rates.ttl, 10.seconds)
+    assertEquals(config.cache.maxSize, 1000L)
+    assertEquals(config.cache.ttl, 10.seconds)
+    assertEquals(config.clientDefault.totalTimeout, 2.seconds)
+    assertEquals(config.clientDefault.idleTimeout, 30.seconds)
+    assertEquals(config.clientDefault.maxTotal, 50)
     assertEquals(config.secrets.oneFrameToken, "test-secret-token")
   }
 

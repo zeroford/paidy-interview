@@ -13,6 +13,7 @@ object ErrorMapper {
     Response[F](status).withEntity(ErrorResponse(status.code, msg)).pure[F]
 
   def toErrorResponse[F[_]: Applicative](e: AppError): F[Response[F]] = e match {
+    case AppError.BadRequest(m)             => getErrorResponse(Status.BadRequest, m)
     case AppError.Validation(m)             => getErrorResponse(Status.BadRequest, m)
     case AppError.NotFound(m)               => getErrorResponse(Status.NotFound, m)
     case AppError.CalculationFailed(m)      => getErrorResponse(Status.UnprocessableEntity, m)

@@ -9,6 +9,7 @@ final case class ApplicationConfig(
     http: HttpConfig,
     oneFrame: OneFrameConfig,
     cache: CacheConfig,
+    clientDefault: ClientDefault,
     secrets: SecretConfig
 )
 
@@ -24,15 +25,15 @@ final case class OneFrameConfig(
 )
 
 final case class CacheConfig(
-    rates: CacheConfig.RatesConfig
+    maxSize: Long,
+    ttl: FiniteDuration
 )
 
-object CacheConfig {
-  final case class RatesConfig(
-      maxSize: Long,
-      ttl: FiniteDuration
-  )
-}
+final case class ClientDefault(
+    totalTimeout: FiniteDuration,
+    idleTimeout: FiniteDuration,
+    maxTotal: Int
+)
 
 final case class SecretConfig(
     oneFrameToken: String = ""

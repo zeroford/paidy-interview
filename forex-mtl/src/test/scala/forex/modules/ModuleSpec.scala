@@ -29,10 +29,13 @@ class ModuleSpec extends CatsEffectSuite {
       port = 8081
     ),
     cache = CacheConfig(
-      rates = CacheConfig.RatesConfig(
-        maxSize = 1000L,
-        ttl = 10.seconds
-      )
+      maxSize = 1000L,
+      ttl = 10.seconds
+    ),
+    clientDefault = ClientDefault(
+      totalTimeout = 2.seconds,
+      idleTimeout = 30.seconds,
+      maxTotal = 50
     ),
     secrets = SecretConfig(
       oneFrameToken = "test-secret-token"
