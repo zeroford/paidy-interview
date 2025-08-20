@@ -110,8 +110,6 @@ class ServiceSpec extends CatsEffectSuite {
     } yield ()
   }
 
-
-
   test("Service should handle same currency pair") {
     val cache   = Service[IO](100, 1.minute)
     val locks   = BucketLocks.create[IO].unsafeRunSync()
@@ -162,8 +160,6 @@ class ServiceSpec extends CatsEffectSuite {
     } yield ()
   }
 
-
-
   test("Service should handle missing rates in response") {
     val incompleteClient: Algebra[IO] = (_: List[Rate.Pair]) =>
       IO.pure(
@@ -205,6 +201,5 @@ class ServiceSpec extends CatsEffectSuite {
       _ <- IO(assert(error.isInstanceOf[AppError.UnexpectedError], "Should be UnexpectedError when cache put fails"))
     } yield ()
   }
-
 
 }

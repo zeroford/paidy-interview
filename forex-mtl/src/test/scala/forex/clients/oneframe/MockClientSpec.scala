@@ -13,7 +13,7 @@ class MockClientSpec extends CatsEffectSuite {
 
   implicit val logger: Logger[IO] = Slf4jLogger.getLogger[IO]
 
-  val mockClient = MockClient[IO]
+  private val mockClient = MockClient[IO]
 
   test("MockClient should return valid rates for USD/JPY pair") {
     val pairs = List(Rate.Pair(Currency.USD, Currency.JPY))
@@ -31,9 +31,9 @@ class MockClientSpec extends CatsEffectSuite {
 
   test("MockClient should return valid rates for multiple pairs") {
     val pairs = List(
-      Rate.Pair(Currency.USD, Currency.EUR),
-      Rate.Pair(Currency.EUR, Currency.GBP),
-      Rate.Pair(Currency.GBP, Currency.JPY)
+      Rate.Pair(Currency.SGD, Currency.SGD),
+      Rate.Pair(Currency.AUD, Currency.AUD),
+      Rate.Pair(Currency.CAD, Currency.CAD)
     )
 
     for {

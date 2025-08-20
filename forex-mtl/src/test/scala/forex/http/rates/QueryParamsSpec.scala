@@ -15,8 +15,8 @@ class QueryParamsSpec extends FunSuite {
       case Validated.Valid(cur)   => assertEquals(cur, Currency.EUR)
       case Validated.Invalid(err) => fail(s"Expected Valid, got Invalid: $err")
     }
-    decoder.decode(QueryParameterValue("eur")) match {
-      case Validated.Valid(cur)   => assertEquals(cur, Currency.EUR)
+    decoder.decode(QueryParameterValue("gbp")) match {
+      case Validated.Valid(cur)   => assertEquals(cur, Currency.GBP)
       case Validated.Invalid(err) => fail(s"Expected Valid, got Invalid: $err")
     }
     decoder.decode(QueryParameterValue("jPy")) match {

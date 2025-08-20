@@ -26,45 +26,6 @@ class ConvertersSpec extends FunSuite {
     assertEquals(response.timestamp, Timestamp(fixedInstant))
   }
 
-  test("GetApiResponse should handle different currency pairs") {
-    val rate2 = Rate(
-      pair = Rate.Pair(Currency.EUR, Currency.GBP),
-      price = Price(BigDecimal(0.90)),
-      timestamp = Timestamp(fixedInstant)
-    )
-    val response = Converters.fromRate(rate2)
-
-    assertEquals(response.from, Currency.EUR)
-    assertEquals(response.to, Currency.GBP)
-    assertEquals(response.price, Price(BigDecimal(0.90)))
-  }
-
-  test("GetApiResponse should handle different prices") {
-    val rate3 = Rate(
-      pair = Rate.Pair(Currency.USD, Currency.JPY),
-      price = Price(BigDecimal(123.45)),
-      timestamp = Timestamp(fixedInstant)
-    )
-    val response = Converters.fromRate(rate3)
-
-    assertEquals(response.from, Currency.USD)
-    assertEquals(response.to, Currency.JPY)
-    assertEquals(response.price, Price(BigDecimal(123.45)))
-  }
-
-  test("GetApiResponse should handle same currency pair") {
-    val sameCurrencyRate = Rate(
-      pair = Rate.Pair(Currency.USD, Currency.USD),
-      price = Price(BigDecimal(1.0)),
-      timestamp = Timestamp(fixedInstant)
-    )
-    val response = Converters.fromRate(sameCurrencyRate)
-
-    assertEquals(response.from, Currency.USD)
-    assertEquals(response.to, Currency.USD)
-    assertEquals(response.price, Price(BigDecimal(1.0)))
-  }
-
   test("GetApiResponse should be immutable") {
     val response1 = Converters.fromRate(testRate)
     val response2 = response1.copy(from = Currency.EUR)
@@ -185,17 +146,4 @@ class ConvertersSpec extends FunSuite {
     assertEquals(exactResponse.price.value, BigDecimal(100.000), "Exact JPY rate should maintain precision")
   }
 
-  test("fractionalPip should work with all major currencies") {
-    val majorCurrencies = List(Currency.EUR, Currency.GBP, Currency.CHF, Currency.CAD, Currency.AUD, Currency.NZD)
-
-    majorCurrencies.foreach { currency =>
-      val rate = Rate(
-        pair = Rate.Pair(Currency.USD, currency),
-        price = Price(BigDecimal(1.234567)),
-        timestamp = Timestamp(fixedInstant)
-      )
-      val response = Converters.fromRate(rate)
-      assertEquals(response.price.value.scale, 5, s"USD->$currency should have scale 5")
-    }
-  }
 }

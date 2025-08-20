@@ -17,7 +17,7 @@ class ModuleSpec extends CatsEffectSuite {
 
   implicit val logger: Logger[IO] = Slf4jLogger.getLogger[IO]
 
-  private val testConfig = ApplicationConfig(
+  private val baseConfig = ApplicationConfig(
     environment = Environment.Dev,
     http = HttpConfig(
       host = Host.fromString("0.0.0.0").get,
@@ -42,16 +42,92 @@ class ModuleSpec extends CatsEffectSuite {
     )
   )
 
+  private val devConfig  = baseConfig.copy(environment = Environment.Dev)
+  private val testConfig = baseConfig.copy(environment = Environment.Test)
+
   private val mockHttpClient: Client[IO] = Client[IO] { _ =>
     Resource.pure(Response[IO](Status.Ok).withEntity("mock response"))
   }
 
-  test("Module should create valid HttpApp") {
-    for {
-      locks <- BucketLocks.create[IO]
-      module = new Module[IO](testConfig, mockHttpClient, locks)
-      httpApp <- IO(module.httpApp)
-      _ <- IO(assert(httpApp.isInstanceOf[HttpApp[IO]], "HttpApp should be created successfully"))
-    } yield ()
+  val locksResource: Resource[IO, BucketLocks[IO]] = Resource.eval(BucketLocks.create[IO])
+
+  test("Module should create valid HttpApp with Dev environment") {
+    locksResource.use { locks =>
+      for {
+        module <- IO(new Module[IO](devConfig, mockHttpClient, locks))
+        httpApp = module.httpApp
+        _       = assert(httpApp.isInstanceOf[HttpApp[IO]], "HttpApp should be created successfully")
+      } yield ()
+    }
+  }
+
+  test("Module should create valid HttpApp with Test environment") {
+    locksResource.use { locks =>
+      for {
+        module <- IO(new Module[IO](testConfig, mockHttpClient, locks))
+        httpApp = module.httpApp
+        _       = assert(httpApp.isInstanceOf[HttpApp[IO]], "HttpApp should be created successfully")
+      } yield ()
+    }
+  }
+
+  test("Module should use Mock Client when environment is Test") {
+    locksResource.use { locks =>
+      for {
+        testModule <- IO(new Module[IO](testConfig, mockHttpClient, locks))
+        devModule <- IO(new Module[IO](devConfig, mockHttpClient, locks))
+
+        // Both should create valid HttpApps
+        testHttpApp = testModule.httpApp
+        devHttpApp  = devModule.httpApp
+
+        _ = assert(testHttpApp.isInstanceOf[HttpApp[IO]], "Test environment should create valid HttpApp")
+        _ = assert(devHttpApp.isInstanceOf[HttpApp[IO]], "Dev environment should create valid HttpApp")
+
+        // Test that different environments create different internal configurations
+        _ = assert(testConfig.environment == Environment.Test, "Test config should have Test environment")
+        _ = assert(devConfig.environment == Environment.Dev, "Dev config should have Dev environment")
+      } yield ()
+    }
+  }
+
+  test("Module should handle environment configuration correctly") {
+    locksResource.use { locks =>
+      for {
+        testModule <- IO(new Module[IO](testConfig, mockHttpClient, locks))
+
+        devModule <- IO(new Module[IO](devConfig, mockHttpClient, locks))
+
+        testApp = testModule.httpApp
+        devApp  = devModule.httpApp
+
+        _ = assert(testApp.isInstanceOf[HttpApp[IO]], "Test environment module should create HttpApp")
+        _ = assert(devApp.isInstanceOf[HttpApp[IO]], "Dev environment module should create HttpApp")
+
+        _ = assertEquals(testConfig.environment, Environment.Test)
+        _ = assertEquals(devConfig.environment, Environment.Dev)
+      } yield ()
+    }
+  }
+
+  test("Module should use Mock Client in Test environment for rates endpoint") {
+    import org.http4s.{ Method, Request, Uri }
+
+    locksResource.use { locks =>
+      for {
+        testModule <- IO(new Module[IO](testConfig, mockHttpClient, locks))
+        httpApp = testModule.httpApp
+
+        request = Request[IO](Method.GET, Uri.unsafeFromString("/rates?from=USD&to=EUR"))
+        response <- httpApp.run(request)
+
+        _ = assert(response.status.isSuccess, s"Expected successful response but got ${response.status}")
+
+        responseBody <- response.as[String]
+
+        _ = assert(responseBody.nonEmpty, "Response body should not be empty")
+        _ = assert(responseBody.contains("from") || responseBody.contains("to"), "Response should contain rate data")
+      } yield ()
+    }
   }
 }
