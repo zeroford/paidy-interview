@@ -35,15 +35,6 @@ final class Service[F[_]: Sync: Logger](maxSize: Long, ttl: FiniteDuration) exte
         Logger[F]
           .error(s"[Cache] put error, key:$key, ${e.getMessage}") >> Error.toAppError("PUT", e).asLeft[Unit].pure[F]
     }
-
-  override def clear(): F[AppError Either Unit] =
-    Sync[F].delay(cache.invalidateAll()).attempt.flatMap {
-      case Right(_) =>
-        Logger[F].debug(s"[Cache] clear OK") >> ().asRight[AppError].pure[F]
-      case Left(e: Throwable) =>
-        Logger[F].error(s"[Cache] clear error, ${e.getMessage}") >> Error.toAppError("CLEAR", e).asLeft[Unit].pure[F]
-    }
-
 }
 
 object Service {

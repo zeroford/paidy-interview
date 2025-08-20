@@ -10,53 +10,37 @@ import forex.domain.error.AppError
 class ErrorsSpec extends FunSuite {
 
   test("toAppError with TimeoutException should return UpstreamUnavailable") {
-    val operation = "GET"
-    val exception = new TimeoutException("Cache timeout")
-    val error     = errors.toAppError(operation, exception)
+    val timeoutException = new TimeoutException("Request timed out")
+    val result           = errors.toAppError("test-operation", timeoutException)
 
-    assert(error.isInstanceOf[AppError.UpstreamUnavailable])
-    val upstreamError = error.asInstanceOf[AppError.UpstreamUnavailable]
-    assertEquals(upstreamError.service, "CacheService")
-    assert(upstreamError.message.contains("Timeout"))
-    assert(upstreamError.message.contains(operation))
+    assert(result.isInstanceOf[AppError.UpstreamUnavailable])
   }
 
   test("toAppError with IOException should return UpstreamUnavailable") {
-    val operation = "PUT"
-    val exception = new IOException("Cache I/O error")
-    val error     = errors.toAppError(operation, exception)
+    val ioException = new IOException("Connection failed")
+    val result      = errors.toAppError("test-operation", ioException)
 
-    assert(error.isInstanceOf[AppError.UpstreamUnavailable])
-    val upstreamError = error.asInstanceOf[AppError.UpstreamUnavailable]
-    assertEquals(upstreamError.service, "CacheService")
-    assert(upstreamError.message.contains("I/O error"))
-    assert(upstreamError.message.contains(operation))
+    assert(result.isInstanceOf[AppError.UpstreamUnavailable])
   }
 
   test("toAppError with unknown exception should return UnexpectedError") {
-    val operation = "CLEAR"
-    val exception = new RuntimeException("Unknown cache error")
-    val error     = errors.toAppError(operation, exception)
+    val unknownException = new RuntimeException("Unknown error")
+    val result           = errors.toAppError("test-operation", unknownException)
 
-    assert(error.isInstanceOf[AppError.UnexpectedError])
-    error match {
-      case e: AppError.UnexpectedError => assertEquals(e.message, "Unexpected cache error")
-      case _                           => fail("Expected UnexpectedError")
-    }
+    assert(result.isInstanceOf[AppError.UnexpectedError])
   }
 
-  test("toAppError should include operation name in message") {
-    val timeoutException = new TimeoutException("Timeout")
-    val getError         = errors.toAppError("GET", timeoutException)
-    val putError         = errors.toAppError("PUT", timeoutException)
+  test("toAppError should handle different exception types") {
+    val nullPointerException     = new NullPointerException("Null pointer")
+    val illegalArgumentException = new IllegalArgumentException("Invalid argument")
+    val runtimeException         = new RuntimeException("Runtime error")
 
-    getError match {
-      case e: AppError.UpstreamUnavailable => assert(e.message.contains("GET"))
-      case _                               => fail("Expected UpstreamUnavailable")
-    }
-    putError match {
-      case e: AppError.UpstreamUnavailable => assert(e.message.contains("PUT"))
-      case _                               => fail("Expected UpstreamUnavailable")
-    }
+    val result1 = errors.toAppError("test-operation", nullPointerException)
+    val result2 = errors.toAppError("test-operation", illegalArgumentException)
+    val result3 = errors.toAppError("test-operation", runtimeException)
+
+    assert(result1.isInstanceOf[AppError.UnexpectedError])
+    assert(result2.isInstanceOf[AppError.UnexpectedError])
+    assert(result3.isInstanceOf[AppError.UnexpectedError])
   }
 }

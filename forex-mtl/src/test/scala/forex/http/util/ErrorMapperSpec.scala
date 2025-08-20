@@ -14,9 +14,10 @@ class ErrorMapperSpec extends CatsEffectSuite {
 
     for {
       response <- ErrorMapper.toErrorResponse[IO](error)
-      _ <- IO(assertEquals(response.status, Status.BadRequest))
-      _ <- IO(assert(response.headers.get(org.typelevel.ci.CIString("Content-Type")).isDefined))
-    } yield ()
+    } yield {
+      assertEquals(response.status, Status.BadRequest)
+      assert(response.headers.get(org.typelevel.ci.CIString("Content-Type")).isDefined)
+    }
   }
 
   test("toErrorResponse should map NotFound error to NotFound") {
@@ -24,8 +25,7 @@ class ErrorMapperSpec extends CatsEffectSuite {
 
     for {
       response <- ErrorMapper.toErrorResponse[IO](error)
-      _ <- IO(assertEquals(response.status, Status.NotFound))
-    } yield ()
+    } yield assertEquals(response.status, Status.NotFound)
   }
 
   test("toErrorResponse should map CalculationFailed error to UnprocessableEntity") {
@@ -33,8 +33,7 @@ class ErrorMapperSpec extends CatsEffectSuite {
 
     for {
       response <- ErrorMapper.toErrorResponse[IO](error)
-      _ <- IO(assertEquals(response.status, Status.UnprocessableEntity))
-    } yield ()
+    } yield assertEquals(response.status, Status.UnprocessableEntity)
   }
 
   test("toErrorResponse should map UpstreamAuthFailed error to BadGateway") {
@@ -42,8 +41,7 @@ class ErrorMapperSpec extends CatsEffectSuite {
 
     for {
       response <- ErrorMapper.toErrorResponse[IO](error)
-      _ <- IO(assertEquals(response.status, Status.BadGateway))
-    } yield ()
+    } yield assertEquals(response.status, Status.BadGateway)
   }
 
   test("toErrorResponse should map RateLimited error to BadGateway") {
@@ -51,8 +49,7 @@ class ErrorMapperSpec extends CatsEffectSuite {
 
     for {
       response <- ErrorMapper.toErrorResponse[IO](error)
-      _ <- IO(assertEquals(response.status, Status.BadGateway))
-    } yield ()
+    } yield assertEquals(response.status, Status.BadGateway)
   }
 
   test("toErrorResponse should map DecodingFailed error to BadGateway") {
@@ -60,8 +57,7 @@ class ErrorMapperSpec extends CatsEffectSuite {
 
     for {
       response <- ErrorMapper.toErrorResponse[IO](error)
-      _ <- IO(assertEquals(response.status, Status.BadGateway))
-    } yield ()
+    } yield assertEquals(response.status, Status.BadGateway)
   }
 
   test("toErrorResponse should map UpstreamUnavailable error to ServiceUnavailable") {
@@ -69,8 +65,7 @@ class ErrorMapperSpec extends CatsEffectSuite {
 
     for {
       response <- ErrorMapper.toErrorResponse[IO](error)
-      _ <- IO(assertEquals(response.status, Status.ServiceUnavailable))
-    } yield ()
+    } yield assertEquals(response.status, Status.ServiceUnavailable)
   }
 
   test("toErrorResponse should map UnexpectedError to InternalServerError") {
@@ -78,15 +73,13 @@ class ErrorMapperSpec extends CatsEffectSuite {
 
     for {
       response <- ErrorMapper.toErrorResponse[IO](error)
-      _ <- IO(assertEquals(response.status, Status.InternalServerError))
-    } yield ()
+    } yield assertEquals(response.status, Status.InternalServerError)
   }
 
   test("badRequest should return BadRequest with empty messages") {
     for {
       response <- ErrorMapper.badRequest[IO](List.empty)
-      _ <- IO(assertEquals(response.status, Status.BadRequest))
-    } yield ()
+    } yield assertEquals(response.status, Status.BadRequest)
   }
 
   test("badRequest should return BadRequest with single message") {
@@ -94,8 +87,7 @@ class ErrorMapperSpec extends CatsEffectSuite {
 
     for {
       response <- ErrorMapper.badRequest[IO](messages)
-      _ <- IO(assertEquals(response.status, Status.BadRequest))
-    } yield ()
+    } yield assertEquals(response.status, Status.BadRequest)
   }
 
   test("badRequest should return BadRequest with multiple messages") {
@@ -103,8 +95,7 @@ class ErrorMapperSpec extends CatsEffectSuite {
 
     for {
       response <- ErrorMapper.badRequest[IO](messages)
-      _ <- IO(assertEquals(response.status, Status.BadRequest))
-    } yield ()
+    } yield assertEquals(response.status, Status.BadRequest)
   }
 
   test("methodNotAllow should return MethodNotAllowed with Allow header") {
@@ -113,9 +104,10 @@ class ErrorMapperSpec extends CatsEffectSuite {
 
     for {
       response <- ErrorMapper.methodNotAllow[IO](method, allow)
-      _ <- IO(assertEquals(response.status, Status.MethodNotAllowed))
-      _ <- IO(assert(response.headers.get(org.typelevel.ci.CIString("Allow")).isDefined))
-    } yield ()
+    } yield {
+      assertEquals(response.status, Status.MethodNotAllowed)
+      assert(response.headers.get(org.typelevel.ci.CIString("Allow")).isDefined)
+    }
   }
 
   test("methodNotAllow should include method name in error message") {
@@ -124,7 +116,6 @@ class ErrorMapperSpec extends CatsEffectSuite {
 
     for {
       response <- ErrorMapper.methodNotAllow[IO](method, allow)
-      _ <- IO(assertEquals(response.status, Status.MethodNotAllowed))
-    } yield ()
+    } yield assertEquals(response.status, Status.MethodNotAllowed)
   }
 }
