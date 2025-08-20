@@ -96,3 +96,8 @@ lazy val root = (project in file("."))
     Acceptance / fork := true,
     Acceptance / parallelExecution := false
   )
+
+// Coverage Configuration
+coverageEnabled := true
+coverageHighlighting := true
+coverageExcludedPackages := "forex\\.Main;forex\\.config\\..*;forex\\.modules\\.HttpClientBuilder;forex\\.modules\\.HttpServerBuilder;forex\\.http\\.package;"
