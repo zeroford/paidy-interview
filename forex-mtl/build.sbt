@@ -69,6 +69,7 @@ libraryDependencies ++= Seq(
   Libraries.scaffeine,
   Libraries.munit           % Test,
   Libraries.munitCatsEffect % Test,
+  Libraries.munitScalaCheck % Test,
   Libraries.scalaCheck      % Test,
   Libraries.catsScalaCheck  % Test
 )
@@ -98,3 +99,16 @@ lazy val root = (project in file("."))
     Acceptance / fork := true,
     Acceptance / parallelExecution := false
   )
+
+// Scoverage Configuration
+coverageEnabled := true
+coverageMinimumStmtTotal := 80
+coverageMinimumBranchTotal := 80
+coverageMinimumStmtPerPackage := 80
+coverageMinimumBranchPerPackage := 80
+coverageMinimumStmtPerFile := 80
+coverageMinimumBranchPerFile := 80
+coverageFailOnMinimum := false
+coverageHighlighting := true
+coverageExcludedPackages := "forex\\.Main;forex\\.config\\..*"
+coverageExcludedFiles := ".*Test.*;.*Spec.*"
