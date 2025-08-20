@@ -52,6 +52,7 @@ jobs:
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: forex-mtl/target/scala-2.13/scoverage-report/scoverage.xml
+          extra-args: --language Scala
       
       - name: Cleanup ivy/coursier metadata
         if: always()
