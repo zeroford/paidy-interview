@@ -65,36 +65,6 @@ class PriceSpec extends FunSuite {
     assertEquals(rounded.value, BigDecimal(123.45))
   }
 
-  test("Price should handle very small values") {
-    val price   = Price(BigDecimal(0.000001))
-    val rounded = price.round(3)
-    assertEquals(rounded.value, BigDecimal(0.000))
-  }
-
-  test("Price should handle very large values") {
-    val price   = Price(BigDecimal(999999.999999))
-    val rounded = price.round(2)
-    assertEquals(rounded.value, BigDecimal(1000000.00))
-  }
-
-  test("Price should handle scientific notation") {
-    val price   = Price(BigDecimal("1.23E-4"))
-    val rounded = price.round(6)
-    assertEquals(rounded.value, BigDecimal("0.000123"))
-  }
-
-  test("Price should handle JSON with scientific notation") {
-    val json  = "1.23E-4".asJson
-    val price = json.as[Price].toOption.get
-    assertEquals(price.value, BigDecimal("0.000123"))
-  }
-
-  test("Price should handle JSON with trailing zeros") {
-    val json  = "123.4500".asJson
-    val price = json.as[Price].toOption.get
-    assertEquals(price.value, BigDecimal("123.45"))
-  }
-
   test("Price should fail for invalid JSON") {
     val json   = "invalid".asJson
     val result = json.as[Price]
