@@ -1,5 +1,6 @@
 name: CI
 on: [ push ]
+
 jobs:
   build-and-test:
     name: Build and Test
@@ -35,10 +36,7 @@ jobs:
         run: sbt scalafmtCheckAll compile
 
       - name: Unit tests with coverage
-        run: sbt clean coverage test coverageReport
-
-      - name: Generate HTML coverage report
-        run: sbt coverageAggregate
+        run: sbt clean coverage test coverageReport coverageAggregate
 
       - name: Upload coverage report as artifact
         uses: actions/upload-artifact@v4
@@ -52,7 +50,7 @@ jobs:
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: forex-mtl/target/scala-2.13/scoverage-report/scoverage.xml
-          extra-args: --language Scala
+          extra-args: --language Scala --final
       
       - name: Cleanup ivy/coursier metadata
         if: always()
