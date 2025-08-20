@@ -1,10 +1,14 @@
 package forex
 
+import scala.concurrent.duration.DurationInt
+
 import cats.effect.{ IO, Resource }
 import io.circe.parser.parse
 import munit.CatsEffectSuite
 import org.http4s._
 import org.http4s.client.Client
+
+import forex.config.ClientDefault
 
 class RatesAcceptanceSpec extends CatsEffectSuite {
 
@@ -13,8 +17,14 @@ class RatesAcceptanceSpec extends CatsEffectSuite {
       .fromString(sys.env.getOrElse("APP_BASE_URL", "http://localhost:8080"))
       .fold(throw _, identity)
 
+  private val config = ClientDefault(
+    totalTimeout = 2.seconds,
+    idleTimeout = 30.seconds,
+    maxTotal = 50
+  )
+
   private def clientR: Resource[IO, Client[IO]] =
-    forex.modules.HttpClientBuilder.build[IO]
+    forex.modules.HttpClientBuilder.build[IO](config)
 
   private def GET(c: Client[IO], path: Uri, qs: (String, String)*): IO[Response[IO]] =
     c.run(Request[IO](Method.GET, path.withQueryParams(qs.toMap))).use(IO.pure)

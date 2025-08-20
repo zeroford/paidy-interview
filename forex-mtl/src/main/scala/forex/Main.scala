@@ -13,7 +13,7 @@ object Main extends IOApp.Simple {
   override def run: IO[Unit] = {
     val app: Resource[IO, Unit] = for {
       config <- Config.resource[IO]("app")
-      client <- HttpClientBuilder.build[IO]
+      client <- HttpClientBuilder.build[IO](config.clientDefault)
       module <- Module.make[IO](config, client)
       _ <- HttpServerBuilder.build[IO](module.httpApp, config.http)
     } yield ()
