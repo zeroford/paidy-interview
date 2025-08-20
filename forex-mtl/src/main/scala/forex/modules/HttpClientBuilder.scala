@@ -7,8 +7,6 @@ import org.http4s.ember.client.EmberClientBuilder
 import forex.config.ClientDefault
 
 object HttpClientBuilder {
-  def apply(config: ClientDefault) = ???
-
   def build[F[_]: Async](config: ClientDefault): Resource[F, Client[F]] =
     EmberClientBuilder
       .default[F]

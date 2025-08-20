@@ -18,8 +18,6 @@ object Dependencies {
 
     val munit           = "0.7.29"
     val munitCatsEffect = "1.0.7"
-    val scalaCheck      = "1.17.0"
-    val catsScalaCheck  = "0.3.2"
     val catsEffectTest  = "1.5.0"
   }
 
@@ -62,10 +60,8 @@ object Dependencies {
 
     // Testing
     lazy val munit           = "org.scalameta"     %% "munit"               % Versions.munit
-    lazy val munitCatsEffect = "org.typelevel"     %% "munit-cats-effect-3" % Versions.munitCatsEffect
     lazy val munitScalaCheck = "org.scalameta"     %% "munit-scalacheck"    % Versions.munit
-    lazy val scalaCheck      = "org.scalacheck"    %% "scalacheck"          % Versions.scalaCheck
-    lazy val catsScalaCheck  = "io.chrisdavenport" %% "cats-scalacheck"     % Versions.catsScalaCheck
+    lazy val munitCatsEffect = "org.typelevel"     %% "munit-cats-effect-3" % Versions.munitCatsEffect
   }
 
 }

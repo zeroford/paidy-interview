@@ -68,10 +68,7 @@ libraryDependencies ++= Seq(
   Libraries.log4cats,
   Libraries.scaffeine,
   Libraries.munit           % Test,
-  Libraries.munitCatsEffect % Test,
-  Libraries.munitScalaCheck % Test,
-  Libraries.scalaCheck      % Test,
-  Libraries.catsScalaCheck  % Test
+  Libraries.munitCatsEffect % Test
 )
 
 def envFromDotEnv(base: File): Map[String, String] = {
@@ -102,13 +99,5 @@ lazy val root = (project in file("."))
 
 // Scoverage Configuration
 coverageEnabled := true
-coverageMinimumStmtTotal := 80
-coverageMinimumBranchTotal := 80
-coverageMinimumStmtPerPackage := 80
-coverageMinimumBranchPerPackage := 80
-coverageMinimumStmtPerFile := 80
-coverageMinimumBranchPerFile := 80
-coverageFailOnMinimum := false
 coverageHighlighting := true
-coverageExcludedPackages := "forex\\.Main;forex\\.config\\..*"
-coverageExcludedFiles := ".*Test.*;.*Spec.*"
+coverageExcludedPackages := "forex\\.Main;forex\\.config\\..*;forex\\.modules\\.HttpClientBuilder;forex\\.modules\\.HttpServerBuilder;forex\\.http\\.package;"

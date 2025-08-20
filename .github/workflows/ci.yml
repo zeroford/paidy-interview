@@ -37,8 +37,31 @@ jobs:
       - name: Format check & compile
         run: sbt scalafmtCheckAll compile
       
-      - name: Unit tests
-        run: sbt clean test
+      - name: Unit tests with coverage
+        run: sbt clean coverage test coverageReport
+
+      - name: Generate HTML coverage report
+        run: sbt coverageAggregate
+
+      - name: Upload coverage report as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: forex-mtl/target/scala-2.13/scoverage-report/
+          retention-days: 30
+
+      - name: Generate coverage summary
+        run: |
+          echo "## 📊 Coverage Report Generated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Coverage Files Available:" >> $GITHUB_STEP_SUMMARY
+          ls -la forex-mtl/target/scala-2.13/scoverage-report/ >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📋 **Download Coverage Report:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Go to Actions tab" >> $GITHUB_STEP_SUMMARY
+          echo "2. Click on this workflow run" >> $GITHUB_STEP_SUMMARY
+          echo "3. Download 'coverage-report' artifact" >> $GITHUB_STEP_SUMMARY
+          echo "4. Open `index.html` in your browser" >> $GITHUB_STEP_SUMMARY
 
   acceptance-test:
     needs: build-and-test
@@ -91,8 +114,15 @@ jobs:
           echo "App did not become healthy in time"
           exit 1
 
-      - name: Acceptance tests
-        run: sbt acceptance:test
+      - name: Acceptance tests with coverage
+        run: sbt acceptance:test coverageReport
+
+      - name: Upload acceptance coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: acceptance-coverage-report
+          path: forex-mtl/target/scala-2.13/scoverage-report/
+          retention-days: 30
 
       - name: Teardown
         if: always()
