@@ -262,7 +262,7 @@ class ServiceSpec extends CatsEffectSuite {
       override def put[K, V](key: K, value: V): IO[AppError Either Unit] =
         IO.pure(Left(AppError.UnexpectedError("Cache put failed")))
     }
-    
+
     val locks   = BucketLocks.create[IO].unsafeRunSync()
     val service = RatesService[IO](successClient, cacheWithPutFailure, locks, 1.minute)
 

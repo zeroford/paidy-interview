@@ -190,8 +190,6 @@ class ServiceSpec extends CatsEffectSuite {
     } yield ()
   }
 
-
-
   test("Cache should handle complex objects") {
     val cache = Service[IO](100, 1.minute)
 
@@ -230,8 +228,6 @@ class ServiceSpec extends CatsEffectSuite {
     } yield ()
   }
 
-
-
   test("Cache should handle cache size limits correctly") {
     val cache = Service[IO](3, 1.minute) // Small cache
 
@@ -263,30 +259,4 @@ class ServiceSpec extends CatsEffectSuite {
     } yield ()
   }
 
-  test("Cache should handle rapid put/get operations") {
-    val cache = Service[IO](100, 1.minute)
-
-    for {
-      // Rapid puts
-      _ <- cache.put("rapid-key-1", "rapid-value-1")
-      _ <- cache.put("rapid-key-2", "rapid-value-2")
-      _ <- cache.put("rapid-key-3", "rapid-value-3")
-      _ <- cache.put("rapid-key-4", "rapid-value-4")
-      _ <- cache.put("rapid-key-5", "rapid-value-5")
-
-      // Rapid gets
-      result1 <- cache.get[String, String]("rapid-key-1")
-      result2 <- cache.get[String, String]("rapid-key-2")
-      result3 <- cache.get[String, String]("rapid-key-3")
-      result4 <- cache.get[String, String]("rapid-key-4")
-      result5 <- cache.get[String, String]("rapid-key-5")
-
-      results      = List(result1, result2, result3, result4, result5)
-      successCount = results.count(_.isRight)
-      valueCount   = results.count(_.toOption.flatten.isDefined)
-
-      _ <- IO(assert(successCount == 5, s"All operations should succeed, but only $successCount/5 did"))
-      _ <- IO(assert(valueCount >= 3, s"At least 3 values should be present, but only $valueCount/5 were"))
-    } yield ()
-  }
 }

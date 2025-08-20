@@ -45,7 +45,7 @@ class ConvertersSpec extends FunSuite {
     assertEquals(pivotRate.currency, Currency.EUR)
   }
 
-    test("toPivotRate should return error for unsupported currency") {
+  test("toPivotRate should return error for unsupported currency") {
     val oneFrameRate = OneFrameRate(
       from = "USD",
       to = "INVALID",
@@ -56,7 +56,7 @@ class ConvertersSpec extends FunSuite {
     )
 
     val result = Converters.toPivotRate(oneFrameRate)
-    
+
     assert(result.isLeft)
     val error = result.left.toOption.get
     assert(error.isInstanceOf[AppError.Validation])
