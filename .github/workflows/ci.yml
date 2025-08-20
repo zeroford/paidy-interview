@@ -2,6 +2,7 @@ name: CI
 on: [ push ]
 jobs:
   build-and-test:
+    name: Build and Test
     runs-on: ubuntu-latest
     env:
       ONE_FRAME_TOKEN: ${{ secrets.ONE_FRAME_TOKEN }}
@@ -46,18 +47,10 @@ jobs:
           path: forex-mtl/target/scala-2.13/scoverage-report/
           retention-days: 30
 
-      - name: Generate coverage summary
-        run: |
-          echo "## 📊 Coverage Report Generated" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Coverage Files Available:" >> $GITHUB_STEP_SUMMARY
-          ls -la forex-mtl/target/scala-2.13/scoverage-report/ >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📋 **Download Coverage Report:**" >> $GITHUB_STEP_SUMMARY
-          echo "1. Go to Actions tab" >> $GITHUB_STEP_SUMMARY
-          echo "2. Click on this workflow run" >> $GITHUB_STEP_SUMMARY
-          echo "3. Download 'coverage-report' artifact" >> $GITHUB_STEP_SUMMARY
-          echo "4. Open \`index.html\` in your browser" >> $GITHUB_STEP_SUMMARY
+      - name: Upload coverage to Codacy
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          coverage-reports: forex-mtl/target/scala-2.13/scoverage-report/scoverage.xml
       
       - name: Cleanup ivy/coursier metadata
         if: always()
@@ -67,6 +60,7 @@ jobs:
           find ~/.cache/coursier/v1 -name "*.lock" -delete || true
         
   acceptance-test:
+    name: Acceptance Test
     needs: build-and-test
     runs-on: ubuntu-latest
     env:
