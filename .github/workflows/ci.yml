@@ -13,30 +13,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Java 17
+      - name: Set up Java 17 (with sbt cache)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
+          cache: sbt
+          cache-dependency-path: |
+            forex-mtl/build.sbt
+            forex-mtl/project/*.sbt
+            forex-mtl/project/build.properties
+            forex-mtl/project/plugins.sbt
 
       - name: Set up SBT
         uses: sbt/setup-sbt@v1
         with:
           sbt-runner-version: 1.8.0
 
-      - name: Cache sbt and dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.ivy2/cache
-            ~/.sbt
-            ~/.cache/coursier
-          key: sbt-${{ runner.os }}-${{ hashFiles('**/*.sbt', '**/build.properties') }}
-          restore-keys: sbt-${{ runner.os }}-
-
       - name: Format check & compile
         run: sbt scalafmtCheckAll compile
-      
+
       - name: Unit tests with coverage
         run: sbt clean coverage test coverageReport
 
@@ -44,7 +40,7 @@ jobs:
         run: sbt coverageAggregate
 
       - name: Upload coverage report as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: forex-mtl/target/scala-2.13/scoverage-report/
@@ -61,8 +57,15 @@ jobs:
           echo "1. Go to Actions tab" >> $GITHUB_STEP_SUMMARY
           echo "2. Click on this workflow run" >> $GITHUB_STEP_SUMMARY
           echo "3. Download 'coverage-report' artifact" >> $GITHUB_STEP_SUMMARY
-          echo "4. Open `index.html` in your browser" >> $GITHUB_STEP_SUMMARY
-
+          echo "4. Open \`index.html\` in your browser" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Cleanup ivy/coursier metadata
+        if: always()
+        run: |
+          rm -f ~/.ivy2/.sbt.ivy.lock || true
+          find ~/.ivy2/cache -name "ivydata-*.properties" -delete || true
+          find ~/.cache/coursier/v1 -name "*.lock" -delete || true
+        
   acceptance-test:
     needs: build-and-test
     runs-on: ubuntu-latest
@@ -74,28 +77,25 @@ jobs:
         working-directory: forex-mtl
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up Java 17
+      - name: Set up Java 17 (with sbt cache)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
+          cache: sbt
+          cache-dependency-path: |
+            forex-mtl/build.sbt
+            forex-mtl/project/*.sbt
+            forex-mtl/project/build.properties
+            forex-mtl/project/plugins.sbt
 
       - name: Set up SBT
         uses: sbt/setup-sbt@v1
         with:
           sbt-runner-version: 1.8.0
-
-      - name: Cache sbt and dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.ivy2/cache
-            ~/.sbt
-            ~/.cache/coursier
-          key: sbt-${{ runner.os }}-${{ hashFiles('**/*.sbt', '**/build.properties') }}
-          restore-keys: sbt-${{ runner.os }}-
 
       - name: Start OneFrame (docker-compose)
         run: docker compose -f docker-compose.acceptance.yml up -d
@@ -114,17 +114,16 @@ jobs:
           echo "App did not become healthy in time"
           exit 1
 
-      - name: Acceptance tests with coverage
-        run: sbt acceptance:test coverageReport
-
-      - name: Upload acceptance coverage report
-        uses: actions/upload-artifact@v3
-        with:
-          name: acceptance-coverage-report
-          path: forex-mtl/target/scala-2.13/scoverage-report/
-          retention-days: 30
+      - name: Run acceptance tests
+        run: sbt acceptance:test 
 
       - name: Teardown
         if: always()
         run: docker compose -f docker-compose.acceptance.yml down
-  
+
+      - name: Cleanup ivy/coursier metadata
+        if: always()
+        run: |
+          rm -f ~/.ivy2/.sbt.ivy.lock || true
+          find ~/.ivy2/cache -name "ivydata-*.properties" -delete || true
+          find ~/.cache/coursier/v1 -name "*.lock" -delete || true
