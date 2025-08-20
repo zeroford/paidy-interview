@@ -4,7 +4,6 @@ import java.time.Instant
 import scala.concurrent.duration._
 
 import cats.effect.IO
-
 import munit.CatsEffectSuite
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
@@ -24,26 +23,10 @@ class ServiceSpec extends CatsEffectSuite {
   private val fixedInstant = Instant.parse("2024-08-04T12:34:56Z")
 
   private val validPivotRates: List[PivotRate] = List(
-    PivotRate(
-      currency = Currency.JPY,
-      price = Price(BigDecimal(123.45)),
-      timestamp = Timestamp(fixedInstant)
-    ),
-    PivotRate(
-      currency = Currency.USD,
-      price = Price(BigDecimal(1.0)),
-      timestamp = Timestamp(fixedInstant)
-    ),
-    PivotRate(
-      currency = Currency.EUR,
-      price = Price(BigDecimal(0.85)),
-      timestamp = Timestamp(fixedInstant)
-    ),
-    PivotRate(
-      currency = Currency.GBP,
-      price = Price(BigDecimal(0.755)),
-      timestamp = Timestamp(fixedInstant)
-    )
+    PivotRate(Currency.JPY, Price(BigDecimal(123.45)), Timestamp(fixedInstant)),
+    PivotRate(Currency.USD, Price(BigDecimal(1.0)), Timestamp(fixedInstant)),
+    PivotRate(Currency.EUR, Price(BigDecimal(0.85)), Timestamp(fixedInstant)),
+    PivotRate(Currency.GBP, Price(BigDecimal(0.755)), Timestamp(fixedInstant))
   )
 
   private val successClient: Algebra[IO] = (_: List[Rate.Pair]) => IO.pure(Right(validPivotRates))
@@ -51,96 +34,99 @@ class ServiceSpec extends CatsEffectSuite {
     IO.pure(Left(AppError.UpstreamUnavailable("one-frame", "API Down")))
 
   test("Service should return rate when OneFrame client succeeds") {
-    val cache   = Service[IO](100, 1.minute)
-    val locks   = BucketLocks.create[IO].unsafeRunSync()
-    val service = RatesService[IO](successClient, cache, locks, 1.minute)
+    val cache = Service[IO](100, 1.minute)
 
     for {
+      locks <- BucketLocks.create[IO]
+      service = RatesService[IO](successClient, cache, locks, 1.minute)
       result <- service.get(Rate.Pair(Currency.USD, Currency.JPY), fixedInstant)
-      _ <- IO(assert(result.isRight, "Service should return success"))
-      rate <- IO(result.toOption.get)
-      _ <- IO(assertEquals(rate.pair.from, Currency.USD))
-      _ <- IO(assertEquals(rate.pair.to, Currency.JPY))
-      _ <- IO(assertEquals(rate.price.value, BigDecimal(123.45)))
-    } yield ()
+    } yield result match {
+      case Right(rate) =>
+        assertEquals(rate.pair.from, Currency.USD)
+        assertEquals(rate.pair.to, Currency.JPY)
+        assertEquals(rate.price.value, BigDecimal(123.45))
+      case Left(e) =>
+        fail(s"Unexpected error: $e")
+    }
   }
 
   test("Service should return error when OneFrame client fails") {
-    val cache   = Service[IO](100, 1.minute)
-    val locks   = BucketLocks.create[IO].unsafeRunSync()
-    val service = RatesService[IO](errorClient, cache, locks, 1.minute)
+    val cache = Service[IO](100, 1.minute)
 
     for {
+      locks <- BucketLocks.create[IO]
+      service = RatesService[IO](errorClient, cache, locks, 1.minute)
       result <- service.get(Rate.Pair(Currency.USD, Currency.JPY), fixedInstant)
-      _ <- IO(assert(result.isLeft, "Service should return error"))
-      error <- IO(result.left.toOption.get)
-      _ <- IO(assert(error.isInstanceOf[AppError.UpstreamUnavailable], "Should be UpstreamUnavailable error"))
-    } yield ()
+    } yield result match {
+      case Left(_: AppError.UpstreamUnavailable) => ()
+      case Left(e)                               => fail(s"Expected UpstreamUnavailable, but got: $e")
+      case Right(v)                              => fail(s"Expected error, but got success: $v")
+    }
   }
 
   test("Service should handle different currency pairs") {
-    val cache   = Service[IO](100, 1.minute)
-    val locks   = BucketLocks.create[IO].unsafeRunSync()
-    val service = RatesService[IO](successClient, cache, locks, 1.minute)
+    val cache = Service[IO](100, 1.minute)
 
     for {
+      locks <- BucketLocks.create[IO]
+      service = RatesService[IO](successClient, cache, locks, 1.minute)
       result <- service.get(Rate.Pair(Currency.EUR, Currency.GBP), fixedInstant)
-      _ <- IO(assert(result.isRight, "Service should return success"))
-      rate <- IO(result.toOption.get)
-      _ <- IO(assertEquals(rate.pair.from, Currency.EUR))
-      _ <- IO(assertEquals(rate.pair.to, Currency.GBP))
-    } yield ()
+    } yield result match {
+      case Right(rate) =>
+        assertEquals(rate.pair.from, Currency.EUR)
+        assertEquals(rate.pair.to, Currency.GBP)
+      case other =>
+        fail(s"Unexpected result: $other")
+    }
   }
 
   test("Service should handle cache miss and put to cache") {
-    val cache   = Service[IO](100, 1.minute)
-    val locks   = BucketLocks.create[IO].unsafeRunSync()
-    val service = RatesService[IO](successClient, cache, locks, 1.minute)
+    val cache = Service[IO](100, 1.minute)
 
     for {
+      locks <- BucketLocks.create[IO]
+      service = RatesService[IO](successClient, cache, locks, 1.minute)
       result1 <- service.get(Rate.Pair(Currency.USD, Currency.JPY), fixedInstant)
-      _ <- IO(assert(result1.isRight, "First call should succeed"))
-
       result2 <- service.get(Rate.Pair(Currency.USD, Currency.JPY), fixedInstant)
-      _ <- IO(assert(result2.isRight, "Second call should succeed"))
-
-      rate1 <- IO(result1.toOption.get)
-      rate2 <- IO(result2.toOption.get)
-      _ <- IO(assertEquals(rate1.price.value, rate2.price.value, "Cached and fresh rates should match"))
-    } yield ()
+    } yield (result1, result2) match {
+      case (Right(rate1), Right(rate2)) =>
+        assertEquals(rate1.price.value, rate2.price.value)
+      case (a, b) =>
+        fail(s"Unexpected results: $a, $b")
+    }
   }
 
   test("Service should handle same currency pair") {
-    val cache   = Service[IO](100, 1.minute)
-    val locks   = BucketLocks.create[IO].unsafeRunSync()
-    val service = RatesService[IO](successClient, cache, locks, 1.minute)
+    val cache = Service[IO](100, 1.minute)
 
     for {
+      locks <- BucketLocks.create[IO]
+      service = RatesService[IO](successClient, cache, locks, 1.minute)
       result <- service.get(Rate.Pair(Currency.USD, Currency.USD), fixedInstant)
-      _ <- IO(assert(result.isRight, "Service should return success for same currency"))
-      rate <- IO(result.toOption.get)
-      _ <- IO(assertEquals(rate.pair.from, Currency.USD))
-      _ <- IO(assertEquals(rate.pair.to, Currency.USD))
-      _ <- IO(assertEquals(rate.price.value, BigDecimal(1.0), "Same currency should have price 1.0"))
-    } yield ()
+    } yield result match {
+      case Right(rate) =>
+        assertEquals(rate.pair.from, Currency.USD)
+        assertEquals(rate.pair.to, Currency.USD)
+        assertEquals(rate.price.value, BigDecimal(1.0))
+      case other =>
+        fail(s"Unexpected result: $other")
+    }
   }
 
   test("Service should handle TTL expiration") {
-    val cache   = Service[IO](100, 1.minute)
-    val locks   = BucketLocks.create[IO].unsafeRunSync()
-    val service = RatesService[IO](successClient, cache, locks, 1.minute)
+    val cache = Service[IO](100, 1.minute)
 
     for {
+      locks <- BucketLocks.create[IO]
+      service = RatesService[IO](successClient, cache, locks, 1.minute)
       result1 <- service.get(Rate.Pair(Currency.USD, Currency.JPY), fixedInstant)
-      _ <- IO(assert(result1.isRight, "First call should succeed"))
-
-      expiredTime = fixedInstant.plusSeconds(61)
-      result2 <- service.get(Rate.Pair(Currency.USD, Currency.JPY), expiredTime)
-      _ <- IO(assert(result2.isRight, "Second call should succeed after TTL expiration"))
-    } yield ()
+      expired = fixedInstant.plusSeconds(61)
+      result2 <- service.get(Rate.Pair(Currency.USD, Currency.JPY), expired)
+    } yield (result1, result2) match {
+      case (Right(_), Right(_)) => ()
+      case (a, b)               => fail(s"Unexpected results around TTL: $a, $b")
+    }
   }
-
-  // Additional tests to improve coverage
 
   test("Service should handle cache error scenarios") {
     val failingCache = new CacheAlgebra[IO] {
@@ -149,57 +135,51 @@ class ServiceSpec extends CatsEffectSuite {
       override def put[K, V](key: K, value: V): IO[AppError Either Unit] =
         IO.pure(Left(AppError.UnexpectedError("Cache error")))
     }
-    val locks   = BucketLocks.create[IO].unsafeRunSync()
-    val service = RatesService[IO](successClient, failingCache, locks, 1.minute)
 
     for {
+      locks <- BucketLocks.create[IO]
+      service = RatesService[IO](successClient, failingCache, locks, 1.minute)
       result <- service.get(Rate.Pair(Currency.EUR, Currency.GBP), fixedInstant)
-      _ <- IO(assert(result.isLeft, "Service should return error when cache fails"))
-      error <- IO(result.left.toOption.get)
-      _ <- IO(assert(error.isInstanceOf[AppError.UnexpectedError], "Should be UnexpectedError"))
-    } yield ()
+    } yield result match {
+      case Left(_: AppError.UnexpectedError) => ()
+      case Left(e)                           => fail(s"Expected UnexpectedError, but got: $e")
+      case Right(v)                          => fail(s"Expected error, but got success: $v")
+    }
   }
 
   test("Service should handle missing rates in response") {
     val incompleteClient: Algebra[IO] = (_: List[Rate.Pair]) =>
-      IO.pure(
-        Right(
-          List(
-            PivotRate(Currency.USD, Price(BigDecimal(1.0)), Timestamp(fixedInstant))
-            // Missing EUR rate
-          )
-        )
-      )
+      IO.pure(Right(List(PivotRate(Currency.USD, Price(BigDecimal(1.0)), Timestamp(fixedInstant)))))
 
-    val cache   = Service[IO](100, 1.minute)
-    val locks   = BucketLocks.create[IO].unsafeRunSync()
-    val service = RatesService[IO](incompleteClient, cache, locks, 1.minute)
+    val cache = Service[IO](100, 1.minute)
 
     for {
+      locks <- BucketLocks.create[IO]
+      service = RatesService[IO](incompleteClient, cache, locks, 1.minute)
       result <- service.get(Rate.Pair(Currency.USD, Currency.EUR), fixedInstant)
-      _ <- IO(assert(result.isLeft, "Service should return error when required rate is missing"))
-      error <- IO(result.left.toOption.get)
-      _ <- IO(assert(error.isInstanceOf[AppError.NotFound], "Should be NotFound error"))
-    } yield ()
+    } yield result match {
+      case Left(_: AppError.NotFound) => ()
+      case Left(e)                    => fail(s"Expected NotFound, but got: $e")
+      case Right(v)                   => fail(s"Expected error, but got success: $v")
+    }
   }
 
   test("Service should handle cache put failures") {
     val cacheWithPutFailure = new CacheAlgebra[IO] {
       override def get[K, V](key: K): IO[AppError Either Option[V]] =
-        IO.pure(Right(None)) // Cache miss - this will trigger fetch from client
+        IO.pure(Right(None))
       override def put[K, V](key: K, value: V): IO[AppError Either Unit] =
         IO.pure(Left(AppError.UnexpectedError("Cache put failed")))
     }
 
-    val locks   = BucketLocks.create[IO].unsafeRunSync()
-    val service = RatesService[IO](successClient, cacheWithPutFailure, locks, 1.minute)
-
     for {
+      locks <- BucketLocks.create[IO]
+      service = RatesService[IO](successClient, cacheWithPutFailure, locks, 1.minute)
       result <- service.get(Rate.Pair(Currency.USD, Currency.JPY), fixedInstant)
-      _ <- IO(assert(result.isLeft, "Service should return error when cache put fails"))
-      error <- IO(result.left.toOption.get)
-      _ <- IO(assert(error.isInstanceOf[AppError.UnexpectedError], "Should be UnexpectedError when cache put fails"))
-    } yield ()
+    } yield result match {
+      case Left(_: AppError.UnexpectedError) => ()
+      case Left(e)                           => fail(s"Expected UnexpectedError when cache put fails, but got: $e")
+      case Right(v)                          => fail(s"Expected error, but got success: $v")
+    }
   }
-
 }

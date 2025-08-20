@@ -14,10 +14,11 @@ class HealthRoutesSpec extends CatsEffectSuite {
 
     for {
       response <- healthRoutes.orNotFound.run(request)
-      _ <- IO(assertEquals(response.status, Status.Ok))
       body <- response.as[String]
-      json = parse(body).getOrElse(fail("Response is not valid JSON"))
-      _ <- IO(assertEquals(json.hcursor.get[String]("status").toOption, Some("OK")))
-    } yield ()
+    } yield {
+      assertEquals(response.status, Status.Ok)
+      val json = parse(body).getOrElse(fail("Response is not valid JSON"))
+      assertEquals(json.hcursor.get[String]("status").toOption, Some("OK"))
+    }
   }
 }

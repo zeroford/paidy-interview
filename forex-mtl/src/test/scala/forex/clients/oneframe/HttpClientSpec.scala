@@ -24,28 +24,22 @@ class HttpClientSpec extends CatsEffectSuite {
   val mockClient: Client[IO] = Client[IO](req =>
     cats.effect.Resource.pure {
       val uri = req.uri.toString()
-      println(s"Mock client received URI: $uri")
       if (uri.contains("pair=")) {
         val allPairs = uri.split("pair=").drop(1).map(_.split("&")(0)).toList
-        println(s"All pairs: $allPairs")
         if (allPairs.isEmpty) {
-          println("Returning empty array")
           org.http4s.Response[IO](org.http4s.Status.Ok).withEntity("[]")
         } else {
           val pairList = allPairs
-          println(s"Pair list: $pairList")
-          val rates = pairList
+          val rates    = pairList
             .map { pair =>
               val from = pair.take(3)
               val to   = pair.drop(3)
               s"""{"from":"$from","to":"$to","bid":0.0085,"ask":0.0086,"price":0.00855,"time_stamp":"2023-01-01T00:00:00.000000Z"}"""
             }
             .mkString("[", ",", "]")
-          println(s"Returning rates: $rates")
           org.http4s.Response[IO](org.http4s.Status.Ok).withEntity(rates)
         }
       } else {
-        println("No pairs parameter, returning empty array")
         org.http4s.Response[IO](org.http4s.Status.Ok).withEntity("[]")
       }
     }
@@ -57,13 +51,15 @@ class HttpClientSpec extends CatsEffectSuite {
 
     for {
       result <- httpClient.getRates(pairs)
-      _ <- IO(assert(result.isRight))
-      rates <- IO(result.toOption.get)
-      _ <- IO(assert(rates.nonEmpty))
-      firstRate <- IO(rates.head)
-      _ <- IO(assertEquals(firstRate.currency, Currency.JPY))
-      _ <- IO(assert(firstRate.price.value > 0))
-    } yield ()
+    } yield result match {
+      case Right(rates) =>
+        assert(rates.nonEmpty)
+        val firstRate = rates.head
+        assertEquals(firstRate.currency, Currency.JPY)
+        assert(firstRate.price.value > 0)
+      case Left(e) =>
+        fail(s"Unexpected error: $e")
+    }
   }
 
   test("HttpClient should handle multiple currency pairs") {
@@ -76,11 +72,13 @@ class HttpClientSpec extends CatsEffectSuite {
 
     for {
       result <- httpClient.getRates(pairs)
-      _ <- IO(assert(result.isRight))
-      rates <- IO(result.toOption.get)
-      _ <- IO(assertEquals(rates.size, 3))
-      _ <- IO(assert(rates.forall(_.price.value > 0)))
-    } yield ()
+    } yield result match {
+      case Right(rates) =>
+        assertEquals(rates.size, 3)
+        assert(rates.forall(_.price.value > 0))
+      case Left(e) =>
+        fail(s"Unexpected error: $e")
+    }
   }
 
   test("HttpClient should handle EUR/GBP pair") {
@@ -89,13 +87,15 @@ class HttpClientSpec extends CatsEffectSuite {
 
     for {
       result <- httpClient.getRates(pairs)
-      _ <- IO(assert(result.isRight))
-      rates <- IO(result.toOption.get)
-      _ <- IO(assert(rates.nonEmpty))
-      firstRate <- IO(rates.head)
-      _ <- IO(assertEquals(firstRate.currency, Currency.GBP))
-      _ <- IO(assert(firstRate.price.value > 0))
-    } yield ()
+    } yield result match {
+      case Right(rates) =>
+        assert(rates.nonEmpty)
+        val firstRate = rates.head
+        assertEquals(firstRate.currency, Currency.GBP)
+        assert(firstRate.price.value > 0)
+      case Left(e) =>
+        fail(s"Unexpected error: $e")
+    }
   }
 
   test("HttpClient should handle USD/EUR pair") {
@@ -104,13 +104,15 @@ class HttpClientSpec extends CatsEffectSuite {
 
     for {
       result <- httpClient.getRates(pairs)
-      _ <- IO(assert(result.isRight))
-      rates <- IO(result.toOption.get)
-      _ <- IO(assert(rates.nonEmpty))
-      firstRate <- IO(rates.head)
-      _ <- IO(assertEquals(firstRate.currency, Currency.EUR))
-      _ <- IO(assert(firstRate.price.value > 0))
-    } yield ()
+    } yield result match {
+      case Right(rates) =>
+        assert(rates.nonEmpty)
+        val firstRate = rates.head
+        assertEquals(firstRate.currency, Currency.EUR)
+        assert(firstRate.price.value > 0)
+      case Left(e) =>
+        fail(s"Unexpected error: $e")
+    }
   }
 
   test("HttpClient should handle edge cases") {
@@ -123,11 +125,13 @@ class HttpClientSpec extends CatsEffectSuite {
 
     for {
       result <- httpClient.getRates(edgePairs)
-      _ <- IO(assert(result.isRight))
-      rates <- IO(result.toOption.get)
-      _ <- IO(assert(rates.nonEmpty))
-      _ <- IO(assert(rates.forall(_.price.value > 0)))
-    } yield ()
+    } yield result match {
+      case Right(rates) =>
+        assert(rates.nonEmpty)
+        assert(rates.forall(_.price.value > 0))
+      case Left(e) =>
+        fail(s"Unexpected error: $e")
+    }
   }
 
   test("HttpClient should handle different configurations") {
@@ -138,13 +142,15 @@ class HttpClientSpec extends CatsEffectSuite {
 
     for {
       result <- httpClient.getRates(pairs)
-      _ <- IO(assert(result.isRight))
-      rates <- IO(result.toOption.get)
-      _ <- IO(assert(rates.nonEmpty))
-      firstRate <- IO(rates.head)
-      _ <- IO(assertEquals(firstRate.currency, Currency.JPY))
-      _ <- IO(assert(firstRate.price.value > 0))
-    } yield ()
+    } yield result match {
+      case Right(rates) =>
+        assert(rates.nonEmpty)
+        val firstRate = rates.head
+        assertEquals(firstRate.currency, Currency.JPY)
+        assert(firstRate.price.value > 0)
+      case Left(e) =>
+        fail(s"Unexpected error: $e")
+    }
   }
 
   test("HttpClient should handle empty pairs list") {
@@ -153,10 +159,10 @@ class HttpClientSpec extends CatsEffectSuite {
 
     for {
       result <- httpClient.getRates(pairs)
-      _ <- IO(assert(result.isLeft, "Empty pairs should return error"))
-      error <- IO(result.left.toOption.get)
-      _ <- IO(assert(error.isInstanceOf[AppError.NotFound], "Should be NotFound error"))
-    } yield ()
+    } yield result match {
+      case Left(_: AppError.NotFound) => ()
+      case other                      => fail(s"Expected NotFound for empty pairs, got: $other")
+    }
   }
 
   test("HttpClient should handle JSON decode errors") {
@@ -169,10 +175,10 @@ class HttpClientSpec extends CatsEffectSuite {
 
     for {
       result <- httpClient.getRates(List(Rate.Pair(Currency.USD, Currency.JPY)))
-      _ <- IO(assert(result.isLeft, "Should return error for invalid JSON"))
-      error <- IO(result.left.toOption.get)
-      _ <- IO(assert(error.isInstanceOf[AppError.DecodingFailed], "Should be DecodingFailed error"))
-    } yield ()
+    } yield result match {
+      case Left(_: AppError.DecodingFailed) => ()
+      case other                            => fail(s"Expected DecodingFailed, got: $other")
+    }
   }
 
   test("HttpClient should handle OneFrameApiError responses") {
@@ -185,10 +191,10 @@ class HttpClientSpec extends CatsEffectSuite {
 
     for {
       result <- httpClient.getRates(List(Rate.Pair(Currency.USD, Currency.JPY)))
-      _ <- IO(assert(result.isLeft, "Should return error for API error"))
-      error <- IO(result.left.toOption.get)
-      _ <- IO(assert(error.isInstanceOf[AppError.RateLimited], "Should be RateLimited error"))
-    } yield ()
+    } yield result match {
+      case Left(_: AppError.RateLimited) => ()
+      case other                         => fail(s"Expected RateLimited, got: $other")
+    }
   }
 
   test("HttpClient should handle HTTP error responses") {
@@ -201,10 +207,10 @@ class HttpClientSpec extends CatsEffectSuite {
 
     for {
       result <- httpClient.getRates(List(Rate.Pair(Currency.USD, Currency.JPY)))
-      _ <- IO(assert(result.isLeft, "Should return error for HTTP error"))
-      error <- IO(result.left.toOption.get)
-      _ <- IO(assert(error.isInstanceOf[AppError.UpstreamUnavailable], "Should be UpstreamUnavailable error"))
-    } yield ()
+    } yield result match {
+      case Left(_: AppError.UpstreamUnavailable) => ()
+      case other                                 => fail(s"Expected UpstreamUnavailable, got: $other")
+    }
   }
 
   test("HttpClient should handle empty response array") {
@@ -217,9 +223,9 @@ class HttpClientSpec extends CatsEffectSuite {
 
     for {
       result <- httpClient.getRates(List(Rate.Pair(Currency.USD, Currency.JPY)))
-      _ <- IO(assert(result.isLeft, "Should return error for empty response"))
-      error <- IO(result.left.toOption.get)
-      _ <- IO(assert(error.isInstanceOf[AppError.NotFound], "Should be NotFound error"))
-    } yield ()
+    } yield result match {
+      case Left(_: AppError.NotFound) => ()
+      case other                      => fail(s"Expected NotFound, got: $other")
+    }
   }
 }
