@@ -1,19 +1,38 @@
 package forex.config
 
-import cats.effect.Sync
-import fs2.Stream
-
-import pureconfig.ConfigSource
+import cats.effect.{ Async, Resource }
+import com.comcast.ip4s.{ Host, Port }
+import pureconfig.error.CannotConvert
 import pureconfig.generic.auto._
+import pureconfig.{ ConfigReader, ConfigSource }
 
 object Config {
 
-  /**
-   * @param path the property path inside the default configuration
-   */
-  def stream[F[_]: Sync](path: String): Stream[F, ApplicationConfig] = {
-    Stream.eval(Sync[F].delay(
-      ConfigSource.default.at(path).loadOrThrow[ApplicationConfig]))
-  }
+  implicit val environmentReader: ConfigReader[Environment] =
+    ConfigReader[String].emap {
+      case "dev"  => Right(Environment.Dev)
+      case "test" => Right(Environment.Test)
+      case other  => Left(CannotConvert(other, "Environment", s"Invalid environment: $other"))
+    }
+
+  implicit val hostReader: ConfigReader[Host] =
+    ConfigReader[String].emap(n => Host.fromString(n).toRight(CannotConvert(n, "Host", s"Invalid host: $n")))
+
+  implicit val portReader: ConfigReader[Port] =
+    ConfigReader[Int].emap(n => Port.fromInt(n).toRight(CannotConvert(n.toString, "Port", s"Invalid port: $n")))
+
+  def resource[F[_]: Async](path: String): Resource[F, ApplicationConfig] =
+    Resource.eval(Async[F].blocking {
+      val configFile = sys.env.getOrElse("APP_CONFIG", "application.conf")
+      val cfg        = ConfigSource
+        .file(s"src/main/resources/$configFile")
+        .withFallback(ConfigSource.default)
+        .withFallback(ConfigSource.systemProperties)
+        .at(path)
+        .loadOrThrow[ApplicationConfig]
+
+      require(cfg.secrets.oneFrameToken.trim.nonEmpty, "ONE_FRAME_TOKEN is required")
+      cfg
+    })
 
 }

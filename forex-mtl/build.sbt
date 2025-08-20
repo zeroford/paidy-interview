@@ -43,7 +43,7 @@ scalacOptions ++= Seq(
   "-Ywarn-unused:patvars", // Warn if a variable bound in a pattern is unused.
   "-Ywarn-unused:privates", // Warn if a private member is unused.
   "-Ycache-plugin-class-loader:last-modified", // Enables caching of classloaders for compiler plugins
-  "-Ycache-macro-class-loader:last-modified" // and macro definitions. This can lead to performance improvements.
+  "-Ycache-macro-class-loader:last-modified" // and macro definitions. This can lead to performance improvements
 )
 
 resolvers +=
@@ -56,14 +56,48 @@ libraryDependencies ++= Seq(
   Libraries.fs2,
   Libraries.http4sDsl,
   Libraries.http4sServer,
+  Libraries.http4sClient,
   Libraries.http4sCirce,
   Libraries.circeCore,
   Libraries.circeGeneric,
   Libraries.circeGenericExt,
   Libraries.circeParser,
   Libraries.pureConfig,
+  Libraries.ip4s,
   Libraries.logback,
-  Libraries.scalaTest      % Test,
-  Libraries.scalaCheck     % Test,
-  Libraries.catsScalaCheck % Test
+  Libraries.log4cats,
+  Libraries.scaffeine,
+  Libraries.munit           % Test,
+  Libraries.munitCatsEffect % Test
 )
+
+def envFromDotEnv(base: File): Map[String, String] = {
+  val f = base / ".env"
+  if (!f.exists) Map.empty
+  else IO.readLines(f).collect {
+    case l if l.trim.nonEmpty && !l.trim.startsWith("#") && l.contains("=") =>
+      val Array(k, v) = l.split("=", 2); k.trim -> v.trim
+  }.toMap
+}
+
+Compile / run / fork := true
+Compile / run / envVars ++= envFromDotEnv(baseDirectory.value)
+
+Test / fork := true
+
+// E2E Tests Configuration
+Test / unmanagedSourceDirectories += baseDirectory.value / "src" / "e2e" / "scala"
+
+lazy val Acceptance = config("acceptance") extend Test
+lazy val root = (project in file("."))
+  .configs(Acceptance)
+  .settings(
+    inConfig(Acceptance)(Defaults.testSettings),
+    Acceptance / fork := true,
+    Acceptance / parallelExecution := false
+  )
+
+// Coverage Configuration
+coverageEnabled := true
+coverageHighlighting := true
+coverageExcludedPackages := "forex\\.Main;forex\\.config\\..*;forex\\.modules\\.HttpClientBuilder;forex\\.modules\\.HttpServerBuilder;forex\\.http\\.package;"

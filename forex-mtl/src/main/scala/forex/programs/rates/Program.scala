@@ -1,24 +1,27 @@
 package forex.programs.rates
 
-import cats.Functor
-import cats.data.EitherT
-import errors._
-import forex.domain._
+import cats.Monad
+import cats.effect.Clock
+import cats.syntax.all._
+
+import forex.domain.error.AppError
+import forex.domain.rates.{ Price, Rate, Timestamp }
 import forex.services.RatesService
 
-class Program[F[_]: Functor](
-    ratesService: RatesService[F]
-) extends Algebra[F] {
+final class Program[F[_]: Monad: Clock](ratesService: RatesService[F]) extends Algebra[F] {
 
-  override def get(request: Protocol.GetRatesRequest): F[Error Either Rate] =
-    EitherT(ratesService.get(Rate.Pair(request.from, request.to))).leftMap(toProgramError(_)).value
-
+  override def get(pair: Rate.Pair): F[AppError Either Rate] =
+    Clock[F].realTimeInstant.flatMap { now =>
+      if (pair.from === pair.to)
+        Rate(
+          pair = pair,
+          price = Price(1.0),
+          timestamp = Timestamp(now)
+        ).asRight[AppError].pure[F]
+      else ratesService.get(pair, now)
+    }
 }
 
 object Program {
-
-  def apply[F[_]: Functor](
-      ratesService: RatesService[F]
-  ): Algebra[F] = new Program[F](ratesService)
-
+  def apply[F[_]: Monad: Clock](ratesService: RatesService[F]): Algebra[F] = new Program[F](ratesService)
 }

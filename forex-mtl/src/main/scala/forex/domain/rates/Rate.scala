@@ -1,0 +1,43 @@
+package forex.domain.rates
+
+import io.circe.{ Decoder, Encoder }
+import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
+
+import forex.domain.currency.Currency
+import forex.domain.currency.Currency.USD
+
+final case class Rate(
+    pair: Rate.Pair,
+    price: Price,
+    timestamp: Timestamp
+)
+object Rate {
+  final case class Pair(
+      from: Currency,
+      to: Currency
+  ) {
+    def fractionalPip: Int = if (from == Currency.JPY || to == Currency.JPY) 3 else 5
+  }
+
+  def fromPivotRate(pivotBase: PivotRate, pivotQuote: PivotRate): Rate = {
+    val (price, timestamp) = (pivotBase.currency, pivotQuote.currency) match {
+      case (USD, _) =>
+        (pivotQuote.price.value, pivotQuote.timestamp)
+      case (_, USD) =>
+        (BigDecimal(1) / pivotBase.price.value, pivotBase.timestamp)
+      case (_, _) =>
+        (pivotQuote.price.value / pivotBase.price.value, Timestamp.base(pivotBase.timestamp, pivotQuote.timestamp))
+    }
+
+    Rate(
+      pair = Rate.Pair(pivotBase.currency, pivotQuote.currency),
+      price = Price(price),
+      timestamp = timestamp
+    )
+  }
+
+  implicit val rateDecoder: Decoder[Rate] = deriveDecoder[Rate]
+  implicit val rateEncoder: Encoder[Rate] = deriveEncoder[Rate]
+  implicit val pairDecoder: Decoder[Pair] = deriveDecoder[Pair]
+  implicit val pairEncoder: Encoder[Pair] = deriveEncoder[Pair]
+}
