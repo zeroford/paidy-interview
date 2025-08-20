@@ -158,4 +158,68 @@ class HttpClientSpec extends CatsEffectSuite {
       _ <- IO(assert(error.isInstanceOf[AppError.NotFound], "Should be NotFound error"))
     } yield ()
   }
+
+  test("HttpClient should handle JSON decode errors") {
+    val errorMockClient: Client[IO] = Client[IO](_ =>
+      cats.effect.Resource.pure {
+        org.http4s.Response[IO](org.http4s.Status.Ok).withEntity("invalid json")
+      }
+    )
+    val httpClient = HttpClient[IO](errorMockClient, config, "test-token")
+
+    for {
+      result <- httpClient.getRates(List(Rate.Pair(Currency.USD, Currency.JPY)))
+      _ <- IO(assert(result.isLeft, "Should return error for invalid JSON"))
+      error <- IO(result.left.toOption.get)
+      _ <- IO(assert(error.isInstanceOf[AppError.DecodingFailed], "Should be DecodingFailed error"))
+    } yield ()
+  }
+
+  test("HttpClient should handle OneFrameApiError responses") {
+    val errorMockClient: Client[IO] = Client[IO](_ =>
+      cats.effect.Resource.pure {
+        org.http4s.Response[IO](org.http4s.Status.Ok).withEntity("""{"error": "Quota reached"}""")
+      }
+    )
+    val httpClient = HttpClient[IO](errorMockClient, config, "test-token")
+
+    for {
+      result <- httpClient.getRates(List(Rate.Pair(Currency.USD, Currency.JPY)))
+      _ <- IO(assert(result.isLeft, "Should return error for API error"))
+      error <- IO(result.left.toOption.get)
+      _ <- IO(assert(error.isInstanceOf[AppError.RateLimited], "Should be RateLimited error"))
+    } yield ()
+  }
+
+  test("HttpClient should handle HTTP error responses") {
+    val errorMockClient: Client[IO] = Client[IO](_ =>
+      cats.effect.Resource.pure {
+        org.http4s.Response[IO](org.http4s.Status.InternalServerError).withEntity("Server error")
+      }
+    )
+    val httpClient = HttpClient[IO](errorMockClient, config, "test-token")
+
+    for {
+      result <- httpClient.getRates(List(Rate.Pair(Currency.USD, Currency.JPY)))
+      _ <- IO(assert(result.isLeft, "Should return error for HTTP error"))
+      error <- IO(result.left.toOption.get)
+      _ <- IO(assert(error.isInstanceOf[AppError.UpstreamUnavailable], "Should be UpstreamUnavailable error"))
+    } yield ()
+  }
+
+  test("HttpClient should handle empty response array") {
+    val emptyMockClient: Client[IO] = Client[IO](_ =>
+      cats.effect.Resource.pure {
+        org.http4s.Response[IO](org.http4s.Status.Ok).withEntity("[]")
+      }
+    )
+    val httpClient = HttpClient[IO](emptyMockClient, config, "test-token")
+
+    for {
+      result <- httpClient.getRates(List(Rate.Pair(Currency.USD, Currency.JPY)))
+      _ <- IO(assert(result.isLeft, "Should return error for empty response"))
+      error <- IO(result.left.toOption.get)
+      _ <- IO(assert(error.isInstanceOf[AppError.NotFound], "Should be NotFound error"))
+    } yield ()
+  }
 }

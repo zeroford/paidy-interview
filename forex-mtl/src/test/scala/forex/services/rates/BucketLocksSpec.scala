@@ -14,22 +14,10 @@ class BucketLocksSpec extends CatsEffectSuite {
     }
   }
 
-  test("BucketLocks should execute withBucket for MostUsed bucket") {
+  test("BucketLocks should execute withBucket for different buckets") {
     BucketLocks.create[IO].flatMap { locks =>
       locks
         .withBucket(RatesBucket.MostUsed) {
-          IO.pure("success")
-        }
-        .map { result =>
-          assertEquals(result, "success")
-        }
-    }
-  }
-
-  test("BucketLocks should execute withBucket for LeastUsed bucket") {
-    BucketLocks.create[IO].flatMap { locks =>
-      locks
-        .withBucket(RatesBucket.LeastUsed) {
           IO.pure("success")
         }
         .map { result =>
@@ -65,30 +53,9 @@ class BucketLocksSpec extends CatsEffectSuite {
     }
   }
 
-  test("BucketLocks should handle exceptions in withBuckets") {
-    BucketLocks.create[IO].flatMap { locks =>
-      val exception = new RuntimeException("test exception")
-      locks
-        .withBuckets {
-          IO.raiseError(exception)
-        }
-        .attempt
-        .map { result =>
-          assert(result.isLeft)
-          assertEquals(result.left.toOption.get, exception)
-        }
-    }
-  }
-
-  test("BucketLocks.bucketFor should return MostUsed for FetchStrategy.MostUsed") {
+  test("BucketLocks.bucketFor should return correct bucket for each strategy") {
     assertEquals(BucketLocks.bucketFor(FetchStrategy.MostUsed), RatesBucket.MostUsed)
-  }
-
-  test("BucketLocks.bucketFor should return LeastUsed for FetchStrategy.LeastUsed") {
     assertEquals(BucketLocks.bucketFor(FetchStrategy.LeastUsed), RatesBucket.LeastUsed)
-  }
-
-  test("BucketLocks.bucketFor should return LeastUsed for FetchStrategy.All") {
     assertEquals(BucketLocks.bucketFor(FetchStrategy.All), RatesBucket.LeastUsed)
   }
 

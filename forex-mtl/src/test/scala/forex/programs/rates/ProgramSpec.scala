@@ -57,4 +57,48 @@ class ProgramSpec extends CatsEffectSuite {
       _ <- IO(assertEquals(rate.price.value, BigDecimal(1.0), "Same currency should have price 1.0"))
     } yield ()
   }
+
+  test("Program should handle different currency pairs for same currency") {
+    val program = Program[IO](errorService)
+
+    for {
+      result1 <- program.get(Rate.Pair(Currency.EUR, Currency.EUR))
+      result2 <- program.get(Rate.Pair(Currency.JPY, Currency.JPY))
+      result3 <- program.get(Rate.Pair(Currency.GBP, Currency.GBP))
+      _ <- IO(assert(result1.isRight, "EUR/EUR should return success"))
+      _ <- IO(assert(result2.isRight, "JPY/JPY should return success"))
+      _ <- IO(assert(result3.isRight, "GBP/GBP should return success"))
+      rate1 <- IO(result1.toOption.get)
+      rate2 <- IO(result2.toOption.get)
+      rate3 <- IO(result3.toOption.get)
+      _ <- IO(assertEquals(rate1.price.value, BigDecimal(1.0), "EUR/EUR should have price 1.0"))
+      _ <- IO(assertEquals(rate2.price.value, BigDecimal(1.0), "JPY/JPY should have price 1.0"))
+      _ <- IO(assertEquals(rate3.price.value, BigDecimal(1.0), "GBP/GBP should have price 1.0"))
+    } yield ()
+  }
+
+  test("Program should handle different error types") {
+    val validationErrorService: Algebra[IO]  = (_, _) => IO.pure(Left(AppError.Validation("Invalid currency pair")))
+    val notFoundErrorService: Algebra[IO]    = (_, _) => IO.pure(Left(AppError.NotFound("Rate not found")))
+    val calculationErrorService: Algebra[IO] = (_, _) => IO.pure(Left(AppError.CalculationFailed("Calculation failed")))
+
+    val program1 = Program[IO](validationErrorService)
+    val program2 = Program[IO](notFoundErrorService)
+    val program3 = Program[IO](calculationErrorService)
+
+    for {
+      result1 <- program1.get(Rate.Pair(Currency.USD, Currency.JPY))
+      result2 <- program2.get(Rate.Pair(Currency.USD, Currency.JPY))
+      result3 <- program3.get(Rate.Pair(Currency.USD, Currency.JPY))
+      _ <- IO(assert(result1.isLeft, "Should return validation error"))
+      _ <- IO(assert(result2.isLeft, "Should return not found error"))
+      _ <- IO(assert(result3.isLeft, "Should return calculation error"))
+      error1 <- IO(result1.left.toOption.get)
+      error2 <- IO(result2.left.toOption.get)
+      error3 <- IO(result3.left.toOption.get)
+      _ <- IO(assert(error1.isInstanceOf[AppError.Validation], "Should be Validation error"))
+      _ <- IO(assert(error2.isInstanceOf[AppError.NotFound], "Should be NotFound error"))
+      _ <- IO(assert(error3.isInstanceOf[AppError.CalculationFailed], "Should be CalculationFailed error"))
+    } yield ()
+  }
 }

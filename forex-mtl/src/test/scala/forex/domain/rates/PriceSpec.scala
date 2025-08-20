@@ -1,71 +1,114 @@
 package forex.domain.rates
 
-import io.circe.parser.decode
 import io.circe.syntax._
 import munit.FunSuite
 
 class PriceSpec extends FunSuite {
 
-  test("Price should handle BigDecimal values correctly") {
-    val price = Price(BigDecimal("123.45"))
-    assertEquals(price.value, BigDecimal("123.45"))
+  test("Price should preserve BigDecimal value") {
+    val value = BigDecimal(123.45)
+    val price = Price(value)
+    assertEquals(price.value, value)
   }
 
-  test("Price should handle Integer conversion") {
-    val price = Price.fromInt(42).toOption.get
-    assertEquals(price.value, BigDecimal(42))
-  }
-
-  test("Price should support JSON serialization") {
-    val price = Price(BigDecimal("123.45"))
-    val json  = price.asJson
-    assert(json.isNumber)
-  }
-
-  test("Price should support JSON deserialization") {
-    val json   = "123.45"
-    val result = decode[Price](json)
+  test("Price.fromInt should work for positive integers") {
+    val result = Price.fromInt(100)
     assert(result.isRight)
-    assertEquals(result.toOption.get.value, BigDecimal("123.45"))
+    assertEquals(result.toOption.get.value, BigDecimal(100))
   }
 
-  test("Price should handle integer JSON") {
-    val json   = "42"
-    val result = decode[Price](json)
-    assert(result.isRight)
-    assertEquals(result.toOption.get.value, BigDecimal(42))
-  }
-
-  test("Price should fail for invalid JSON") {
-    val json   = "\"invalid\""
-    val result = decode[Price](json)
+  test("Price.fromInt should fail for negative integers") {
+    val result = Price.fromInt(-100)
     assert(result.isLeft)
   }
 
-  test("Price.round should round correctly with HALF_UP") {
-    val price1   = Price(BigDecimal(123.4567))
-    val rounded1 = price1.round(3)
-    assertEquals(rounded1.value, BigDecimal(123.457), "Price should round up to 3 decimal places")
-
-    val price2   = Price(BigDecimal(123.4564))
-    val rounded2 = price2.round(3)
-    assertEquals(rounded2.value, BigDecimal(123.456), "Price should round down to 3 decimal places")
-
-    val price3   = Price(BigDecimal(0.851234))
-    val rounded3 = price3.round(5)
-    assertEquals(rounded3.value, BigDecimal(0.85123), "Price should round to 5 decimal places")
-
-    val price4   = Price(BigDecimal(0.851236))
-    val rounded4 = price4.round(5)
-    assertEquals(rounded4.value, BigDecimal(0.85124), "Price should round up to 5 decimal places")
+  test("Price.round should maintain value within scale") {
+    val price   = Price(BigDecimal(123.456789))
+    val rounded = price.round(2)
+    assertEquals(rounded.value.scale, 2)
+    assertEquals(rounded.value, BigDecimal(123.46))
   }
 
-  test("Price.round should return new Price instance") {
-    val originalPrice = Price(BigDecimal(123.4567))
-    val roundedPrice  = originalPrice.round(3)
+  test("Price.round should be idempotent") {
+    val price    = Price(BigDecimal(123.456789))
+    val rounded1 = price.round(2)
+    val rounded2 = rounded1.round(2)
+    assertEquals(rounded1, rounded2)
+  }
 
-    assert(originalPrice.value != roundedPrice.value, "original and rounded prices should be different")
-    assertEquals(originalPrice.value, BigDecimal(123.4567), "Original price should remain unchanged")
-    assertEquals(roundedPrice.value, BigDecimal(123.457), "Rounded price should have correct value")
+  test("Price should support round-trip JSON serialization") {
+    val price   = Price(BigDecimal(123.45))
+    val json    = price.asJson
+    val decoded = json.as[Price]
+    assert(decoded.isRight)
+    assertEquals(decoded.toOption.get, price)
+  }
+
+  test("Price should handle equality correctly") {
+    val price1 = Price(BigDecimal(123.45))
+    val price2 = Price(BigDecimal(123.45))
+    val price3 = Price(BigDecimal(678.90))
+
+    assertEquals(price1, price2)
+    assert(price1 != price3)
+  }
+
+  test("Price should handle zero") {
+    val result = Price.fromInt(0)
+    assert(result.isRight)
+    assertEquals(result.toOption.get.value, BigDecimal(0))
+  }
+
+  test("Price should handle boundary rounding") {
+    val price   = Price(BigDecimal(123.445))
+    val rounded = price.round(2)
+    assertEquals(rounded.value, BigDecimal(123.45))
+  }
+
+  test("Price should handle very small values") {
+    val price   = Price(BigDecimal(0.000001))
+    val rounded = price.round(3)
+    assertEquals(rounded.value, BigDecimal(0.000))
+  }
+
+  test("Price should handle very large values") {
+    val price   = Price(BigDecimal(999999.999999))
+    val rounded = price.round(2)
+    assertEquals(rounded.value, BigDecimal(1000000.00))
+  }
+
+  test("Price should handle scientific notation") {
+    val price   = Price(BigDecimal("1.23E-4"))
+    val rounded = price.round(6)
+    assertEquals(rounded.value, BigDecimal("0.000123"))
+  }
+
+  test("Price should handle JSON with scientific notation") {
+    val json  = "1.23E-4".asJson
+    val price = json.as[Price].toOption.get
+    assertEquals(price.value, BigDecimal("0.000123"))
+  }
+
+  test("Price should handle JSON with trailing zeros") {
+    val json  = "123.4500".asJson
+    val price = json.as[Price].toOption.get
+    assertEquals(price.value, BigDecimal("123.45"))
+  }
+
+  test("Price should fail for invalid JSON") {
+    val json   = "invalid".asJson
+    val result = json.as[Price]
+    assert(result.isLeft)
+  }
+
+  test("Price should handle fromInt with maximum integer") {
+    val result = Price.fromInt(Int.MaxValue)
+    assert(result.isRight)
+    assertEquals(result.toOption.get.value, BigDecimal(Int.MaxValue))
+  }
+
+  test("Price should handle fromInt with minimum integer") {
+    val result = Price.fromInt(Int.MinValue)
+    assert(result.isLeft)
   }
 }

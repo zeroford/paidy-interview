@@ -173,4 +173,120 @@ class ServiceSpec extends CatsEffectSuite {
       _ <- IO(assert(doubleResult.toOption.flatten.contains(3.14)))
     } yield ()
   }
+
+  test("Cache should handle edge case configurations") {
+    val cache1 = Service[IO](1, 1.millisecond)
+    val cache2 = Service[IO](1000, 1.hour)
+
+    for {
+      _ <- cache1.put("key1", "value1")
+      _ <- cache2.put("key2", "value2")
+
+      result1 <- cache1.get[String, String]("key1")
+      result2 <- cache2.get[String, String]("key2")
+
+      _ <- IO(assert(result1.isRight, "Small cache should work"))
+      _ <- IO(assert(result2.isRight, "Large cache should work"))
+    } yield ()
+  }
+
+
+
+  test("Cache should handle complex objects") {
+    val cache = Service[IO](100, 1.minute)
+
+    for {
+      _ <- cache.put("rate-key", testRate)
+      _ <- cache.put("rate2-key", testRate2)
+      _ <- cache.put("rate3-key", testRate3)
+
+      result1 <- cache.get[String, Rate]("rate-key")
+      result2 <- cache.get[String, Rate]("rate2-key")
+      result3 <- cache.get[String, Rate]("rate3-key")
+
+      _ <- IO(assert(result1.toOption.flatten.isDefined))
+      _ <- IO(assert(result2.toOption.flatten.isDefined))
+      _ <- IO(assert(result3.toOption.flatten.isDefined))
+
+      rate1 <- IO(result1.toOption.flatten.get)
+      rate2 <- IO(result2.toOption.flatten.get)
+      rate3 <- IO(result3.toOption.flatten.get)
+
+      _ <- IO(assertEquals(rate1.pair.from, Currency.USD))
+      _ <- IO(assertEquals(rate2.pair.from, Currency.EUR))
+      _ <- IO(assertEquals(rate3.pair.from, Currency.GBP))
+    } yield ()
+  }
+
+  test("Cache should handle null key gracefully") {
+    val cache = Service[IO](100, 1.minute)
+
+    for {
+      putResult <- cache.put(null, "value")
+      getResult <- cache.get[String, String](null)
+
+      _ <- IO(assert(putResult.isLeft, "Put with null key should fail"))
+      _ <- IO(assert(getResult.isLeft, "Get with null key should fail"))
+    } yield ()
+  }
+
+
+
+  test("Cache should handle cache size limits correctly") {
+    val cache = Service[IO](3, 1.minute) // Small cache
+
+    for {
+      _ <- cache.put("key1", "value1")
+      _ <- cache.put("key2", "value2")
+      _ <- cache.put("key3", "value3")
+
+      // All should be present
+      result1 <- cache.get[String, String]("key1")
+      result2 <- cache.get[String, String]("key2")
+      result3 <- cache.get[String, String]("key3")
+
+      _ <- IO(assert(result1.isRight && result2.isRight && result3.isRight))
+
+      // Add one more to trigger eviction
+      _ <- cache.put("key4", "value4")
+
+      result4 <- cache.get[String, String]("key4")
+      _ <- IO(assert(result4.toOption.flatten.contains("value4")))
+
+      // Check that at least one of the original keys is still there
+      result1Check <- cache.get[String, String]("key1")
+      result2Check <- cache.get[String, String]("key2")
+      result3Check <- cache.get[String, String]("key3")
+      allResults   = List(result1Check, result2Check, result3Check)
+      presentCount = allResults.count(_.toOption.flatten.isDefined)
+      _ <- IO(assert(presentCount >= 2, s"Should have at least 2 items, but found $presentCount"))
+    } yield ()
+  }
+
+  test("Cache should handle rapid put/get operations") {
+    val cache = Service[IO](100, 1.minute)
+
+    for {
+      // Rapid puts
+      _ <- cache.put("rapid-key-1", "rapid-value-1")
+      _ <- cache.put("rapid-key-2", "rapid-value-2")
+      _ <- cache.put("rapid-key-3", "rapid-value-3")
+      _ <- cache.put("rapid-key-4", "rapid-value-4")
+      _ <- cache.put("rapid-key-5", "rapid-value-5")
+
+      // Rapid gets
+      result1 <- cache.get[String, String]("rapid-key-1")
+      result2 <- cache.get[String, String]("rapid-key-2")
+      result3 <- cache.get[String, String]("rapid-key-3")
+      result4 <- cache.get[String, String]("rapid-key-4")
+      result5 <- cache.get[String, String]("rapid-key-5")
+
+      results      = List(result1, result2, result3, result4, result5)
+      successCount = results.count(_.isRight)
+      valueCount   = results.count(_.toOption.flatten.isDefined)
+
+      _ <- IO(assert(successCount == 5, s"All operations should succeed, but only $successCount/5 did"))
+      _ <- IO(assert(valueCount >= 3, s"At least 3 values should be present, but only $valueCount/5 were"))
+    } yield ()
+  }
 }
